@@ -68,6 +68,12 @@ GET /api/prices?channelSize=1000000
 }
 ```
 
+### 🤝 **API Usage Guidelines**
+- **Rate Limiting**: Please don't exceed 100 requests per minute
+- **Caching**: Cache responses for at least 5 minutes to reduce load
+- **Respectful Usage**: This is a free service - use responsibly
+- **Error Handling**: Implement proper error handling for 429 (rate limit) responses
+
 ### Features
 - **No authentication required** - completely open API
 - **CORS enabled** - works from any website
@@ -143,6 +149,50 @@ docker run -p 3000:3000 alby-lsp-priceboard
 1. **Set up Vercel KV** in your Vercel dashboard
 2. **Configure environment variables** for database connection
 3. **Deploy** using your preferred method
+
+## ⚠️ Service Limitations & Usage Guidelines
+
+### 🆓 Free Tier Constraints
+This project runs on **Vercel's free tier** to keep costs minimal and accessible. Please be mindful of these limitations:
+
+#### **Current Limits (September 2025)**
+- **Data Transfer**: 100 GB/month (~333K page views)
+- **API Calls**: 1M requests/month (~33K per day)
+- **CPU Time**: 4 hours/month
+- **Database**: 256 MB storage + 30K reads/month
+- **Cron Jobs**: Limited to 2 (we use 1)
+
+#### **What This Means for You**
+- ✅ **Light Usage**: Perfect for personal projects and small teams
+- ⚠️ **Heavy Usage**: May hit limits with 50K+ monthly users
+- ❌ **Commercial Scale**: Requires paid plan ($20/month)
+
+### 🤝 **Please Be Considerate**
+To keep this service free for everyone:
+
+- **Don't abuse the API** - Use reasonable request intervals
+- **Cache responses** - Don't call the API every few seconds
+- **Share responsibly** - Avoid viral sharing that could overwhelm the service
+- **Report issues** - Help us optimize rather than work around limits
+
+### 📊 **Realistic Usage Expectations**
+- **Target Users**: 1,000-5,000/month
+- **API Calls**: 10,000-50,000/month  
+- **Page Views**: 5,000-25,000/month
+- **Status**: ✅ Well within free tier limits
+
+### 🚀 **If We Outgrow Free Tier**
+If usage exceeds free limits, we'll:
+1. **Monitor and optimize** first
+2. **Implement rate limiting** if needed
+3. **Consider upgrading** to Pro plan ($20/month)
+4. **Seek community support** for hosting costs
+
+### 🔧 **Technical Limitations**
+- **Cold Starts**: 1-2 second delays on first request
+- **Function Timeout**: 15 minutes max execution time
+- **No WebSockets**: Real-time features not supported
+- **Limited Control**: Can't modify server configurations
 
 ## Contributing
 
