@@ -97,7 +97,7 @@ GET /api/prices?channelSize=1000000
 ### Local Development
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/alby-lsp-priceboard.git
+git clone https://github.com/NodeDiver/alby-lsp-priceboard.git
 cd alby-lsp-priceboard
 
 # Install dependencies
@@ -105,6 +105,20 @@ npm install
 
 # Start development server
 npm run dev
+```
+
+### Docker Deployment
+```bash
+# Clone the repository
+git clone https://github.com/NodeDiver/alby-lsp-priceboard.git
+cd alby-lsp-priceboard
+
+# Build and run with Docker
+npm run docker:build
+npm run docker:run
+
+# Or use Docker Compose
+npm run docker:compose
 ```
 
 ### Production Deployment

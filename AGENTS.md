@@ -23,7 +23,7 @@
 ## Technology Stack
 - **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
 - **Backend**: Next.js API Routes, Vercel KV (Redis)
-- **Deployment**: Vercel, Docker support
+- **Deployment**: Vercel (recommended), Docker support
 - **External APIs**: Alby Lightning Tools, LSPS1 Protocol
 
 ## Development Guidelines
@@ -59,6 +59,7 @@ alby-lsp-priceboard/
 2. Install dependencies: `npm install`
 3. Start development server: `npm run dev`
 4. Deploy to Vercel: `vercel --prod`
+5. Or run with Docker: `npm run docker:compose`
 
 ## Related Issues
 - [Alby Hub Issue #1001](https://github.com/getAlby/hub/issues/1001) - Original feature request

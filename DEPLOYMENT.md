@@ -1,7 +1,11 @@
 # Deployment Guide
 
 ## Overview
-This guide covers deploying the Alby LSP Price Board to production using Vercel or Docker.
+This guide covers deploying the Alby LSP Price Board to production. The application supports multiple deployment options:
+
+- **Vercel (Recommended)**: Serverless deployment with Vercel KV
+- **Docker**: Containerized deployment for any platform  
+- **Local Development**: Both npm and Docker options available
 
 ## 🚀 Vercel Deployment (Recommended)
 
@@ -61,7 +65,17 @@ KV_REST_API_READ_ONLY_TOKEN=your_readonly_token_here
 - Docker installed
 - Environment variables configured
 
-### Build and Run
+### Quick Start
+```bash
+# Using npm scripts (recommended)
+npm run docker:build
+npm run docker:run
+
+# Or using Docker Compose
+npm run docker:compose
+```
+
+### Manual Docker Commands
 ```bash
 # Build image
 docker build -t alby-lsp-priceboard .
