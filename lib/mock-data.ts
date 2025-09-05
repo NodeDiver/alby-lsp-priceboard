@@ -43,7 +43,7 @@ export const MOCK_PRICES: LSPPrice[] = generateMockPrices();
 
 // Helper function to check if we should use mock data
 export function shouldUseMockData(): boolean {
-  return !process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN;
+  return !process.env.KV_URL || !process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN;
 }
 
 // Get mock prices formatted for display
