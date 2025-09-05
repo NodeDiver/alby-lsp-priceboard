@@ -7,8 +7,6 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "docker:build": "docker build -t alby-lsp-priceboard .",
-    "docker:run": "docker run -p 3000:3000 alby-lsp-priceboard",
     "vercel:deploy": "vercel --prod"
   },
   "dependencies": {
