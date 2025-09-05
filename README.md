@@ -2,6 +2,8 @@
 
 A real-time Lightning Service Provider (LSP) price comparison tool that helps users make informed decisions when opening Lightning channels.
 
+🌐 **Live Demo**: [https://alby-lsp-priceboard-lrxjehwd4-nodii-teams-yes.vercel.app/](https://alby-lsp-priceboard-lrxjehwd4-nodii-teams-yes.vercel.app/)
+
 ## Problem Solved
 
 This project addresses [Alby Hub Issue #1001](https://github.com/getAlby/hub/issues/1001) - users want to see LSP pricing information upfront before selecting one, instead of only seeing costs after clicking "Next".
