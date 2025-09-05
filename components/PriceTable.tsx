@@ -21,6 +21,9 @@ interface PriceTableProps {
   lspMetadata?: any[];
   selectedChannelSize?: number;
   selectedCurrency?: string;
+  lastUpdate?: string;
+  dataSource?: string;
+  dataSourceDescription?: string;
 }
 
 // LSP Icon Component with proper fallback
@@ -51,7 +54,7 @@ function LSPIcon({ lspId, lspName, lspData }: { lspId: string; lspName: string; 
 }
 
 
-export function PriceTable({ prices, loading = false, lspMetadata = [], selectedChannelSize = 1000000, selectedCurrency = 'usd' }: PriceTableProps) {
+export function PriceTable({ prices, loading = false, lspMetadata = [], selectedChannelSize = 1000000, selectedCurrency = 'usd', lastUpdate, dataSource, dataSourceDescription }: PriceTableProps) {
   const [currencyConversions, setCurrencyConversions] = useState<{ [key: string]: CurrencyConversion }>({});
   const [conversionLoading, setConversionLoading] = useState(false);
 
@@ -200,7 +203,31 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
       
       <div className="p-4 bg-gray-50 text-sm text-gray-600 border-t border-gray-200">
         <div className="flex justify-between items-center">
-          <span>Last updated: {prices[0]?.timestamp ? new Date(prices[0].timestamp).toLocaleString() : 'Unknown'}</span>
+          <div className="flex items-center space-x-2">
+            {lastUpdate && (
+              <span>Last: {new Date(lastUpdate).toLocaleString()}</span>
+            )}
+            {dataSource && (
+              <div className="flex items-center space-x-2">
+                <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  dataSource === 'real' 
+                    ? 'bg-green-100 text-green-800' 
+                    : dataSource === 'mock' 
+                    ? 'bg-yellow-100 text-yellow-800'
+                    : 'bg-gray-100 text-gray-800'
+                }`}>
+                  {dataSource === 'real' ? '🟢 Real Data' : 
+                   dataSource === 'mock' ? '🟡 Mock Data' : 
+                   '⚪ Unknown'}
+                </div>
+                {dataSourceDescription && (
+                  <span className="text-xs text-gray-500" title={dataSourceDescription}>
+                    {dataSourceDescription}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
           <span>{prices.length} price entries</span>
         </div>
       </div>

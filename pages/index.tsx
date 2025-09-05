@@ -85,7 +85,7 @@ export default function Home() {
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
+          <div className="py-6">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
                 Alby LSP Price Board
@@ -93,49 +93,6 @@ export default function Home() {
               <p className="mt-2 text-gray-600">
                 Lightning Service Provider price comparison
               </p>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={handleRefresh}
-                disabled={loading}
-                className="px-4 py-2 bg-slate-500 text-white rounded-md hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Refreshing...' : 'Refresh Prices'}
-              </button>
-              
-              <button
-                onClick={() => window.open('/api/debug', '_blank')}
-                className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
-              >
-                Debug Info
-              </button>
-              
-              {lastUpdate && (
-                <div className="text-sm text-gray-500">
-                  Last: {new Date(lastUpdate).toLocaleString()}
-                </div>
-              )}
-              
-              {/* Data Source Indicator */}
-              <div className="flex items-center space-x-2">
-                <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  dataSource === 'real' 
-                    ? 'bg-green-100 text-green-800' 
-                    : dataSource === 'mock' 
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {dataSource === 'real' ? '🟢 Real Data' : 
-                   dataSource === 'mock' ? '🟡 Mock Data' : 
-                   '⚪ Unknown'}
-                </div>
-                {dataSourceDescription && (
-                  <div className="text-xs text-gray-500" title={dataSourceDescription}>
-                    {dataSourceDescription}
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         </div>
@@ -221,12 +178,38 @@ export default function Home() {
             lspMetadata={lspMetadata} 
             selectedChannelSize={selectedChannelSize}
             selectedCurrency={selectedCurrency}
+            lastUpdate={lastUpdate}
+            dataSource={dataSource}
+            dataSourceDescription={dataSourceDescription}
           />
+        </div>
+
+        {/* Action Buttons */}
+        <div className="mt-6 flex justify-end">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={handleRefresh}
+              disabled={loading}
+              className="px-4 py-2 bg-slate-500 text-white rounded-md hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Refreshing...' : 'Refresh Prices'}
+            </button>
+            
+            <button
+              onClick={() => window.open('/api/debug', '_blank')}
+              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+            >
+              Debug Info
+            </button>
+          </div>
         </div>
 
         {/* API Info */}
         <div className="mt-8 bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Public API Access</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Public API Access</h3>
+          <p className="text-sm text-gray-500 mb-4 italic">
+            Note: Currently using mock data for development - real LSP integration pending
+          </p>
           <p className="text-sm text-gray-600 mb-4">
             Other applications can access this pricing data via our public REST API:
           </p>
