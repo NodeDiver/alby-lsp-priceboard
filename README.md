@@ -12,7 +12,7 @@ This project addresses [Alby Hub Issue #1001](https://github.com/getAlby/hub/iss
 - **Multi-currency support** with live conversion using Alby's Lightning Tools
 - **Channel size filtering** (1M-10M sats)
 - **Public REST API** for integration with other applications
-- **Automatic price updates** every 10 minutes via Vercel Cron Jobs
+- **Automatic price updates** daily via Vercel Cron Jobs
 - **Clean, responsive UI** with professional design 
 
 ## Technology Stack
@@ -21,7 +21,7 @@ This project addresses [Alby Hub Issue #1001](https://github.com/getAlby/hub/iss
 - **TypeScript** - Type-safe development
 - **Tailwind CSS** - Utility-first styling
 - **Vercel KV** - Redis-compatible database for price storage
-- **Vercel Cron Jobs** - Automated price fetching every 10 minutes
+- **Vercel Cron Jobs** - Automated price fetching daily
 - **Alby Lightning Tools** - Real-time currency conversion
 - **LSPS1 Protocol** - Standard LSP communication protocol
 
@@ -36,7 +36,7 @@ This project addresses [Alby Hub Issue #1001](https://github.com/getAlby/hub/iss
 
 ## How It Works
 
-1. **Automated Data Collection**: Vercel Cron Jobs fetch prices from all LSPs every 10 minutes
+1. **Automated Data Collection**: Vercel Cron Jobs fetch prices from all LSPs daily
 2. **Real-time Storage**: Latest prices are stored in Vercel KV (Redis-compatible database)
 3. **Live Conversion**: Prices are converted to multiple currencies using Alby's Lightning Tools
 4. **Public API**: Other applications can access current prices via REST API
@@ -78,7 +78,7 @@ GET /api/prices?channelSize=1000000
 - **No authentication required** - completely open API
 - **CORS enabled** - works from any website
 - **Channel size filtering** - add `?channelSize=2000000` for 2M sats
-- **Real-time data** - prices update every 10 minutes automatically
+- **Real-time data** - prices update daily automatically
 
 ## Development Status
 
