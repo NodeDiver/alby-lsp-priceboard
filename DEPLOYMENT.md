@@ -1,26 +1,42 @@
-# Deployment Guide - Alby LSP Price Board
+# Deployment Guide
 
-## 🚀 Deploy to Vercel
+## Overview
+This guide covers deploying the Alby LSP Price Board to production using Vercel or Docker.
+
+## 🚀 Vercel Deployment (Recommended)
 
 ### Prerequisites
-- Vercel account (free tier available)
-- GitHub repository with this code
+- Vercel account ([vercel.com](https://vercel.com))
+- GitHub repository access
+- Vercel CLI installed (`npm i -g vercel`)
 
-### Step 1: Connect to Vercel
+### Quick Deploy
+```bash
+# Clone and setup
+git clone https://github.com/NodeDiver/alby-lsp-priceboard.git
+cd alby-lsp-priceboard
+npm install
+
+# Deploy to Vercel
+vercel --prod
+```
+
+### Step-by-Step Deployment
+
+#### 1. Connect Repository
 1. Go to [vercel.com](https://vercel.com)
 2. Sign in with GitHub
 3. Click "New Project"
-4. Import your GitHub repository
+4. Import `NodeDiver/alby-lsp-priceboard`
 
-### Step 2: Configure Vercel KV
-1. In your Vercel project dashboard, go to "Storage"
-2. Click "Create Database"
-3. Choose "KV" (Redis)
-4. Select your preferred region
-5. Click "Create"
+#### 2. Configure Vercel KV
+1. In project dashboard → "Storage"
+2. Click "Create Database" → "KV"
+3. Select region (closest to users)
+4. Click "Create"
 
-### Step 3: Set Environment Variables
-In your Vercel project settings, add these environment variables:
+#### 3. Environment Variables
+Add these in Vercel project settings:
 
 ```bash
 KV_URL=your_kv_url_here
@@ -29,44 +45,103 @@ KV_REST_API_TOKEN=your_kv_token_here
 KV_REST_API_READ_ONLY_TOKEN=your_readonly_token_here
 ```
 
-### Step 4: Deploy
-1. Vercel will automatically detect Next.js
-2. Click "Deploy"
-3. Wait for build to complete
+#### 4. Deploy
+- Vercel auto-detects Next.js configuration
+- Click "Deploy" and wait for completion
+- Cron jobs activate automatically
 
-### Step 5: Configure Custom Domain (Optional)
-1. Go to "Domains" in project settings
-2. Add your custom domain
-3. Follow DNS configuration instructions
+#### 5. Custom Domain (Optional)
+1. Project settings → "Domains"
+2. Add your domain
+3. Configure DNS as instructed
 
-## 🐳 Deploy with Docker
+## 🐳 Docker Deployment
 
-### Build Image
+### Prerequisites
+- Docker installed
+- Environment variables configured
+
+### Build and Run
 ```bash
+# Build image
 docker build -t alby-lsp-priceboard .
+
+# Run container
+docker run -p 3000:3000 \
+  -e KV_URL=your_kv_url \
+  -e KV_REST_API_URL=your_rest_url \
+  -e KV_REST_API_TOKEN=your_token \
+  alby-lsp-priceboard
 ```
 
-### Run Container
+### Using Docker Compose
+```yaml
+version: '3.8'
+services:
+  alby-lsp-priceboard:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - KV_URL=${KV_URL}
+      - KV_REST_API_URL=${KV_REST_API_URL}
+      - KV_REST_API_TOKEN=${KV_REST_API_TOKEN}
+```
+
+## 📊 Post-Deployment Verification
+
+### 1. Health Checks
 ```bash
-docker run -p 3000:3000 alby-lsp-priceboard
+# Test main page
+curl https://your-domain.vercel.app/
+
+# Test API endpoints
+curl https://your-domain.vercel.app/api/prices
+curl https://your-domain.vercel.app/api/debug
 ```
 
-## 📊 Verify Deployment
+### 2. Expected Responses
+- **Main page**: LSP price comparison table
+- **API prices**: JSON with current LSP pricing data
+- **API debug**: System status and configuration info
 
-1. Check your deployed URL
-2. Test the API endpoints:
-   - `GET /api/prices` - Should return LSP prices
-   - `GET /api/debug` - Should show system status
-3. Verify cron job is working (check Vercel logs)
+### 3. Cron Job Verification
+- Check Vercel function logs for `/api/cron/fetch-prices`
+- Verify prices update every 10 minutes
+- Monitor Vercel KV for data persistence
 
 ## 🔧 Troubleshooting
 
 ### Common Issues
-- **Build fails**: Check Node.js version compatibility
-- **API errors**: Verify environment variables are set
-- **Cron job not working**: Check Vercel KV configuration
 
-### Support
-- Check Vercel deployment logs
-- Verify environment variables
-- Test locally first
+#### Build Failures
+- **Node.js version**: Ensure compatibility with Next.js 15
+- **Dependencies**: Run `npm install` before building
+- **Memory limits**: Check Vercel build limits
+
+#### Runtime Errors
+- **Environment variables**: Verify all KV credentials are set
+- **API errors**: Check Vercel function logs
+- **CORS issues**: API endpoints have CORS enabled
+
+#### Data Issues
+- **No prices showing**: Check Vercel KV connection
+- **Mock data only**: Verify KV environment variables
+- **Stale data**: Check cron job execution logs
+
+### Debug Commands
+```bash
+# Local testing
+npm run dev
+
+# Check build
+npm run build
+
+# Test production build
+npm run start
+```
+
+### Support Resources
+- [Vercel Documentation](https://vercel.com/docs)
+- [Next.js Deployment Guide](https://nextjs.org/docs/deployment)
+- [Vercel KV Documentation](https://vercel.com/docs/storage/vercel-kv)
