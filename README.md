@@ -150,49 +150,9 @@ docker run -p 3000:3000 alby-lsp-priceboard
 2. **Configure environment variables** for database connection
 3. **Deploy** using your preferred method
 
-## ⚠️ Service Limitations & Usage Guidelines
+## Service Limitations
 
-### 🆓 Free Tier Constraints
-This project runs on **Vercel's free tier** to keep costs minimal and accessible. Please be mindful of these limitations:
-
-#### **Current Limits (September 2025)**
-- **Data Transfer**: 100 GB/month (~333K page views)
-- **API Calls**: 1M requests/month (~33K per day)
-- **CPU Time**: 4 hours/month
-- **Database**: 256 MB storage + 30K reads/month
-- **Cron Jobs**: Limited to 2 (we use 1)
-
-#### **What This Means for You**
-- ✅ **Light Usage**: Perfect for personal projects and small teams
-- ⚠️ **Heavy Usage**: May hit limits with 50K+ monthly users
-- ❌ **Commercial Scale**: Requires paid plan ($20/month)
-
-### 🤝 **Please Be Considerate**
-To keep this service free for everyone:
-
-- **Don't abuse the API** - Use reasonable request intervals
-- **Cache responses** - Don't call the API every few seconds
-- **Share responsibly** - Avoid viral sharing that could overwhelm the service
-- **Report issues** - Help us optimize rather than work around limits
-
-### 📊 **Realistic Usage Expectations**
-- **Target Users**: 1,000-5,000/month
-- **API Calls**: 10,000-50,000/month  
-- **Page Views**: 5,000-25,000/month
-- **Status**: ✅ Well within free tier limits
-
-### 🚀 **If We Outgrow Free Tier**
-If usage exceeds free limits, we'll:
-1. **Monitor and optimize** first
-2. **Implement rate limiting** if needed
-3. **Consider upgrading** to Pro plan ($20/month)
-4. **Seek community support** for hosting costs
-
-### 🔧 **Technical Limitations**
-- **Cold Starts**: 1-2 second delays on first request
-- **Function Timeout**: 15 minutes max execution time
-- **No WebSockets**: Real-time features not supported
-- **Limited Control**: Can't modify server configurations
+This service operates on Vercel's free tier with the following constraints: **100 GB monthly data transfer** (~333K page views), **1M API requests per month** (~33K daily), **256 MB database storage**, and **4 hours CPU time monthly**. Please use the API responsibly by implementing reasonable request intervals and caching responses for at least 5 minutes. The service is designed for light to moderate usage (1,000-5,000 monthly users) and may implement rate limiting if usage exceeds free tier limits.
 
 ## Contributing
 
