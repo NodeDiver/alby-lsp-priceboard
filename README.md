@@ -55,6 +55,8 @@ GET /api/prices?channelSize=1000000
   "success": true,
   "last_update": "2025-09-05T16:24:06.744Z",
   "total_lsps": 4,
+  "data_source": "mock",
+  "data_source_description": "Mock data for development/testing",
   "prices": [
     {
       "lsp_id": "olympus",
@@ -73,6 +75,17 @@ GET /api/prices?channelSize=1000000
 - **Caching**: Cache responses for at least 5 minutes to reduce load
 - **Respectful Usage**: This is a free service - use responsibly
 - **Error Handling**: Implement proper error handling for 429 (rate limit) responses
+
+### 📊 **Data Source Indicators**
+The API response includes data source information:
+- **`data_source: "real"`** - Real-time data from LSP APIs
+- **`data_source: "mock"`** - Mock data for development/testing
+- **`data_source: "mock_fallback"`** - Mock data (fallback when no real data available)
+
+The frontend displays a visual indicator:
+- 🟢 **Real Data** - Live pricing from LSPs
+- 🟡 **Mock Data** - Simulated pricing for development
+- ⚪ **Unknown** - Data source not determined
 
 ### Features
 - **No authentication required** - completely open API

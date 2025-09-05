@@ -11,6 +11,8 @@ export default function Home() {
   const [lspMetadata, setLspMetadata] = useState<LSP[]>([]);
   const [selectedChannelSize, setSelectedChannelSize] = useState<number>(1000000); // Default to 1M sats
   const [selectedCurrency, setSelectedCurrency] = useState<string>('usd'); // Default to USD
+  const [dataSource, setDataSource] = useState<string>('unknown');
+  const [dataSourceDescription, setDataSourceDescription] = useState<string>('');
 
   // Fetch prices from API
   const fetchPrices = async (channelSize: number = selectedChannelSize) => {
@@ -29,6 +31,8 @@ export default function Home() {
       if (data.success && data.prices) {
         setPrices(data.prices);
         setLastUpdate(data.last_update);
+        setDataSource(data.data_source || 'unknown');
+        setDataSourceDescription(data.data_source_description || '');
       } else {
         throw new Error(data.message || 'Failed to fetch prices');
       }
@@ -112,6 +116,26 @@ export default function Home() {
                   Last: {new Date(lastUpdate).toLocaleString()}
                 </div>
               )}
+              
+              {/* Data Source Indicator */}
+              <div className="flex items-center space-x-2">
+                <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  dataSource === 'real' 
+                    ? 'bg-green-100 text-green-800' 
+                    : dataSource === 'mock' 
+                    ? 'bg-yellow-100 text-yellow-800'
+                    : 'bg-gray-100 text-gray-800'
+                }`}>
+                  {dataSource === 'real' ? '🟢 Real Data' : 
+                   dataSource === 'mock' ? '🟡 Mock Data' : 
+                   '⚪ Unknown'}
+                </div>
+                {dataSourceDescription && (
+                  <div className="text-xs text-gray-500" title={dataSourceDescription}>
+                    {dataSourceDescription}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
