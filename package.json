@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@getalby/lightning-tools": "^6.0.0",
-    "@vercel/kv": "^3.0.0",
+    "@upstash/redis": "^1.35.3",
     "next": "15.5.0",
     "react": "19.1.0",
     "react-dom": "19.1.0"

@@ -1,5 +1,8 @@
-import { kv } from './vercel-kv';
+import { Redis } from '@upstash/redis';
 import { LSPPrice } from './lsp-api';
+
+// Initialize Redis client
+const redis = Redis.fromEnv();
 
 // Database keys
 const PRICES_KEY = 'lsp_prices';
@@ -9,16 +12,16 @@ const PRICE_HISTORY_KEY = 'price_history';
 // Save latest prices to database
 export async function savePricesToDB(prices: LSPPrice[]): Promise<boolean> {
   try {
-    if (!kv) {
-      console.error('Vercel KV not configured');
+    if (!redis) {
+      console.error('Upstash Redis not configured');
       return false;
     }
 
     // Save current prices
-    await kv.set(PRICES_KEY, prices);
+    await redis.set(PRICES_KEY, JSON.stringify(prices));
     
     // Save timestamp of last update
-    await kv.set(LAST_UPDATE_KEY, new Date().toISOString());
+    await redis.set(LAST_UPDATE_KEY, new Date().toISOString());
     
     // Save to history (keep last 100 entries)
     const history = await getPriceHistory();
@@ -32,7 +35,7 @@ export async function savePricesToDB(prices: LSPPrice[]): Promise<boolean> {
       history.splice(0, history.length - 100);
     }
     
-    await kv.set(PRICE_HISTORY_KEY, history);
+    await redis.set(PRICE_HISTORY_KEY, JSON.stringify(history));
     
     return true;
   } catch (error) {
@@ -44,13 +47,13 @@ export async function savePricesToDB(prices: LSPPrice[]): Promise<boolean> {
 // Get latest prices from database
 export async function getLatestPrices(): Promise<LSPPrice[]> {
   try {
-    if (!kv) {
-      console.error('Vercel KV not configured');
+    if (!redis) {
+      console.error('Upstash Redis not configured');
       return [];
     }
 
-    const prices = await kv.get<LSPPrice[]>(PRICES_KEY);
-    return prices || [];
+    const pricesJson = await redis.get<string>(PRICES_KEY);
+    return pricesJson ? JSON.parse(pricesJson) : [];
   } catch (error) {
     console.error('Error getting latest prices from database:', error);
     return [];
@@ -60,11 +63,11 @@ export async function getLatestPrices(): Promise<LSPPrice[]> {
 // Get last update timestamp
 export async function getLastUpdateTime(): Promise<string | null> {
   try {
-    if (!kv) {
+    if (!redis) {
       return null;
     }
 
-    return await kv.get<string>(LAST_UPDATE_KEY);
+    return await redis.get<string>(LAST_UPDATE_KEY);
   } catch (error) {
     console.error('Error getting last update time:', error);
     return null;
@@ -74,12 +77,12 @@ export async function getLastUpdateTime(): Promise<string | null> {
 // Get price history
 export async function getPriceHistory(): Promise<Array<{timestamp: string, prices: LSPPrice[]}>> {
   try {
-    if (!kv) {
+    if (!redis) {
       return [];
     }
 
-    const history = await kv.get<Array<{timestamp: string, prices: LSPPrice[]}>>(PRICE_HISTORY_KEY);
-    return history || [];
+    const historyJson = await redis.get<string>(PRICE_HISTORY_KEY);
+    return historyJson ? JSON.parse(historyJson) : [];
   } catch (error) {
     console.error('Error getting price history:', error);
     return [];
@@ -109,13 +112,13 @@ export async function getLSPPrices(lspId: string): Promise<LSPPrice[]> {
 // Clear all data (useful for testing/reset)
 export async function clearAllData(): Promise<boolean> {
   try {
-    if (!kv) {
+    if (!redis) {
       return false;
     }
 
-    await kv.del(PRICES_KEY);
-    await kv.del(LAST_UPDATE_KEY);
-    await kv.del(PRICE_HISTORY_KEY);
+    await redis.del(PRICES_KEY);
+    await redis.del(LAST_UPDATE_KEY);
+    await redis.del(PRICE_HISTORY_KEY);
     
     return true;
   } catch (error) {
