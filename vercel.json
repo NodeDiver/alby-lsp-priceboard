@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/fetch-prices",
+      "schedule": "*/10 * * * *"
+    }
+  ],
+  "functions": {
+    "pages/api/cron/fetch-prices.ts": {
+      "maxDuration": 60
+    }
+  },
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "framework": "nextjs"
+}
