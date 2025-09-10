@@ -17,14 +17,16 @@
 ## Project Status
 - **Current Phase**: Production Ready
 - **Last Updated**: September 2025
-- **Deployment Status**: Ready for Vercel deployment
+- **Deployment Status**: Live on Vercel
 - **Code Quality**: Production-ready, fully tested
+- **LSPs**: 4 working LSPs with real pricing data
 
 ## Technology Stack
 - **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
 - **Backend**: Next.js API Routes, Vercel KV (Redis)
 - **Deployment**: Vercel (recommended), Docker support
 - **External APIs**: Alby Lightning Tools, LSPS1 Protocol
+- **LSPs**: Olympus, LNServer Wave, Megalith, Flashsats
 
 ## Development Guidelines
 

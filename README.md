@@ -2,7 +2,7 @@
 
 A real-time Lightning Service Provider (LSP) price comparison tool that helps users make informed decisions when opening Lightning channels.
 
-🌐 **Live Demo**: [https://alby-lsp-priceboard-lrxjehwd4-nodii-teams-yes.vercel.app/](https://alby-lsp-priceboard-lrxjehwd4-nodii-teams-yes.vercel.app/)
+🌐 **Live Demo**: [https://alby-lsp-priceboard-qe4ir4olm-nodii-teams-yes.vercel.app/](https://alby-lsp-priceboard-qe4ir4olm-nodii-teams-yes.vercel.app/)
 
 ## Problem Solved
 
@@ -10,12 +10,13 @@ This project addresses [Alby Hub Issue #1001](https://github.com/getAlby/hub/iss
 
 ## Features
 
-- **Real-time price comparison** across multiple LSPs
+- **Real-time price comparison** across 4 working LSPs
 - **Multi-currency support** with live conversion using Alby's Lightning Tools
 - **Channel size filtering** (1M-10M sats)
 - **Public REST API** for integration with other applications
 - **Automatic price updates** daily via Vercel Cron Jobs
-- **Clean, responsive UI** with professional design 
+- **Clean, responsive UI** with professional design
+- **Per-LSP error handling** with detailed status indicators 
 
 ## Technology Stack
 
@@ -99,12 +100,13 @@ The frontend displays a visual indicator:
 
 ### ✅ Completed Features
 - **Core Infrastructure**: Next.js app with TypeScript and Tailwind CSS
-- **LSP Integration**: Support for 4 major LSPs using LSPS1 protocol
-- **Price Management**: Automated fetching and caching system
+- **LSP Integration**: 4 working LSPs with real pricing data using LSPS1 protocol
+- **Price Management**: Automated fetching and caching system with per-LSP fallbacks
 - **Multi-Currency Support**: Real-time conversion using Alby Lightning Tools
-- **User Interface**: Responsive price comparison table with filtering
+- **User Interface**: Responsive price comparison table with filtering and status indicators
 - **Public API**: RESTful endpoints for external integration
-- **Vercel Configuration**: Ready for deployment with cron jobs
+- **Error Handling**: Comprehensive per-LSP error classification and UI feedback
+- **Vercel Configuration**: Live deployment with cron jobs
 
 ### 🚀 Ready for Production
 - All core features implemented and tested
