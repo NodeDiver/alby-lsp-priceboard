@@ -66,7 +66,15 @@ export function getLSPByURL(url: string): LSP | undefined {
 // Fetch LSP metadata including icon from LSP endpoint
 export async function fetchLSPMetadata(lsp: LSP): Promise<LSP> {
   try {
-    const response = await fetch(`${lsp.url}/info`);
+    // URL safety: prevent double slashes
+    const infoUrl = new URL('info', lsp.url).toString();
+    
+    // Add timeout and retry logic
+    const response = await fetchWithRetry(infoUrl, {
+      timeoutMs: 5000,
+      retries: 1
+    });
+    
     if (!response.ok) {
       console.warn(`Failed to fetch metadata for ${lsp.name}: ${response.status}`);
       return lsp;
@@ -74,23 +82,55 @@ export async function fetchLSPMetadata(lsp: LSP): Promise<LSP> {
     
     const data = await response.json();
     
+    // Basic validation of response structure
+    if (typeof data !== 'object' || data === null) {
+      console.warn(`Invalid metadata response from ${lsp.name}:`, data);
+      return lsp;
+    }
+    
     // Update LSP with metadata from the endpoint
     return {
       ...lsp,
       metadata: {
-        name: data.name || lsp.name,
-        description: data.description,
-        icon: data.icon,
-        logo: data.logo || data.icon,
-        website: data.website,
-        min_channel_size: data.min_channel_size,
-        max_channel_size: data.max_channel_size,
+        name: typeof data.name === 'string' ? data.name : lsp.name,
+        description: typeof data.description === 'string' ? data.description : undefined,
+        icon: typeof data.icon === 'string' ? data.icon : undefined,
+        logo: typeof data.logo === 'string' ? data.logo : (typeof data.icon === 'string' ? data.icon : undefined),
+        website: typeof data.website === 'string' ? data.website : undefined,
+        min_channel_size: typeof data.min_channel_size === 'number' ? data.min_channel_size : undefined,
+        max_channel_size: typeof data.max_channel_size === 'number' ? data.max_channel_size : undefined,
       }
     };
   } catch (error) {
     console.warn(`Error fetching metadata for ${lsp.name}:`, error);
     return lsp;
   }
+}
+
+// Helper function for fetch with timeout and retry
+async function fetchWithRetry(url: string, { timeoutMs = 5000, retries = 1 } = {}) {
+  for (let i = 0; i <= retries; i++) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    
+    try {
+      const response = await fetch(url, { 
+        signal: controller.signal,
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'Alby-LSP-PriceBoard/1.0'
+        }
+      });
+      clearTimeout(timeout);
+      return response;
+    } catch (error) {
+      clearTimeout(timeout);
+      if (i === retries) throw error;
+      // Wait before retry
+      await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+    }
+  }
+  throw new Error(`Failed to fetch ${url} after ${retries + 1} attempts`);
 }
 
 // Fetch metadata for all active LSPs

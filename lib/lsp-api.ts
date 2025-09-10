@@ -97,11 +97,14 @@ export interface LSPPrice {
 // Fetch LSP info using LSPS1 protocol (matching Alby Hub implementation)
 export async function fetchLSPInfo(lsp: LSP): Promise<LSPS1GetInfoResponse | null> {
   try {
-    const response = await fetch(`${lsp.url}/get_info`, {
+    // URL safety: prevent double slashes
+    const infoUrl = new URL('get_info', lsp.url).toString();
+    const response = await fetch(infoUrl, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        'User-Agent': 'Alby-LSP-PriceBoard/1.0',
       },
       // Add timeout to prevent hanging requests
       signal: AbortSignal.timeout(10000), // 10 second timeout
@@ -147,11 +150,14 @@ export async function createLSPOrder(
       client_balance_sat: 0, // Client starts with 0 balance
     };
 
-    const response = await fetch(`${lsp.url}/create_order`, {
+    // URL safety: prevent double slashes
+    const orderUrl = new URL('create_order', lsp.url).toString();
+    const response = await fetch(orderUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        'User-Agent': 'Alby-LSP-PriceBoard/1.0',
       },
       body: JSON.stringify(orderRequest),
       // Add timeout to prevent hanging requests
@@ -237,7 +243,7 @@ export async function fetchLSPPrice(lsp: LSP, channelSizeSat: number = 1000000):
 
       // Fallback: Estimate fees based on LSP info and channel size
       console.log(`Using estimated pricing for ${lsp.name} (order creation failed)`);
-      const estimatedPrice = estimateLSPPrice(lsp, channelSizeSat, info);
+      const estimatedPrice = estimateLSPPrice(lsp, channelSizeSat);
       
       return {
         lsp_id: lsp.id,
@@ -282,7 +288,7 @@ function createErrorPrice(lsp: LSP, channelSizeSat: number, error: string): LSPP
 }
 
 // Estimate LSP pricing based on channel size and LSP characteristics
-function estimateLSPPrice(lsp: LSP, channelSizeSat: number, info: LSPS1GetInfoResponse): {
+function estimateLSPPrice(lsp: LSP, channelSizeSat: number): {
   total_fee_msat: number;
   channel_fee_percent: number;
   channel_fee_base_msat: number;
@@ -366,7 +372,6 @@ export async function fetchLSPCapabilities(lsp: LSP): Promise<{
   isOnline: boolean;
   lastChecked: string;
 }> {
-  const startTime = Date.now();
   const capabilities = await fetchLSPInfo(lsp);
   const isOnline = capabilities !== null;
   const lastChecked = new Date().toISOString();
@@ -394,17 +399,19 @@ export async function fetchAllLSPCapabilities(): Promise<Array<{
 }
 
 // Validate LSP response data
-export function validateLSPResponse(data: any): boolean {
+export function validateLSPResponse(data: unknown): boolean {
   if (!data || typeof data !== 'object') return false;
   
+  const response = data as Record<string, unknown>;
+  
   // Check for required fields in order response
-  if (data.order_id && typeof data.total_fee_msat === 'number') {
-    return data.total_fee_msat >= 0;
+  if (response.order_id && typeof response.total_fee_msat === 'number') {
+    return response.total_fee_msat >= 0;
   }
   
   // Check for required fields in info response
-  if (data.uris && data.options) {
-    return Array.isArray(data.uris) && typeof data.options === 'object';
+  if (response.uris && response.options) {
+    return Array.isArray(response.uris) && typeof response.options === 'object';
   }
   
   return false;
@@ -428,14 +435,13 @@ export function formatFee(msat: number): string {
 export function supportsChannelSize(capabilities: LSPS1GetInfoResponse | null, channelSizeSat: number): boolean {
   if (!capabilities) return false;
   
-  const { options } = capabilities;
   const channelSizeMsat = channelSizeSat * 1000;
   
-  if (options.min_channel_lease_msat && channelSizeMsat < options.min_channel_lease_msat) {
+  if (capabilities.options?.min_channel_lease_msat && channelSizeMsat < capabilities.options.min_channel_lease_msat) {
     return false;
   }
   
-  if (options.max_channel_lease_msat && channelSizeMsat > options.max_channel_lease_msat) {
+  if (capabilities.options?.max_channel_lease_msat && channelSizeMsat > capabilities.options.max_channel_lease_msat) {
     return false;
   }
   
