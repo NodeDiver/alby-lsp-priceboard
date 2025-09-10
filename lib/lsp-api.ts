@@ -156,7 +156,7 @@ function toLspError(e: unknown, status?: number): { code: LspErrorCode; message:
 export async function fetchLSPInfo(lsp: LSP): Promise<LSPS1GetInfoResponse | null> {
   try {
     // URL safety: prevent double slashes
-    const infoUrl = new URL('get_info', lsp.url).toString();
+    const infoUrl = new URL('get_info', lsp.url + '/').toString();
     const response = await fetch(infoUrl, {
       method: 'GET',
       headers: {
@@ -203,11 +203,11 @@ export async function createLSPOrder(
       channel_expiry_blocks: 144, // 24 hours in blocks (6 blocks/hour * 24)
       public_key: lsp.pubkey, // TODO: This should be client's node pubkey, not LSP's
       lsp_balance_sat: channelSizeSat, // LSP provides the full channel balance
-      client_balance_sat: 0, // Client starts with 0 balance
+      client_balance_sat: 1, // Client needs at least 1 sat balance
     };
 
     // URL safety: prevent double slashes
-    const orderUrl = new URL('create_order', lsp.url).toString();
+    const orderUrl = new URL('create_order', lsp.url + '/').toString();
     const response = await fetch(orderUrl, {
       method: 'POST',
       headers: {
@@ -260,7 +260,7 @@ export async function fetchLSPPrice(lsp: LSP, channelSizeSat: number = 1000000):
         
         // Try a direct fetch to get the actual error
         try {
-          const infoUrl = new URL('get_info', lsp.url).toString();
+          const infoUrl = new URL('get_info', lsp.url + '/').toString();
           const response = await fetch(infoUrl, {
             method: 'GET',
             headers: {
