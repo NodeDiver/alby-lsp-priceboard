@@ -268,7 +268,8 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
                     );
                   }
 
-                  if (price.error) {
+                  // Only show error if there's no price data at all
+                  if (price.error && price.price === 0) {
                     return (
                       <td className="text-center p-4 text-red-500">
                         Error

@@ -125,10 +125,8 @@ function toLspError(e: unknown, status?: number): { code: LspErrorCode; message:
   if (status === 429) return { code: LspErrorCode.RATE_LIMITED, message: 'Rate limited' };
   if (status && status >= 500) return { code: LspErrorCode.BAD_STATUS, message: `Server error ${status}` };
   if (e instanceof TypeError) {
-    if (e.message.includes('fetch failed')) {
-      return { code: LspErrorCode.NETWORK_ERROR, message: 'Network connection failed' };
-    }
-    if (e.message.includes('ENOTFOUND')) {
+    // Check for DNS errors first (more specific)
+    if (e.message.includes('ENOTFOUND') || e.message.includes('getaddrinfo ENOTFOUND')) {
       return { code: LspErrorCode.DNS_ERROR, message: 'Domain not found' };
     }
     if (e.message.includes('ECONNREFUSED')) {
@@ -136,6 +134,9 @@ function toLspError(e: unknown, status?: number): { code: LspErrorCode; message:
     }
     if (e.message.includes('CERT')) {
       return { code: LspErrorCode.TLS_ERROR, message: 'SSL certificate error' };
+    }
+    if (e.message.includes('fetch failed')) {
+      return { code: LspErrorCode.NETWORK_ERROR, message: 'Network connection failed' };
     }
   }
   if (e instanceof Error) {
@@ -153,7 +154,7 @@ function toLspError(e: unknown, status?: number): { code: LspErrorCode; message:
 }
 
 // Fetch LSP info using LSPS1 protocol (matching Alby Hub implementation)
-export async function fetchLSPInfo(lsp: LSP): Promise<LSPS1GetInfoResponse | null> {
+export async function fetchLSPInfo(lsp: LSP): Promise<{ info: LSPS1GetInfoResponse | null; error?: { code: LspErrorCode; message: string } }> {
   try {
     // URL safety: prevent double slashes
     const infoUrl = new URL('get_info', lsp.url + '/').toString();
@@ -171,7 +172,7 @@ export async function fetchLSPInfo(lsp: LSP): Promise<LSPS1GetInfoResponse | nul
     if (!response.ok) {
       const errorInfo = toLspError(null, response.status);
       console.error(`Failed to fetch info from ${lsp.name}: ${response.status} ${response.statusText} - ${errorInfo.message}`);
-      return null;
+      return { info: null, error: errorInfo };
     }
 
     const data = await response.json();
@@ -179,14 +180,15 @@ export async function fetchLSPInfo(lsp: LSP): Promise<LSPS1GetInfoResponse | nul
     // Validate the response structure
     if (!data.uris || !Array.isArray(data.uris)) {
       console.error(`Invalid response structure from ${lsp.name}:`, data);
-      return null;
+      return { info: null, error: { code: LspErrorCode.SCHEMA_MISMATCH, message: 'Invalid response structure' } };
     }
 
-    return data;
+    return { info: data };
   } catch (error) {
     const errorInfo = toLspError(error);
     console.error(`Error fetching info from ${lsp.name}: ${errorInfo.message}`, error);
-    return null;
+    console.error(`Error details:`, { error, errorInfo });
+    return { info: null, error: errorInfo };
   }
 }
 
@@ -252,37 +254,11 @@ export async function fetchLSPPrice(lsp: LSP, channelSizeSat: number = 1000000):
       console.log(`Fetching price from ${lsp.name} (attempt ${attempt}/${maxRetries}) for channel size ${channelSizeSat} sats`);
 
       // First get LSP info to validate the LSP is available
-      const info = await fetchLSPInfo(lsp);
-      if (!info) {
-        // Try to get more specific error information
-        let specificError = 'Failed to fetch LSP info';
-        let errorCode = LspErrorCode.UNKNOWN;
-        
-        // Try a direct fetch to get the actual error
-        try {
-          const infoUrl = new URL('get_info', lsp.url + '/').toString();
-          const response = await fetch(infoUrl, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-              'User-Agent': 'Alby-LSP-PriceBoard/1.0',
-            },
-            signal: AbortSignal.timeout(5000),
-          });
-          
-          if (!response.ok) {
-            const errorInfo = toLspError(null, response.status);
-            specificError = errorInfo.message;
-            errorCode = errorInfo.code;
-          }
-        } catch (directError) {
-          const errorInfo = toLspError(directError);
-          specificError = errorInfo.message;
-          errorCode = errorInfo.code;
-        }
-        
-        lastError = specificError;
+      const infoResult = await fetchLSPInfo(lsp);
+      if (!infoResult.info) {
+        // Use the error that was already classified in fetchLSPInfo
+        lastError = infoResult.error?.message || 'Failed to fetch LSP info';
+        const errorCode = infoResult.error?.code || LspErrorCode.UNKNOWN;
         if (attempt < maxRetries) {
           console.log(`Retrying ${lsp.name} in 2 seconds...`);
           await new Promise(resolve => setTimeout(resolve, 2000));
@@ -292,8 +268,8 @@ export async function fetchLSPPrice(lsp: LSP, channelSizeSat: number = 1000000):
       }
 
       // Validate channel size is within LSP limits
-      const minChannelBalance = parseInt(info.min_channel_balance_sat);
-      const maxChannelBalance = parseInt(info.max_channel_balance_sat);
+      const minChannelBalance = parseInt(infoResult.info.min_channel_balance_sat);
+      const maxChannelBalance = parseInt(infoResult.info.max_channel_balance_sat);
       
       if (channelSizeSat < minChannelBalance) {
         lastError = `Channel size too small. Minimum: ${minChannelBalance} sats`;
@@ -487,7 +463,8 @@ export async function fetchLSPCapabilities(lsp: LSP): Promise<{
   isOnline: boolean;
   lastChecked: string;
 }> {
-  const capabilities = await fetchLSPInfo(lsp);
+  const capabilitiesResult = await fetchLSPInfo(lsp);
+  const capabilities = capabilitiesResult.info;
   const isOnline = capabilities !== null;
   const lastChecked = new Date().toISOString();
   
