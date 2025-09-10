@@ -28,7 +28,7 @@ export const LSPS: LSP[] = [
   {
     id: 'lnserver',
     name: 'LNServer Wave',
-    url: 'https://www.lnserver.com/lsp/wave',
+    url: 'https://lsps1.lnserver.com/api/v1',
     pubkey: '02b4552a7a85274e4da01a7c71ca57407181752e8568b31d51f13c110a2941dce3',
     active: true
   },

@@ -31,36 +31,66 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Get channel size from query parameter, default to 1M sats
     const channelSize = req.query.channelSize ? Number(req.query.channelSize) : 1000000;
     
-    // Check if we should use mock data or real data
-    if (shouldUseMockData()) {
-      // Using mock data for development
-      const allPrices = getMockPricesForDisplay();
-      prices = allPrices.filter(price => price.channel_size === channelSize);
-      lastUpdate = new Date().toISOString();
-      dataSource = 'mock';
-    } else {
+    // Try to get real data first, then fallback to mock data
+    let allPrices = [];
+    
+    if (!shouldUseMockData()) {
       // Try to get real data from database
-      const allPrices = await getLatestPrices();
-      if (allPrices.length > 0) {
-        // Convert real data to display format
-        prices = allPrices
-          .filter(price => price.channel_size_sat === channelSize)
-          .map(price => ({
-            lsp_id: price.lsp_id,
-            lsp_name: price.lsp_name,
-            channel_size: price.channel_size_sat,
-            price: price.total_fee_msat,
-            channel_fee_percent: price.channel_fee_percent,
-            channel_fee_base_msat: price.channel_fee_base_msat,
-            lease_fee_base_msat: price.lease_fee_base_msat,
-            lease_fee_basis: price.lease_fee_basis,
-            timestamp: price.timestamp,
-            error: price.error || null
-          }));
-        lastUpdate = await getLastUpdateTime() || new Date().toISOString();
-        dataSource = 'real';
-      } else {
-        // Fallback to mock data if no real data available
+      allPrices = await getLatestPrices();
+    }
+    
+    if (allPrices.length > 0) {
+      // Convert real data to display format
+      prices = allPrices
+        .filter(price => price.channel_size_sat === channelSize)
+        .map(price => ({
+          lsp_id: price.lsp_id,
+          lsp_name: price.lsp_name,
+          channel_size: price.channel_size_sat,
+          price: price.total_fee_msat,
+          channel_fee_percent: price.channel_fee_percent,
+          channel_fee_base_msat: price.channel_fee_base_msat,
+          lease_fee_base_msat: price.lease_fee_base_msat,
+          lease_fee_basis: price.lease_fee_basis,
+          timestamp: price.timestamp,
+          error: price.error || null
+        }));
+      lastUpdate = await getLastUpdateTime() || new Date().toISOString();
+      dataSource = 'real';
+    } else {
+      // Try to fetch fresh data from LSPs
+      try {
+        const { fetchAllLSPPrices } = await import('../../lib/lsp-api');
+        const freshPrices = await fetchAllLSPPrices(channelSize);
+        
+        if (freshPrices.length > 0 && freshPrices.some(p => p.total_fee_msat > 0)) {
+          // Use fresh real data
+          prices = freshPrices
+            .filter(price => price.channel_size_sat === channelSize)
+            .map(price => ({
+              lsp_id: price.lsp_id,
+              lsp_name: price.lsp_name,
+              channel_size: price.channel_size_sat,
+              price: price.total_fee_msat,
+              channel_fee_percent: price.channel_fee_percent,
+              channel_fee_base_msat: price.channel_fee_base_msat,
+              lease_fee_base_msat: price.lease_fee_base_msat,
+              lease_fee_basis: price.lease_fee_basis,
+              timestamp: price.timestamp,
+              error: price.error || null
+            }));
+          lastUpdate = new Date().toISOString();
+          dataSource = 'real_fresh';
+        } else {
+          // Fallback to mock data
+          const allPrices = getMockPricesForDisplay();
+          prices = allPrices.filter(price => price.channel_size === channelSize);
+          lastUpdate = new Date().toISOString();
+          dataSource = 'mock_fallback';
+        }
+      } catch (error) {
+        console.error('Error fetching fresh prices:', error);
+        // Fallback to mock data
         const allPrices = getMockPricesForDisplay();
         prices = allPrices.filter(price => price.channel_size === channelSize);
         lastUpdate = new Date().toISOString();
