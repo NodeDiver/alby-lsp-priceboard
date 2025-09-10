@@ -7,10 +7,12 @@ function getDataSourceDescription(source: string): string {
   switch (source) {
     case 'real':
       return 'Real-time data from LSP APIs';
+    case 'real_fresh':
+      return 'Fresh real-time data from LSP APIs';
     case 'mock':
       return 'Mock data for development/testing';
     case 'mock_fallback':
-      return 'Mock data (fallback - no real data available)';
+      return 'Mixed data (real + estimated pricing)';
     default:
       return 'Unknown data source';
   }
