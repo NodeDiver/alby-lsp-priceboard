@@ -94,6 +94,9 @@ export enum LspErrorCode {
   RATE_LIMITED = 'RATE_LIMITED',
   TLS_ERROR = 'TLS_ERROR',
   CORS_BLOCKED = 'CORS_BLOCKED',
+  NETWORK_ERROR = 'NETWORK_ERROR',
+  DNS_ERROR = 'DNS_ERROR',
+  CONNECTION_REFUSED = 'CONNECTION_REFUSED',
   UNKNOWN = 'UNKNOWN',
 }
 
@@ -123,13 +126,13 @@ function toLspError(e: unknown, status?: number): { code: LspErrorCode; message:
   if (status && status >= 500) return { code: LspErrorCode.BAD_STATUS, message: `Server error ${status}` };
   if (e instanceof TypeError) {
     if (e.message.includes('fetch failed')) {
-      return { code: LspErrorCode.TLS_ERROR, message: 'Network connection failed' };
+      return { code: LspErrorCode.NETWORK_ERROR, message: 'Network connection failed' };
     }
     if (e.message.includes('ENOTFOUND')) {
-      return { code: LspErrorCode.URL_NOT_FOUND, message: 'Domain not found' };
+      return { code: LspErrorCode.DNS_ERROR, message: 'Domain not found' };
     }
     if (e.message.includes('ECONNREFUSED')) {
-      return { code: LspErrorCode.URL_NOT_FOUND, message: 'Connection refused' };
+      return { code: LspErrorCode.CONNECTION_REFUSED, message: 'Connection refused' };
     }
     if (e.message.includes('CERT')) {
       return { code: LspErrorCode.TLS_ERROR, message: 'SSL certificate error' };
@@ -137,10 +140,10 @@ function toLspError(e: unknown, status?: number): { code: LspErrorCode; message:
   }
   if (e instanceof Error) {
     if (e.message.includes('ENOTFOUND')) {
-      return { code: LspErrorCode.URL_NOT_FOUND, message: 'Domain not found' };
+      return { code: LspErrorCode.DNS_ERROR, message: 'Domain not found' };
     }
     if (e.message.includes('ECONNREFUSED')) {
-      return { code: LspErrorCode.URL_NOT_FOUND, message: 'Connection refused' };
+      return { code: LspErrorCode.CONNECTION_REFUSED, message: 'Connection refused' };
     }
     if (e.message.includes('timeout')) {
       return { code: LspErrorCode.TIMEOUT, message: 'Request timed out' };

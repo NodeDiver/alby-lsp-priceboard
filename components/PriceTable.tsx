@@ -56,10 +56,17 @@ function StatusBadge({ source, staleSeconds, errorCode, error }: {
     const getErrorIcon = (code: string) => {
       switch (code) {
         case 'URL_NOT_FOUND': return '🌐';
+        case 'DNS_ERROR': return '🔍';
+        case 'CONNECTION_REFUSED': return '🚫';
+        case 'NETWORK_ERROR': return '📡';
         case 'TIMEOUT': return '⏱️';
         case 'TLS_ERROR': return '🔒';
         case 'RATE_LIMITED': return '🚫';
         case 'BAD_STATUS': return '⚠️';
+        case 'INVALID_JSON': return '📄';
+        case 'SCHEMA_MISMATCH': return '🔧';
+        case 'CHANNEL_SIZE_TOO_SMALL': return '📏';
+        case 'CHANNEL_SIZE_TOO_LARGE': return '📏';
         default: return '❌';
       }
     };
@@ -67,10 +74,17 @@ function StatusBadge({ source, staleSeconds, errorCode, error }: {
     const getErrorColor = (code: string) => {
       switch (code) {
         case 'URL_NOT_FOUND': return 'bg-orange-100 text-orange-800';
+        case 'DNS_ERROR': return 'bg-orange-100 text-orange-800';
+        case 'CONNECTION_REFUSED': return 'bg-red-100 text-red-800';
+        case 'NETWORK_ERROR': return 'bg-red-100 text-red-800';
         case 'TIMEOUT': return 'bg-yellow-100 text-yellow-800';
         case 'TLS_ERROR': return 'bg-red-100 text-red-800';
         case 'RATE_LIMITED': return 'bg-purple-100 text-purple-800';
         case 'BAD_STATUS': return 'bg-red-100 text-red-800';
+        case 'INVALID_JSON': return 'bg-yellow-100 text-yellow-800';
+        case 'SCHEMA_MISMATCH': return 'bg-yellow-100 text-yellow-800';
+        case 'CHANNEL_SIZE_TOO_SMALL': return 'bg-blue-100 text-blue-800';
+        case 'CHANNEL_SIZE_TOO_LARGE': return 'bg-blue-100 text-blue-800';
         default: return 'bg-red-100 text-red-800';
       }
     };
