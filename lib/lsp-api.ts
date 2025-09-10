@@ -32,8 +32,8 @@ export interface LSPS1GetInfoResponse {
 export interface LSPS1CreateOrderRequest {
   lsp_id: string;
   channel_size_sat: number;
-  announcement_channel: boolean;
-  channel_lease_ms: number;
+  announce_channel: boolean; // Fixed: was announcement_channel
+  channel_expiry_blocks: number; // Fixed: was channel_lease_ms
   public_key: string;
   lsp_balance_sat: number;
   client_balance_sat: number;
@@ -143,9 +143,9 @@ export async function createLSPOrder(
     const orderRequest: LSPS1CreateOrderRequest = {
       lsp_id: lsp.id,
       channel_size_sat: channelSizeSat,
-      announcement_channel: false,
-      channel_lease_ms: 86400000, // 24 hours in milliseconds
-      public_key: lsp.pubkey, // Use the LSP's public key
+      announce_channel: false, // Fixed: was announcement_channel
+      channel_expiry_blocks: 144, // 24 hours in blocks (6 blocks/hour * 24)
+      public_key: lsp.pubkey, // TODO: This should be client's node pubkey, not LSP's
       lsp_balance_sat: channelSizeSat, // LSP provides the full channel balance
       client_balance_sat: 0, // Client starts with 0 balance
     };
@@ -409,9 +409,12 @@ export function validateLSPResponse(data: unknown): boolean {
     return response.total_fee_msat >= 0;
   }
   
-  // Check for required fields in info response
-  if (response.uris && response.options) {
-    return Array.isArray(response.uris) && typeof response.options === 'object';
+  // Check for required fields in info response (relaxed validation)
+  if (response.uris && Array.isArray(response.uris)) {
+    // Check for basic LSPS1 fields (options is optional)
+    return typeof response.min_channel_balance_sat === 'string' || 
+           typeof response.max_channel_balance_sat === 'string' ||
+           response.options !== undefined;
   }
   
   return false;
@@ -435,13 +438,15 @@ export function formatFee(msat: number): string {
 export function supportsChannelSize(capabilities: LSPS1GetInfoResponse | null, channelSizeSat: number): boolean {
   if (!capabilities) return false;
   
-  const channelSizeMsat = channelSizeSat * 1000;
+  // Use the correct fields from LSPS1 spec
+  const minChannelBalance = parseInt(capabilities.min_channel_balance_sat || '0');
+  const maxChannelBalance = parseInt(capabilities.max_channel_balance_sat || '0');
   
-  if (capabilities.options?.min_channel_lease_msat && channelSizeMsat < capabilities.options.min_channel_lease_msat) {
+  if (minChannelBalance > 0 && channelSizeSat < minChannelBalance) {
     return false;
   }
   
-  if (capabilities.options?.max_channel_lease_msat && channelSizeMsat > capabilities.options.max_channel_lease_msat) {
+  if (maxChannelBalance > 0 && channelSizeSat > maxChannelBalance) {
     return false;
   }
   

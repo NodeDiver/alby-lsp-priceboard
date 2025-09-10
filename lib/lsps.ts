@@ -35,15 +35,15 @@ export const LSPS: LSP[] = [
   {
     id: 'megalith',
     name: 'Megalith',
-    url: 'https://lsps1.megalith.com/api/v1',
+    url: 'https://megalithic.me/api/lsps1/v1',
     pubkey: '03e30fda71887a916ef5548a4d02b06fe04aaa1a8de9e24134ce7f139cf79d7579',
     active: true
   },
   {
     id: 'flashsats',
     name: 'Flashsats',
-    url: 'https://lsps1.flashsats.com/api/v1',
-    pubkey: '038a9e56512ec98da2b5789761f7af8f280baf98a09282360cd6ff1381b5e889bf',
+    url: 'https://flashsats.xyz/api/v1',
+    pubkey: '02e4971e61a3f55718ae31e2eed19aaf2e32caf3eb5ef5ff03e01aa3ada8907e78',
     active: true
   }
 ];
