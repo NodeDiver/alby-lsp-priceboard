@@ -176,3 +176,83 @@ export async function getDatabaseStatus(): Promise<{
     };
   }
 }
+
+// Per-LSP caching functions for individual LSP fallback
+export async function getLastGoodPriceForLSP(lspId: string): Promise<LSPPrice | null> {
+  try {
+    if (!redis) {
+      console.error('Upstash Redis not configured');
+      return null;
+    }
+
+    const key = `alby:lsp:price:${lspId}`;
+    const json = await redis.get<string>(key);
+    
+    if (!json) {
+      return null;
+    }
+
+    const price = JSON.parse(json) as LSPPrice;
+    return price;
+  } catch (error) {
+    console.error(`Error getting last good price for LSP ${lspId}:`, error);
+    return null;
+  }
+}
+
+export async function saveLatestForLsp(lspId: string, price: LSPPrice): Promise<boolean> {
+  try {
+    if (!redis) {
+      console.error('Upstash Redis not configured');
+      return false;
+    }
+
+    const key = `alby:lsp:price:${lspId}`;
+    // Save with 24 hour TTL for per-LSP cache
+    await redis.set(key, JSON.stringify(price), { ex: 86400 });
+    return true;
+  } catch (error) {
+    console.error(`Error saving latest price for LSP ${lspId}:`, error);
+    return false;
+  }
+}
+
+// Save all prices with per-LSP individual caching
+export async function savePricesWithPerLSPCache(prices: LSPPrice[]): Promise<boolean> {
+  try {
+    if (!redis) {
+      console.error('Upstash Redis not configured');
+      return false;
+    }
+
+    const now = new Date().toISOString();
+    const historyEntry = JSON.stringify({ timestamp: now, prices });
+    
+    // Use pipeline for atomic operations
+    const pipeline = redis.pipeline();
+    
+    // Save current prices with TTL (1 hour for staleness detection)
+    pipeline.set(PRICES_KEY, JSON.stringify(prices), { ex: 3600 });
+    
+    // Save timestamp
+    pipeline.set(LAST_UPDATE_KEY, now);
+    
+    // Add to history using atomic LIST operations
+    pipeline.lpush(PRICE_HISTORY_KEY, historyEntry);
+    pipeline.ltrim(PRICE_HISTORY_KEY, 0, 99); // Keep only last 100 entries
+    
+    // Save each LSP's latest price individually
+    prices.forEach(price => {
+      const lspKey = `alby:lsp:price:${price.lsp_id}`;
+      pipeline.set(lspKey, JSON.stringify(price), { ex: 86400 }); // 24 hour TTL
+    });
+    
+    // Execute all operations atomically
+    await pipeline.exec();
+    
+    return true;
+  } catch (error) {
+    console.error('Error saving prices with per-LSP cache:', error);
+    return false;
+  }
+}

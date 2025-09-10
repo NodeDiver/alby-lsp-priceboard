@@ -1,4 +1,5 @@
 import { LSP } from './lsps';
+import { getLastGoodPriceForLSP, saveLatestForLsp } from './db';
 
 // LSPS1 Protocol Types (matching actual LSP responses)
 export interface LSPS1GetInfoResponse {
@@ -81,6 +82,21 @@ export interface LSPS1InvoiceResponse {
   created_at: string;
 }
 
+export enum LspErrorCode {
+  URL_NOT_FOUND = 'URL_NOT_FOUND',
+  TIMEOUT = 'TIMEOUT',
+  BAD_STATUS = 'BAD_STATUS',
+  INVALID_JSON = 'INVALID_JSON',
+  SCHEMA_MISMATCH = 'SCHEMA_MISMATCH',
+  CHANNEL_SIZE_TOO_SMALL = 'CHANNEL_SIZE_TOO_SMALL',
+  CHANNEL_SIZE_TOO_LARGE = 'CHANNEL_SIZE_TOO_LARGE',
+  ENDPOINT_UNSUPPORTED = 'ENDPOINT_UNSUPPORTED',
+  RATE_LIMITED = 'RATE_LIMITED',
+  TLS_ERROR = 'TLS_ERROR',
+  CORS_BLOCKED = 'CORS_BLOCKED',
+  UNKNOWN = 'UNKNOWN',
+}
+
 export interface LSPPrice {
   lsp_id: string;
   lsp_name: string;
@@ -92,6 +108,23 @@ export interface LSPPrice {
   lease_fee_basis: number;
   timestamp: string;
   error?: string;
+  source?: 'live' | 'cached' | 'estimated';
+  stale_seconds?: number; // only when cached
+  error_code?: LspErrorCode;
+}
+
+// Error classification helper
+function toLspError(e: unknown, status?: number): { code: LspErrorCode; message: string } {
+  if (typeof e === 'object' && e && 'name' in e && (e as Error).name === 'TimeoutError') {
+    return { code: LspErrorCode.TIMEOUT, message: 'Request timed out' };
+  }
+  if (status === 404) return { code: LspErrorCode.URL_NOT_FOUND, message: 'Endpoint not found' };
+  if (status === 429) return { code: LspErrorCode.RATE_LIMITED, message: 'Rate limited' };
+  if (status && status >= 500) return { code: LspErrorCode.BAD_STATUS, message: `Server error ${status}` };
+  if (e instanceof TypeError && e.message.includes('fetch failed')) {
+    return { code: LspErrorCode.TLS_ERROR, message: 'Network error' };
+  }
+  return { code: LspErrorCode.UNKNOWN, message: 'Unknown error' };
 }
 
 // Fetch LSP info using LSPS1 protocol (matching Alby Hub implementation)
@@ -111,7 +144,8 @@ export async function fetchLSPInfo(lsp: LSP): Promise<LSPS1GetInfoResponse | nul
     });
 
     if (!response.ok) {
-      console.error(`Failed to fetch info from ${lsp.name}: ${response.status} ${response.statusText}`);
+      const errorInfo = toLspError(null, response.status);
+      console.error(`Failed to fetch info from ${lsp.name}: ${response.status} ${response.statusText} - ${errorInfo.message}`);
       return null;
     }
 
@@ -125,11 +159,8 @@ export async function fetchLSPInfo(lsp: LSP): Promise<LSPS1GetInfoResponse | nul
 
     return data;
   } catch (error) {
-    if (error instanceof Error && error.name === 'TimeoutError') {
-      console.error(`Timeout fetching info from ${lsp.name}`);
-    } else {
-      console.error(`Error fetching info from ${lsp.name}:`, error);
-    }
+    const errorInfo = toLspError(error);
+    console.error(`Error fetching info from ${lsp.name}: ${errorInfo.message}`, error);
     return null;
   }
 }
@@ -165,7 +196,8 @@ export async function createLSPOrder(
     });
 
     if (!response.ok) {
-      console.error(`Failed to create order with ${lsp.name}: ${response.status} ${response.statusText}`);
+      const errorInfo = toLspError(null, response.status);
+      console.error(`Failed to create order with ${lsp.name}: ${response.status} ${response.statusText} - ${errorInfo.message}`);
       return null;
     }
 
@@ -179,16 +211,13 @@ export async function createLSPOrder(
 
     return data;
   } catch (error) {
-    if (error instanceof Error && error.name === 'TimeoutError') {
-      console.error(`Timeout creating order with ${lsp.name}`);
-    } else {
-      console.error(`Error creating order with ${lsp.name}:`, error);
-    }
+    const errorInfo = toLspError(error);
+    console.error(`Error creating order with ${lsp.name}: ${errorInfo.message}`, error);
     return null;
   }
 }
 
-// Fetch price for a specific LSP (matching Alby Hub implementation)
+// Fetch price for a specific LSP with per-LSP fallback logic
 export async function fetchLSPPrice(lsp: LSP, channelSizeSat: number = 1000000): Promise<LSPPrice | null> {
   const maxRetries = 2;
   let lastError: string = '';
@@ -206,7 +235,8 @@ export async function fetchLSPPrice(lsp: LSP, channelSizeSat: number = 1000000):
           await new Promise(resolve => setTimeout(resolve, 2000));
           continue;
         }
-        return createErrorPrice(lsp, channelSizeSat, lastError);
+        const errorInfo = toLspError(null);
+        return createErrorPrice(lsp, channelSizeSat, lastError, errorInfo.code);
       }
 
       // Validate channel size is within LSP limits
@@ -215,12 +245,12 @@ export async function fetchLSPPrice(lsp: LSP, channelSizeSat: number = 1000000):
       
       if (channelSizeSat < minChannelBalance) {
         lastError = `Channel size too small. Minimum: ${minChannelBalance} sats`;
-        return createErrorPrice(lsp, channelSizeSat, lastError);
+        return createErrorPrice(lsp, channelSizeSat, lastError, LspErrorCode.CHANNEL_SIZE_TOO_SMALL);
       }
 
       if (channelSizeSat > maxChannelBalance) {
         lastError = `Channel size too large. Maximum: ${maxChannelBalance} sats`;
-        return createErrorPrice(lsp, channelSizeSat, lastError);
+        return createErrorPrice(lsp, channelSizeSat, lastError, LspErrorCode.CHANNEL_SIZE_TOO_LARGE);
       }
 
       // Try to create order to get actual pricing
@@ -228,7 +258,7 @@ export async function fetchLSPPrice(lsp: LSP, channelSizeSat: number = 1000000):
       if (order && order.total_fee_msat > 0) {
         console.log(`Successfully fetched price from ${lsp.name}: ${order.total_fee_msat} msat`);
         
-        return {
+        const livePrice: LSPPrice = {
           lsp_id: lsp.id,
           lsp_name: lsp.name,
           channel_size_sat: order.channel_size_sat,
@@ -238,7 +268,13 @@ export async function fetchLSPPrice(lsp: LSP, channelSizeSat: number = 1000000):
           lease_fee_base_msat: order.lease_fee_base_msat,
           lease_fee_basis: order.lease_fee_basis,
           timestamp: new Date().toISOString(),
+          source: 'live'
         };
+
+        // Save this successful price for future fallback
+        await saveLatestForLsp(lsp.id, livePrice);
+        
+        return livePrice;
       }
 
       // Fallback: Estimate fees based on LSP info and channel size
@@ -255,11 +291,14 @@ export async function fetchLSPPrice(lsp: LSP, channelSizeSat: number = 1000000):
         lease_fee_base_msat: estimatedPrice.lease_fee_base_msat,
         lease_fee_basis: estimatedPrice.lease_fee_basis,
         timestamp: new Date().toISOString(),
+        source: 'estimated',
+        error: 'Live fetch failed; showing estimated price'
       };
 
     } catch (error) {
-      lastError = error instanceof Error ? error.message : 'Unknown error';
-      console.error(`Error fetching price from ${lsp.name} (attempt ${attempt}):`, error);
+      const errorInfo = toLspError(error);
+      lastError = errorInfo.message;
+      console.error(`Error fetching price from ${lsp.name} (attempt ${attempt}): ${errorInfo.message}`, error);
       
       if (attempt < maxRetries) {
         console.log(`Retrying ${lsp.name} in 2 seconds...`);
@@ -268,11 +307,31 @@ export async function fetchLSPPrice(lsp: LSP, channelSizeSat: number = 1000000):
     }
   }
 
-  return createErrorPrice(lsp, channelSizeSat, lastError);
+  // All retries failed - try per-LSP fallback
+  console.log(`All retries failed for ${lsp.name}, trying cached fallback...`);
+  
+  // Try to get cached price for this LSP
+  const cachedPrice = await getLastGoodPriceForLSP(lsp.id);
+  if (cachedPrice) {
+    const staleSeconds = Math.floor((Date.now() - new Date(cachedPrice.timestamp).getTime()) / 1000);
+    console.log(`Using cached price for ${lsp.name} (${staleSeconds}s old)`);
+    
+    return {
+      ...cachedPrice,
+      source: 'cached',
+      stale_seconds: staleSeconds,
+      error: `Live fetch failed: ${lastError}`,
+      error_code: LspErrorCode.UNKNOWN
+    };
+  }
+
+  // No cache available - return error with estimated fallback
+  const errorInfo = toLspError(null);
+  return createErrorPrice(lsp, channelSizeSat, lastError, errorInfo.code);
 }
 
 // Helper function to create error price response
-function createErrorPrice(lsp: LSP, channelSizeSat: number, error: string): LSPPrice {
+function createErrorPrice(lsp: LSP, channelSizeSat: number, error: string, errorCode?: LspErrorCode): LSPPrice {
   return {
     lsp_id: lsp.id,
     lsp_name: lsp.name,
@@ -283,7 +342,9 @@ function createErrorPrice(lsp: LSP, channelSizeSat: number, error: string): LSPP
     lease_fee_base_msat: 0,
     lease_fee_basis: 0,
     timestamp: new Date().toISOString(),
-    error: error
+    error: error,
+    error_code: errorCode || LspErrorCode.UNKNOWN,
+    source: 'estimated'
   };
 }
 
@@ -338,7 +399,8 @@ export async function fetchAllLSPPrices(channelSizeSat: number = 1000000): Promi
       return await fetchLSPPrice(lsp, channelSizeSat);
     } catch (error) {
       console.error(`Unexpected error fetching from ${lsp.name}:`, error);
-      return createErrorPrice(lsp, channelSizeSat, `Unexpected error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      const errorInfo = toLspError(error);
+      return createErrorPrice(lsp, channelSizeSat, `Unexpected error: ${errorInfo.message}`, errorInfo.code);
     }
   });
   
@@ -351,7 +413,8 @@ export async function fetchAllLSPPrices(channelSizeSat: number = 1000000): Promi
     } else if (result.status === 'rejected') {
       const lsp = activeLSPs[index];
       console.error(`Failed to fetch from ${lsp.name}:`, result.reason);
-      prices.push(createErrorPrice(lsp, channelSizeSat, `Promise rejected: ${result.reason}`));
+      const errorInfo = toLspError(result.reason);
+      prices.push(createErrorPrice(lsp, channelSizeSat, `Promise rejected: ${errorInfo.message}`, errorInfo.code));
     }
   });
   

@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { shouldUseMockData } from '../../lib/mock-data';
+import { getDatabaseStatus } from '../../lib/db';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
@@ -7,15 +7,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // Get system status
-    const usingMockData = shouldUseMockData();
+    // Get database status
+    const dbStatus = await getDatabaseStatus();
     
     // Check environment variables
     const envStatus = {
-      KV_URL: !!process.env.KV_URL,
-      KV_REST_API_URL: !!process.env.KV_REST_API_URL,
-      KV_REST_API_TOKEN: !!process.env.KV_REST_API_TOKEN,
-      KV_REST_API_READ_ONLY_TOKEN: !!process.env.KV_REST_API_READ_ONLY_TOKEN,
+      UPSTASH_REDIS_REST_URL: !!process.env.UPSTASH_REDIS_REST_URL,
+      UPSTASH_REDIS_REST_TOKEN: !!process.env.UPSTASH_REDIS_REST_TOKEN,
+      NODE_ENV: process.env.NODE_ENV || 'development',
     };
 
     // Get current timestamp
@@ -25,13 +24,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       success: true,
       timestamp: now,
       system_status: {
-        kv_configured: false,
-        using_mock_data: usingMockData,
+        database_configured: dbStatus.hasData,
+        database_stale: dbStatus.isStale,
+        last_update: dbStatus.lastUpdate,
+        price_count: dbStatus.priceCount,
+        history_count: dbStatus.historyCount,
         environment: envStatus,
-        node_env: process.env.NODE_ENV || 'development',
       },
-      message: 'System running with mock data (Vercel KV not configured)',
-      next_steps: 'Configure Vercel KV environment variables to use real database'
+      message: dbStatus.hasData 
+        ? `System running with ${dbStatus.isStale ? 'stale' : 'fresh'} data (${dbStatus.priceCount} prices)`
+        : 'System running without cached data - will fetch live from LSPs',
+      next_steps: dbStatus.hasData 
+        ? 'System is operational with per-LSP fallback caching'
+        : 'Configure Vercel KV environment variables for better performance'
     });
 
   } catch (error) {

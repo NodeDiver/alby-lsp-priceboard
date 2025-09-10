@@ -13,6 +13,9 @@ export interface DisplayPrice {
   lease_fee_basis: number;
   timestamp: string;
   error: string | null;
+  source?: 'live' | 'cached' | 'estimated' | 'unknown';
+  stale_seconds?: number | null;
+  error_code?: string | null;
 }
 
 interface PriceTableProps {
@@ -24,6 +27,49 @@ interface PriceTableProps {
   lastUpdate?: string;
   dataSource?: string;
   dataSourceDescription?: string;
+}
+
+// Status Badge Component
+function StatusBadge({ source, staleSeconds, errorCode }: { 
+  source?: string; 
+  staleSeconds?: number | null; 
+  errorCode?: string | null; 
+}) {
+  if (errorCode) {
+    return (
+      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+        ✗ Error
+      </span>
+    );
+  }
+
+  switch (source) {
+    case 'live':
+      return (
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          ✓ Live
+        </span>
+      );
+    case 'cached':
+      const minutes = staleSeconds ? Math.floor(staleSeconds / 60) : 0;
+      return (
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800" title={`Cached ${minutes}m ago`}>
+          ⚠ Cached
+        </span>
+      );
+    case 'estimated':
+      return (
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800" title="Estimated pricing">
+          ≈ Estimated
+        </span>
+      );
+    default:
+      return (
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+          ? Unknown
+        </span>
+      );
+  }
 }
 
 // LSP Icon Component with proper fallback
@@ -138,7 +184,14 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
                       lspName={lspName} 
                       lspData={lspData}
                     />
-                    <span>{lspName}</span>
+                    <div className="flex flex-col">
+                      <span>{lspName}</span>
+                      <StatusBadge 
+                        source={lspPrices[0]?.source}
+                        staleSeconds={lspPrices[0]?.stale_seconds}
+                        errorCode={lspPrices[0]?.error_code}
+                      />
+                    </div>
                   </div>
                 </td>
                 

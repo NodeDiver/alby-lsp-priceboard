@@ -1,5 +1,5 @@
 import { fetchAllLSPPrices, LSPPrice } from './lsp-api';
-import { savePricesToDB, getLatestPrices as getLatestPricesFromDB } from './db';
+import { savePricesWithPerLSPCache, getLatestPrices as getLatestPricesFromDB } from './db';
 
 // Price fetching service
 export class PriceService {
@@ -38,7 +38,7 @@ export class PriceService {
       
       if (prices.length > 0) {
         // Save to database
-        const saved = await savePricesToDB(prices);
+        const saved = await savePricesWithPerLSPCache(prices);
         if (saved) {
           this.lastFetchTime = new Date();
         }
