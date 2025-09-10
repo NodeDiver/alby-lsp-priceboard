@@ -1,13 +1,12 @@
-import { fetchAllLSPPrices } from './lsp-api';
-import { savePricesToDB, getLatestPrices } from './db';
-import { LSPPrice } from './lsp-api';
+import { fetchAllLSPPrices, LSPPrice } from './lsp-api';
+import { savePricesToDB, getLatestPrices as getLatestPricesFromDB } from './db';
 
 // Price fetching service
 export class PriceService {
   private static instance: PriceService;
   private isFetching: boolean = false;
   private lastFetchTime: Date | null = null;
-  private readonly FETCH_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
+  private fetchIntervalMs = 10 * 60 * 1000; // 10 minutes
 
   private constructor() {}
 
@@ -21,13 +20,13 @@ export class PriceService {
   // Fetch prices from all LSPs and save to database
   public async fetchAndSavePrices(): Promise<LSPPrice[]> {
     if (this.isFetching) {
-      return await getLatestPrices();
+      return await getLatestPricesFromDB();
     }
 
     // Check if we need to fetch (based on time interval)
     if (this.lastFetchTime && 
-        Date.now() - this.lastFetchTime.getTime() < this.FETCH_INTERVAL_MS) {
-      return await getLatestPrices();
+        Date.now() - this.lastFetchTime.getTime() < this.fetchIntervalMs) {
+      return await getLatestPricesFromDB();
     }
 
     this.isFetching = true;
@@ -49,7 +48,7 @@ export class PriceService {
     } catch (error) {
       console.error('Error in price fetch service:', error);
       // Return cached prices if available
-      return await getLatestPrices();
+      return await getLatestPricesFromDB();
     } finally {
       this.isFetching = false;
     }
@@ -63,7 +62,7 @@ export class PriceService {
 
   // Get latest prices (from cache or fetch if needed)
   public async getLatestPrices(): Promise<LSPPrice[]> {
-    const cachedPrices = await getLatestPrices();
+    const cachedPrices = await getLatestPricesFromDB();
     
     if (cachedPrices.length === 0) {
       return await this.fetchAndSavePrices();
@@ -78,12 +77,14 @@ export class PriceService {
     return cachedPrices;
   }
 
-  // Check if prices should be refreshed
+  // Check if prices should be refreshed (with jitter to avoid thundering herd)
   private shouldRefreshPrices(): boolean {
     if (!this.lastFetchTime) return true;
     
+    // Add small jitter to avoid multiple instances refreshing simultaneously
+    const jitterMs = Math.floor(Math.random() * 15_000); // 0-15 seconds
     const timeSinceLastFetch = Date.now() - this.lastFetchTime.getTime();
-    return timeSinceLastFetch >= this.FETCH_INTERVAL_MS;
+    return timeSinceLastFetch >= (this.fetchIntervalMs + jitterMs);
   }
 
   // Get service status
@@ -93,7 +94,7 @@ export class PriceService {
     nextFetchTime: Date | null;
   } {
     const nextFetchTime = this.lastFetchTime 
-      ? new Date(this.lastFetchTime.getTime() + this.FETCH_INTERVAL_MS)
+      ? new Date(this.lastFetchTime.getTime() + this.fetchIntervalMs)
       : null;
     
     return {
@@ -105,7 +106,7 @@ export class PriceService {
 
   // Set custom fetch interval
   public setFetchInterval(minutes: number): void {
-    this.FETCH_INTERVAL_MS = minutes * 60 * 1000;
+    this.fetchIntervalMs = Math.max(1, minutes) * 60 * 1000;
   }
 }
 
