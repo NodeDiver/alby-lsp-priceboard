@@ -26,13 +26,6 @@ export const LSPS: LSP[] = [
     active: true
   },
   {
-    id: 'lnserver',
-    name: 'LNServer Wave',
-    url: 'https://lsps1.lnserver.com/api/v1',
-    pubkey: '02b4552a7a85274e4da01a7c71ca57407181752e8568b31d51f13c110a2941dce3',
-    active: true
-  },
-  {
     id: 'megalith',
     name: 'Megalith',
     url: 'https://megalithic.me/api/lsps1/v1',
