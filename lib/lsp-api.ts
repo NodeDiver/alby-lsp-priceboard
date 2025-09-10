@@ -1,6 +1,66 @@
 import { LSP } from './lsps';
 import { getLastGoodPriceForLSP, saveLatestForLsp } from './db';
 
+// LNServer candidate URLs for autodiscovery
+const LNSERVER_CANDIDATES = [
+  'https://www.lnserver.com/lsp/wave',        // User's suggestion (likely UI route)
+  'https://lnserver.com/lsp/wave',
+  'https://lnserver.com/api/v1',              // Typical LSPS1 pattern
+  'https://lnserver.com/lsps1/api/v1',
+  'https://lsps1.lnserver.com/api/v1',        // Original attempt
+  'https://api.lnserver.com/lsps1/api/v1',    // Alternative API subdomain
+];
+
+// Cache for resolved LSP base URLs
+const resolvedBaseCache = new Map<string, string>();
+
+// Resolve LSP base URL with autodiscovery for LNServer
+async function resolveLspBase(lsp: LSP): Promise<string | null> {
+  // Allow override via environment variable
+  const envKey = `${lsp.id.toUpperCase()}_LSPS1_BASE`;
+  const envBase = process.env[envKey as keyof NodeJS.ProcessEnv] as string | undefined;
+  if (envBase) {
+    console.log(`Using environment override for ${lsp.id}: ${envBase}`);
+    return envBase;
+  }
+
+  // Check cache first
+  if (resolvedBaseCache.has(lsp.id)) {
+    return resolvedBaseCache.get(lsp.id)!;
+  }
+
+  // For LNServer, try multiple candidates; for others, use the configured URL
+  const candidates = lsp.id === 'lnserver' ? LNSERVER_CANDIDATES : [lsp.url];
+  
+  for (const base of candidates) {
+    try {
+      const infoUrl = new URL('get_info', base + '/').toString();
+      console.log(`Trying LNServer candidate: ${infoUrl}`);
+      
+      const response = await fetch(infoUrl, {
+        method: 'GET',
+        headers: { 
+          'Accept': 'application/json',
+          'User-Agent': 'Alby-LSP-PriceBoard/1.0'
+        },
+        signal: AbortSignal.timeout(5000)
+      });
+      
+      if (response.ok) {
+        console.log(`✅ LNServer endpoint found: ${base}`);
+        resolvedBaseCache.set(lsp.id, base);
+        return base;
+      }
+    } catch (error) {
+      // Continue to next candidate
+      console.log(`❌ LNServer candidate failed: ${base} - ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+  
+  console.log(`❌ No working LNServer endpoint found for ${lsp.id}`);
+  return null;
+}
+
 // LSPS1 Protocol Types (matching actual LSP responses)
 export interface LSPS1GetInfoResponse {
   uris: string[];
@@ -156,8 +216,16 @@ function toLspError(e: unknown, status?: number): { code: LspErrorCode; message:
 // Fetch LSP info using LSPS1 protocol (matching Alby Hub implementation)
 export async function fetchLSPInfo(lsp: LSP): Promise<{ info: LSPS1GetInfoResponse | null; error?: { code: LspErrorCode; message: string } }> {
   try {
+    // Resolve the base URL (with autodiscovery for LNServer)
+    const baseUrl = await resolveLspBase(lsp);
+    if (!baseUrl) {
+      const errorInfo = { code: LspErrorCode.URL_NOT_FOUND, message: 'LSP endpoint not found or not published' };
+      console.error(`No working endpoint found for ${lsp.name}: ${errorInfo.message}`);
+      return { info: null, error: errorInfo };
+    }
+
     // URL safety: prevent double slashes
-    const infoUrl = new URL('get_info', lsp.url + '/').toString();
+    const infoUrl = new URL('get_info', baseUrl + '/').toString();
     const response = await fetch(infoUrl, {
       method: 'GET',
       headers: {
@@ -208,8 +276,16 @@ export async function createLSPOrder(
       client_balance_sat: 1, // Client needs at least 1 sat balance
     };
 
+    // Resolve the base URL (with autodiscovery for LNServer)
+    const baseUrl = await resolveLspBase(lsp);
+    if (!baseUrl) {
+      const errorInfo = { code: LspErrorCode.URL_NOT_FOUND, message: 'LSP endpoint not found or not published' };
+      console.error(`No working endpoint found for ${lsp.name}: ${errorInfo.message}`);
+      return null;
+    }
+
     // URL safety: prevent double slashes
-    const orderUrl = new URL('create_order', lsp.url + '/').toString();
+    const orderUrl = new URL('create_order', baseUrl + '/').toString();
     const response = await fetch(orderUrl, {
       method: 'POST',
       headers: {
