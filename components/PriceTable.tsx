@@ -210,14 +210,17 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
             {dataSource && (
               <div className="flex items-center space-x-2">
                 <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  dataSource === 'real' 
+                  dataSource === 'real' || dataSource === 'real_fresh'
                     ? 'bg-green-100 text-green-800' 
                     : dataSource === 'mock' 
                     ? 'bg-yellow-100 text-yellow-800'
+                    : dataSource === 'mock_fallback'
+                    ? 'bg-orange-100 text-orange-800'
                     : 'bg-gray-100 text-gray-800'
                 }`}>
-                  {dataSource === 'real' ? '🟢 Real Data' : 
+                  {dataSource === 'real' || dataSource === 'real_fresh' ? '🟢 Real Data' : 
                    dataSource === 'mock' ? '🟡 Mock Data' : 
+                   dataSource === 'mock_fallback' ? '🟠 Partial Data' :
                    '⚪ Unknown'}
                 </div>
                 {dataSourceDescription && (

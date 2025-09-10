@@ -208,7 +208,12 @@ export default function Home() {
         <div className="mt-8 bg-white rounded-lg shadow p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Public API Access</h3>
           <p className="text-sm text-gray-500 mb-4 italic">
-            Note: Currently using mock data for development - real LSP integration pending
+            {dataSource === 'real' || dataSource === 'real_fresh' 
+              ? `Note: Using real-time data from LSPs (${dataSourceDescription})`
+              : dataSource === 'mock_fallback'
+              ? 'Note: Using estimated pricing (some LSPs unavailable)'
+              : 'Note: Currently using mock data for development - real LSP integration pending'
+            }
           </p>
           <p className="text-sm text-gray-600 mb-4">
             Other applications can access this pricing data via our public REST API:
@@ -269,9 +274,19 @@ export default function Home() {
             <h4 className="text-sm font-medium text-gray-900 mb-2">Current Status</h4>
             <div className="text-xs text-gray-600 space-y-1">
               <div>• ✅ API endpoint active and responding</div>
-              <div>• ✅ Mock data enabled for development</div>
-              <div>• ⏳ Vercel KV configuration pending (real data storage)</div>
-              <div>• ⏳ Cron jobs will activate after Vercel deployment</div>
+              {dataSource === 'real' || dataSource === 'real_fresh' ? (
+                <>
+                  <div>• ✅ Real-time LSP data fetching active</div>
+                  <div>• ✅ LSPS1 protocol implementation working</div>
+                  <div>• ⚠️ Some LSPs may be unavailable (using estimated pricing)</div>
+                </>
+              ) : (
+                <>
+                  <div>• ✅ Mock data enabled for development</div>
+                  <div>• ⏳ Vercel KV configuration pending (real data storage)</div>
+                  <div>• ⏳ Cron jobs will activate after Vercel deployment</div>
+                </>
+              )}
               <div>• Use Debug Info button to check detailed system status</div>
             </div>
           </div>
