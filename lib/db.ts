@@ -4,12 +4,12 @@ import { LSPPrice } from './lsp-api';
 // Initialize Redis client
 const redis = Redis.fromEnv();
 
-// Database keys
-const PRICES_KEY = 'lsp_prices';
-const LAST_UPDATE_KEY = 'last_update';
-const PRICE_HISTORY_KEY = 'price_history';
+// Database keys with namespacing
+const PRICES_KEY = 'alby:lsp:prices';
+const LAST_UPDATE_KEY = 'alby:lsp:last_update';
+const PRICE_HISTORY_KEY = 'alby:lsp:price_history';
 
-// Save latest prices to database
+// Save latest prices to database with pipeline and atomic operations
 export async function savePricesToDB(prices: LSPPrice[]): Promise<boolean> {
   try {
     if (!redis) {
@@ -17,25 +17,24 @@ export async function savePricesToDB(prices: LSPPrice[]): Promise<boolean> {
       return false;
     }
 
-    // Save current prices
-    await redis.set(PRICES_KEY, JSON.stringify(prices));
+    const now = new Date().toISOString();
+    const historyEntry = JSON.stringify({ timestamp: now, prices });
     
-    // Save timestamp of last update
-    await redis.set(LAST_UPDATE_KEY, new Date().toISOString());
+    // Use pipeline for atomic operations and better performance
+    const pipeline = redis.pipeline();
     
-    // Save to history (keep last 100 entries)
-    const history = await getPriceHistory();
-    history.push({
-      timestamp: new Date().toISOString(),
-      prices: prices
-    });
+    // Save current prices with TTL (1 hour for staleness detection)
+    pipeline.set(PRICES_KEY, JSON.stringify(prices), { ex: 3600 });
     
-    // Keep only last 100 entries
-    if (history.length > 100) {
-      history.splice(0, history.length - 100);
-    }
+    // Save timestamp
+    pipeline.set(LAST_UPDATE_KEY, now);
     
-    await redis.set(PRICE_HISTORY_KEY, JSON.stringify(history));
+    // Add to history using atomic LIST operations
+    pipeline.lpush(PRICE_HISTORY_KEY, historyEntry);
+    pipeline.ltrim(PRICE_HISTORY_KEY, 0, 99); // Keep only last 100 entries
+    
+    // Execute all operations atomically
+    await pipeline.exec();
     
     return true;
   } catch (error) {
@@ -74,15 +73,16 @@ export async function getLastUpdateTime(): Promise<string | null> {
   }
 }
 
-// Get price history
+// Get price history from LIST
 export async function getPriceHistory(): Promise<Array<{timestamp: string, prices: LSPPrice[]}>> {
   try {
     if (!redis) {
       return [];
     }
 
-    const historyJson = await redis.get<string>(PRICE_HISTORY_KEY);
-    return historyJson ? JSON.parse(historyJson) : [];
+    // Get all entries from the LIST (most recent first)
+    const historyEntries = await redis.lrange<string>(PRICE_HISTORY_KEY, 0, -1);
+    return historyEntries.map(entry => JSON.parse(entry));
   } catch (error) {
     console.error('Error getting price history:', error);
     return [];
@@ -127,23 +127,43 @@ export async function clearAllData(): Promise<boolean> {
   }
 }
 
-// Get database status
+// Get database status (optimized with pipeline)
 export async function getDatabaseStatus(): Promise<{
   hasData: boolean;
   lastUpdate: string | null;
   priceCount: number;
   historyCount: number;
+  isStale: boolean;
 }> {
   try {
-    const prices = await getLatestPrices();
-    const lastUpdate = await getLastUpdateTime();
-    const history = await getPriceHistory();
+    if (!redis) {
+      return {
+        hasData: false,
+        lastUpdate: null,
+        priceCount: 0,
+        historyCount: 0,
+        isStale: true
+      };
+    }
+
+    // Use pipeline for efficient status check
+    const pipeline = redis.pipeline();
+    pipeline.get(PRICES_KEY);
+    pipeline.get(LAST_UPDATE_KEY);
+    pipeline.llen(PRICE_HISTORY_KEY);
+    pipeline.ttl(PRICES_KEY); // Check if data is stale
+    
+    const [pricesJson, lastUpdate, historyCount, ttl] = await pipeline.exec();
+    
+    const prices = pricesJson ? JSON.parse(pricesJson as string) : [];
+    const isStale = ttl === -2; // Key doesn't exist (expired or never set)
     
     return {
       hasData: prices.length > 0,
-      lastUpdate,
+      lastUpdate: lastUpdate as string | null,
       priceCount: prices.length,
-      historyCount: history.length
+      historyCount: historyCount as number,
+      isStale
     };
   } catch (error) {
     console.error('Error getting database status:', error);
@@ -151,7 +171,8 @@ export async function getDatabaseStatus(): Promise<{
       hasData: false,
       lastUpdate: null,
       priceCount: 0,
-      historyCount: 0
+      historyCount: 0,
+      isStale: true
     };
   }
 }
