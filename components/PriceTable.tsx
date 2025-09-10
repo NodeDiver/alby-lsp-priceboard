@@ -27,18 +27,60 @@ interface PriceTableProps {
   lastUpdate?: string;
   dataSource?: string;
   dataSourceDescription?: string;
+  onRetry?: (lspId: string) => void;
+}
+
+// Retry Button Component
+function RetryButton({ lspId, onRetry }: { lspId: string; onRetry?: (lspId: string) => void }) {
+  if (!onRetry) return null;
+  
+  return (
+    <button
+      onClick={() => onRetry(lspId)}
+      className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded hover:bg-blue-200 transition-colors"
+      title="Retry this LSP"
+    >
+      🔄 Retry
+    </button>
+  );
 }
 
 // Status Badge Component
-function StatusBadge({ source, staleSeconds, errorCode }: { 
+function StatusBadge({ source, staleSeconds, errorCode, error }: { 
   source?: string; 
   staleSeconds?: number | null; 
-  errorCode?: string | null; 
+  errorCode?: string | null;
+  error?: string | null;
 }) {
   if (errorCode) {
+    const getErrorIcon = (code: string) => {
+      switch (code) {
+        case 'URL_NOT_FOUND': return '🌐';
+        case 'TIMEOUT': return '⏱️';
+        case 'TLS_ERROR': return '🔒';
+        case 'RATE_LIMITED': return '🚫';
+        case 'BAD_STATUS': return '⚠️';
+        default: return '❌';
+      }
+    };
+
+    const getErrorColor = (code: string) => {
+      switch (code) {
+        case 'URL_NOT_FOUND': return 'bg-orange-100 text-orange-800';
+        case 'TIMEOUT': return 'bg-yellow-100 text-yellow-800';
+        case 'TLS_ERROR': return 'bg-red-100 text-red-800';
+        case 'RATE_LIMITED': return 'bg-purple-100 text-purple-800';
+        case 'BAD_STATUS': return 'bg-red-100 text-red-800';
+        default: return 'bg-red-100 text-red-800';
+      }
+    };
+
     return (
-      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-        ✗ Error
+      <span 
+        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getErrorColor(errorCode)}`}
+        title={error || `Error: ${errorCode}`}
+      >
+        {getErrorIcon(errorCode)} {errorCode.replace(/_/g, ' ').toLowerCase()}
       </span>
     );
   }
@@ -100,7 +142,7 @@ function LSPIcon({ lspId, lspName, lspData }: { lspId: string; lspName: string; 
 }
 
 
-export function PriceTable({ prices, loading = false, lspMetadata = [], selectedChannelSize = 1000000, selectedCurrency = 'usd', lastUpdate, dataSource, dataSourceDescription }: PriceTableProps) {
+export function PriceTable({ prices, loading = false, lspMetadata = [], selectedChannelSize = 1000000, selectedCurrency = 'usd', lastUpdate, dataSource, dataSourceDescription, onRetry }: PriceTableProps) {
   const [currencyConversions, setCurrencyConversions] = useState<{ [key: string]: CurrencyConversion }>({});
   const [conversionLoading, setConversionLoading] = useState(false);
 
@@ -185,11 +227,17 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
                       lspData={lspData}
                     />
                     <div className="flex flex-col">
-                      <span>{lspName}</span>
+                      <div className="flex items-center">
+                        <span>{lspName}</span>
+                        {lspPrices[0]?.error_code && (
+                          <RetryButton lspId={lspId} onRetry={onRetry} />
+                        )}
+                      </div>
                       <StatusBadge 
                         source={lspPrices[0]?.source}
                         staleSeconds={lspPrices[0]?.stale_seconds}
                         errorCode={lspPrices[0]?.error_code}
+                        error={lspPrices[0]?.error}
                       />
                     </div>
                   </div>

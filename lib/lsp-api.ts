@@ -121,10 +121,32 @@ function toLspError(e: unknown, status?: number): { code: LspErrorCode; message:
   if (status === 404) return { code: LspErrorCode.URL_NOT_FOUND, message: 'Endpoint not found' };
   if (status === 429) return { code: LspErrorCode.RATE_LIMITED, message: 'Rate limited' };
   if (status && status >= 500) return { code: LspErrorCode.BAD_STATUS, message: `Server error ${status}` };
-  if (e instanceof TypeError && e.message.includes('fetch failed')) {
-    return { code: LspErrorCode.TLS_ERROR, message: 'Network error' };
+  if (e instanceof TypeError) {
+    if (e.message.includes('fetch failed')) {
+      return { code: LspErrorCode.TLS_ERROR, message: 'Network connection failed' };
+    }
+    if (e.message.includes('ENOTFOUND')) {
+      return { code: LspErrorCode.URL_NOT_FOUND, message: 'Domain not found' };
+    }
+    if (e.message.includes('ECONNREFUSED')) {
+      return { code: LspErrorCode.URL_NOT_FOUND, message: 'Connection refused' };
+    }
+    if (e.message.includes('CERT')) {
+      return { code: LspErrorCode.TLS_ERROR, message: 'SSL certificate error' };
+    }
   }
-  return { code: LspErrorCode.UNKNOWN, message: 'Unknown error' };
+  if (e instanceof Error) {
+    if (e.message.includes('ENOTFOUND')) {
+      return { code: LspErrorCode.URL_NOT_FOUND, message: 'Domain not found' };
+    }
+    if (e.message.includes('ECONNREFUSED')) {
+      return { code: LspErrorCode.URL_NOT_FOUND, message: 'Connection refused' };
+    }
+    if (e.message.includes('timeout')) {
+      return { code: LspErrorCode.TIMEOUT, message: 'Request timed out' };
+    }
+  }
+  return { code: LspErrorCode.UNKNOWN, message: e instanceof Error ? e.message : 'Unknown error' };
 }
 
 // Fetch LSP info using LSPS1 protocol (matching Alby Hub implementation)
@@ -229,14 +251,41 @@ export async function fetchLSPPrice(lsp: LSP, channelSizeSat: number = 1000000):
       // First get LSP info to validate the LSP is available
       const info = await fetchLSPInfo(lsp);
       if (!info) {
-        lastError = 'Failed to fetch LSP info';
+        // Try to get more specific error information
+        let specificError = 'Failed to fetch LSP info';
+        let errorCode = LspErrorCode.UNKNOWN;
+        
+        // Try a direct fetch to get the actual error
+        try {
+          const infoUrl = new URL('get_info', lsp.url).toString();
+          const response = await fetch(infoUrl, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'User-Agent': 'Alby-LSP-PriceBoard/1.0',
+            },
+            signal: AbortSignal.timeout(5000),
+          });
+          
+          if (!response.ok) {
+            const errorInfo = toLspError(null, response.status);
+            specificError = errorInfo.message;
+            errorCode = errorInfo.code;
+          }
+        } catch (directError) {
+          const errorInfo = toLspError(directError);
+          specificError = errorInfo.message;
+          errorCode = errorInfo.code;
+        }
+        
+        lastError = specificError;
         if (attempt < maxRetries) {
           console.log(`Retrying ${lsp.name} in 2 seconds...`);
           await new Promise(resolve => setTimeout(resolve, 2000));
           continue;
         }
-        const errorInfo = toLspError(null);
-        return createErrorPrice(lsp, channelSizeSat, lastError, errorInfo.code);
+        return createErrorPrice(lsp, channelSizeSat, lastError, errorCode);
       }
 
       // Validate channel size is within LSP limits

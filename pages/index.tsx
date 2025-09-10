@@ -14,6 +14,36 @@ export default function Home() {
   const [dataSource, setDataSource] = useState<string>('unknown');
   const [dataSourceDescription, setDataSourceDescription] = useState<string>('');
 
+  // Retry function for individual LSPs
+  const handleRetryLSP = async (lspId: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Fetch fresh data for all LSPs (the API will handle per-LSP logic)
+      const response = await fetch(`/api/prices?channelSize=${selectedChannelSize}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setPrices(data.prices);
+        setLastUpdate(data.last_update);
+        setDataSource(data.data_source);
+        setDataSourceDescription(data.data_source_description);
+      } else {
+        setError(data.message || 'Failed to fetch prices');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch prices from API
   const fetchPrices = async (channelSize: number = selectedChannelSize) => {
     try {
@@ -181,6 +211,7 @@ export default function Home() {
             lastUpdate={lastUpdate}
             dataSource={dataSource}
             dataSourceDescription={dataSourceDescription}
+            onRetry={handleRetryLSP}
           />
         </div>
 
