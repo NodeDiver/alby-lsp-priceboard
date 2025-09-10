@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PriceTable, DisplayPrice } from '../components/PriceTable';
 import { LSP } from '../lib/lsps';
-import { SUPPORTED_CURRENCIES } from '../lib/currency';
+import { COMMON_CURRENCIES } from '../lib/currency';
 
 export default function Home() {
   const [prices, setPrices] = useState<DisplayPrice[]>([]);
@@ -162,7 +162,7 @@ export default function Home() {
                                 onChange={(e) => handleCurrencyChange(e.target.value)}
                                 className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
                               >
-                                {SUPPORTED_CURRENCIES.slice(0, 20).map((currency) => (
+                                {COMMON_CURRENCIES.map((currency) => (
                                   <option key={currency.code} value={currency.code}>
                                     {currency.symbol} {currency.name}
                                   </option>
