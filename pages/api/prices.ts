@@ -82,14 +82,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
     // Use priceService for better caching and throttling
     const rows = force
-      ? await priceService.forceFetchPrices()
-      : await priceService.getLatestPrices();
-
-    // Filter by channel size if specified
-    const filteredRows = rows.filter(row => row.channel_size_sat === channelSize);
+      ? await priceService.forceFetchPrices(channelSize)
+      : await priceService.getLatestPrices(channelSize);
 
     // Map to API response format
-    const prices = filteredRows.map(price => ({
+    const prices = rows.map(price => ({
       lsp_id: price.lsp_id,
       lsp_name: price.lsp_name,
       channel_size: price.channel_size_sat,

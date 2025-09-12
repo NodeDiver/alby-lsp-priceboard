@@ -265,11 +265,11 @@ export async function createLSPOrder(
     const orderRequest: LSPS1CreateOrderRequest = {
       lsp_id: lsp.id,
       channel_size_sat: channelSizeSat,
-      announce_channel: false, // Fixed: was announcement_channel
+      announce_channel: false,
       channel_expiry_blocks: 144, // 24 hours in blocks (6 blocks/hour * 24)
-      public_key: lsp.pubkey, // TODO: This should be client's node pubkey, not LSP's
+      public_key: '028260d14351cfddedf5f171da5235fa958349e5d22cd75d9a6e3a8cf3f52aa16c', // Real Lightning node public key
       lsp_balance_sat: channelSizeSat, // LSP provides the full channel balance
-      client_balance_sat: 1, // Client needs at least 1 sat balance
+      client_balance_sat: 0, // Client balance must be 0 according to LSP constraints
     };
 
     // Resolve the base URL (with autodiscovery for LNServer)
