@@ -2,6 +2,8 @@
 
 A real-time Lightning Service Provider (LSP) price comparison tool that helps users make informed decisions when opening Lightning channels.
 
+🎉 **BREAKTHROUGH**: We now have **LIVE DATA** from 2 LSPs (Megalith & LNServer Wave) with proper LSPS1 protocol implementation!
+
 🌐 **Live Demo**: [https://alby-lsp-priceboard-qe4ir4olm-nodii-teams-yes.vercel.app/](https://alby-lsp-priceboard-qe4ir4olm-nodii-teams-yes.vercel.app/)
 
 ## Problem Solved
@@ -10,9 +12,11 @@ This project addresses [Alby Hub Issue #1001](https://github.com/getAlby/hub/iss
 
 ## Features
 
+- **🟢 LIVE DATA** from 2 LSPs (Megalith & LNServer Wave) using proper LSPS1 protocol
+- **🟡 ESTIMATED DATA** for 2 LSPs (Olympus & Flashsats) with realistic pricing models
 - **Real-time price comparison** across 4 working LSPs
 - **Multi-currency support** with live conversion using Alby's Lightning Tools
-- **Channel size filtering** (1M-10M sats)
+- **Channel size filtering** (1M-10M sats) - all sizes now work correctly
 - **Public REST API** for integration with other applications
 - **Automatic price updates** daily via Vercel Cron Jobs
 - **Clean, responsive UI** with professional design
@@ -100,13 +104,15 @@ The frontend displays a visual indicator:
 
 ### ✅ Completed Features
 - **Core Infrastructure**: Next.js app with TypeScript and Tailwind CSS
-- **LSP Integration**: 4 working LSPs with real pricing data using LSPS1 protocol
+- **🟢 LIVE LSP Integration**: 2 LSPs (Megalith & LNServer Wave) with real-time LSPS1 protocol data
+- **🟡 ESTIMATED LSP Integration**: 2 LSPs (Olympus & Flashsats) with realistic pricing models
 - **Price Management**: Automated fetching and caching system with per-LSP fallbacks
 - **Multi-Currency Support**: Real-time conversion using Alby Lightning Tools
 - **User Interface**: Responsive price comparison table with filtering and status indicators
 - **Public API**: RESTful endpoints for external integration
 - **Error Handling**: Comprehensive per-LSP error classification and UI feedback
 - **Vercel Configuration**: Live deployment with cron jobs
+- **Channel Size Support**: All sizes (1M-10M sats) now work correctly
 
 ### 🚀 Ready for Production
 - All core features implemented and tested
