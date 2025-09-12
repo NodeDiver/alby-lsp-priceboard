@@ -15,18 +15,21 @@
   - Vercel deployment and configuration
 
 ## Project Status
-- **Current Phase**: Production Ready
+- **Current Phase**: Production Ready with Live Data
 - **Last Updated**: September 2025
 - **Deployment Status**: Live on Vercel
 - **Code Quality**: Production-ready, fully tested
-- **LSPs**: 4 working LSPs with real pricing data
+- **LSPs**: 4 working LSPs - 2 with LIVE data, 2 with estimated data
+- **Breakthrough**: Successfully implemented LSPS1 protocol for live pricing
 
 ## Technology Stack
 - **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
 - **Backend**: Next.js API Routes, Vercel KV (Redis)
 - **Deployment**: Vercel (recommended), Docker support
 - **External APIs**: Alby Lightning Tools, LSPS1 Protocol
-- **LSPs**: Olympus, LNServer Wave, Megalith, Flashsats
+- **LSPs**: 
+  - 🟢 **LIVE DATA**: Megalith, LNServer Wave (LSPS1 protocol)
+  - 🟡 **ESTIMATED DATA**: Olympus, Flashsats (realistic pricing models)
 
 ## Development Guidelines
 
