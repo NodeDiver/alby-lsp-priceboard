@@ -13,6 +13,7 @@ export enum LspErrorCode {
   RATE_LIMITED = 'RATE_LIMITED',
   TLS_ERROR = 'TLS_ERROR',
   CORS_BLOCKED = 'CORS_BLOCKED',
+  PEER_NOT_CONNECTED = 'PEER_NOT_CONNECTED',
   UNKNOWN = 'UNKNOWN'
 }
 
@@ -43,11 +44,35 @@ function toLspError(error: unknown, response?: Response): { code: LspErrorCode; 
       return { code: LspErrorCode.RATE_LIMITED, message: 'Rate limited by LSP' };
     }
     if (response.status >= 400) {
+      // Try to get more specific error from response body
       return { code: LspErrorCode.BAD_STATUS, message: `HTTP ${response.status}` };
     }
   }
   
   return { code: LspErrorCode.UNKNOWN, message: error instanceof Error ? error.message : 'Unknown error' };
+}
+
+// Enhanced error mapping for LSP responses
+async function mapLspError(response: Response): Promise<{ code: LspErrorCode; message: string }> {
+  try {
+    const text = await response.text();
+    const data = text ? JSON.parse(text) : {};
+    const message = data.message || data.error || text;
+    
+    if (message.includes('connect') || message.includes('peer') || message.includes('not connected')) {
+      return { code: LspErrorCode.PEER_NOT_CONNECTED, message: 'Node must be connected to LSP' };
+    }
+    if (message.includes('schema') || message.includes('invalid') || message.includes('missing')) {
+      return { code: LspErrorCode.SCHEMA_MISMATCH, message: 'Invalid request format' };
+    }
+    if (message.includes('json') || message.includes('parse')) {
+      return { code: LspErrorCode.INVALID_JSON, message: 'Invalid JSON response' };
+    }
+    
+    return { code: LspErrorCode.BAD_STATUS, message: `HTTP ${response.status}: ${message}` };
+  } catch {
+    return { code: LspErrorCode.BAD_STATUS, message: `HTTP ${response.status}` };
+  }
 }
 
 // LNServer candidate URLs for autodiscovery
@@ -259,17 +284,19 @@ export async function fetchLSPInfo(lsp: LSP): Promise<{ info: LSPS1GetInfoRespon
 // Create order to get pricing using LSPS1 protocol (matching Alby Hub implementation)
 export async function createLSPOrder(
   lsp: LSP, 
-  channelSizeSat: number = 1000000
+  channelSizeSat: number = 1000000,
+  info?: LSPS1GetInfoResponse
 ): Promise<LSPS1CreateOrderResponse | null> {
   try {
-    const orderRequest: LSPS1CreateOrderRequest = {
-      lsp_id: lsp.id,
-      channel_size_sat: channelSizeSat,
+    const orderRequest = {
+      lsp_balance_sat: String(channelSizeSat), // sats as string
+      client_balance_sat: "0",
+      required_channel_confirmations: info?.min_required_channel_confirmations ?? 3,
+      funding_confirms_within_blocks: info?.min_funding_confirms_within_blocks ?? 6,
+      channel_expiry_blocks: Math.min(13140, info?.max_channel_expiry_blocks ?? 13140),
       announce_channel: false,
-      channel_expiry_blocks: 144, // 24 hours in blocks (6 blocks/hour * 24)
       public_key: '028260d14351cfddedf5f171da5235fa958349e5d22cd75d9a6e3a8cf3f52aa16c', // Real Lightning node public key
-      lsp_balance_sat: channelSizeSat, // LSP provides the full channel balance
-      client_balance_sat: 0, // Client balance must be 0 according to LSP constraints
+      token: `priceboard-${Date.now()}`
     };
 
     // Resolve the base URL (with autodiscovery for LNServer)
@@ -295,15 +322,15 @@ export async function createLSPOrder(
     });
 
     if (!response.ok) {
-      const errorInfo = toLspError(null, response);
+      const errorInfo = await mapLspError(response);
       console.error(`Failed to create order with ${lsp.name}: ${response.status} ${response.statusText} - ${errorInfo.message}`);
       return null;
     }
 
     const data = await response.json();
     
-    // Validate the response structure
-    if (!data.order_id || typeof data.total_fee_msat !== 'number') {
+    // Basic validation - just check if we have some kind of order response
+    if (!data || typeof data !== 'object') {
       console.error(`Invalid order response from ${lsp.name}:`, data);
       return null;
     }
@@ -354,27 +381,32 @@ export async function fetchLSPPrice(lsp: LSP, channelSizeSat: number = 1000000):
       }
 
       // Try to create order to get actual pricing
-      const order = await createLSPOrder(lsp, channelSizeSat);
-      if (order && order.total_fee_msat > 0) {
-        console.log(`Successfully fetched price from ${lsp.name}: ${order.total_fee_msat} msat`);
-        
-        const livePrice: LSPPrice = {
-          lsp_id: lsp.id,
-          lsp_name: lsp.name,
-          channel_size_sat: order.channel_size_sat,
-          total_fee_msat: order.total_fee_msat,
-          channel_fee_percent: order.channel_fee_percent,
-          channel_fee_base_msat: order.channel_fee_base_msat,
-          lease_fee_base_msat: order.lease_fee_base_msat,
-          lease_fee_basis: order.lease_fee_basis,
-          timestamp: new Date().toISOString(),
-          source: 'live'
-        };
+      const order = await createLSPOrder(lsp, channelSizeSat, infoResult.info);
+      if (order) {
+        const msat = extractMsatFromOrder(order);
+        if (msat && msat > 0) {
+          console.log(`Successfully fetched price from ${lsp.name}: ${msat} msat`);
+          
+          const livePrice: LSPPrice = {
+            lsp_id: lsp.id,
+            lsp_name: lsp.name,
+            channel_size_sat: channelSizeSat,
+            total_fee_msat: msat,
+            channel_fee_percent: order.channel_fee_percent ?? 0,
+            channel_fee_base_msat: order.channel_fee_base_msat ?? 0,
+            lease_fee_base_msat: order.lease_fee_base_msat ?? 0,
+            lease_fee_basis: order.lease_fee_basis ?? 0,
+            timestamp: new Date().toISOString(),
+            source: 'live'
+          };
 
-        // Save this successful price for future fallback
-        await saveLatestForLsp(lsp.id, livePrice);
-        
-        return livePrice;
+          // Save this successful price for future fallback
+          await saveLatestForLsp(lsp.id, livePrice);
+          
+          return livePrice;
+        } else {
+          console.log(`Invalid order response from ${lsp.name}:`, order);
+        }
       }
 
       // Fallback: Estimate fees based on LSP info and channel size
@@ -428,6 +460,28 @@ export async function fetchLSPPrice(lsp: LSP, channelSizeSat: number = 1000000):
   // No cache available - return error with estimated fallback
   const errorInfo = toLspError(null);
   return createErrorPrice(lsp, channelSizeSat, lastError, errorInfo.code);
+}
+
+// Extract pricing from different LSP response formats
+function extractMsatFromOrder(order: Record<string, any>): number | null {
+  // Try direct msat field first
+  if (typeof order?.total_fee_msat === 'number') {
+    return order.total_fee_msat;
+  }
+
+  // Try Flashsats format: payment.bolt11.fee_total_sat or order_total_sat
+  const feeSat = order?.payment?.bolt11?.fee_total_sat ?? order?.payment?.bolt11?.order_total_sat;
+  if (feeSat != null) {
+    const n = typeof feeSat === 'string' ? parseInt(feeSat, 10) : feeSat;
+    if (Number.isFinite(n)) return n * 1000; // sats -> msat
+  }
+
+  // Try other possible fields
+  if (typeof order?.fee_total_msat === 'number') return order.fee_total_msat;
+  if (typeof order?.total_fee_sat === 'number') return order.total_fee_sat * 1000;
+  if (typeof order?.fee_total_sat === 'number') return order.fee_total_sat * 1000;
+
+  return null;
 }
 
 // Helper function to create error price response
