@@ -89,19 +89,19 @@ function StatusBadge({ source, staleSeconds, errorCode, error }: {
 
     const getErrorColor = (code: string) => {
       switch (code) {
-        case 'URL_NOT_FOUND': return 'bg-orange-100 text-orange-800';
-        case 'DNS_ERROR': return 'bg-orange-100 text-orange-800';
-        case 'CONNECTION_REFUSED': return 'bg-red-100 text-red-800';
-        case 'NETWORK_ERROR': return 'bg-red-100 text-red-800';
-        case 'TIMEOUT': return 'bg-yellow-100 text-yellow-800';
-        case 'TLS_ERROR': return 'bg-red-100 text-red-800';
-        case 'RATE_LIMITED': return 'bg-purple-100 text-purple-800';
-        case 'BAD_STATUS': return 'bg-red-100 text-red-800';
-        case 'INVALID_JSON': return 'bg-yellow-100 text-yellow-800';
-        case 'SCHEMA_MISMATCH': return 'bg-yellow-100 text-yellow-800';
-        case 'CHANNEL_SIZE_TOO_SMALL': return 'bg-blue-100 text-blue-800';
-        case 'CHANNEL_SIZE_TOO_LARGE': return 'bg-blue-100 text-blue-800';
-        default: return 'bg-red-100 text-red-800';
+        case 'URL_NOT_FOUND': return 'bg-gray-200 text-gray-700';
+        case 'DNS_ERROR': return 'bg-gray-200 text-gray-700';
+        case 'CONNECTION_REFUSED': return 'bg-gray-300 text-gray-600';
+        case 'NETWORK_ERROR': return 'bg-gray-300 text-gray-600';
+        case 'TIMEOUT': return 'bg-gray-200 text-gray-700';
+        case 'TLS_ERROR': return 'bg-gray-300 text-gray-600';
+        case 'RATE_LIMITED': return 'bg-gray-400 text-gray-500';
+        case 'BAD_STATUS': return 'bg-gray-300 text-gray-600';
+        case 'INVALID_JSON': return 'bg-gray-200 text-gray-700';
+        case 'SCHEMA_MISMATCH': return 'bg-gray-200 text-gray-700';
+        case 'CHANNEL_SIZE_TOO_SMALL': return 'bg-gray-200 text-gray-700';
+        case 'CHANNEL_SIZE_TOO_LARGE': return 'bg-gray-200 text-gray-700';
+        default: return 'bg-gray-300 text-gray-600';
       }
     };
 
@@ -119,20 +119,20 @@ function StatusBadge({ source, staleSeconds, errorCode, error }: {
   switch (source) {
     case 'live':
       return (
-        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800" aria-label="Live data">
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800" aria-label="Live data - fresh from LSP">
           ✓ Live
         </span>
       );
     case 'cached':
       const minutes = staleSeconds ? Math.floor(staleSeconds / 60) : 0;
       return (
-        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800" title={`Cached ${minutes}m ago`} aria-label={`Cached data, ${minutes} minutes old`}>
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700" title={`Cached ${minutes}m ago`} aria-label={`Cached data, ${minutes} minutes old`}>
           ⚠ Cached
         </span>
       );
     case 'estimated':
       return (
-        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800" title="Estimated pricing" aria-label="Estimated pricing">
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-300 text-gray-600" title="Estimated pricing - LSP unavailable" aria-label="Estimated pricing - LSP unavailable">
           ≈ Estimated
         </span>
       );

@@ -242,12 +242,17 @@ export default function Home() {
         {/* Action Buttons */}
         <div className="mt-6 flex justify-between items-center">
           {/* Data Source Legend */}
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
-            <span>Data sources:</span>
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">⚫ Live</span>
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700">⚫ Cached</span>
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-300 text-gray-600">⚫ Estimated</span>
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-400 text-gray-500">⚫ Mixed</span>
+          <div className="flex items-center space-x-4 text-sm text-gray-600">
+            <div className="flex items-center space-x-2">
+              <span>Data sources:</span>
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800" title="Fresh data directly from the LSP">⚫ Live</span>
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700" title="Saved data from earlier (LSP temporarily down)">⚫ Cached</span>
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-300 text-gray-600" title="Calculated estimate (LSP not responding)">⚫ Estimated</span>
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-400 text-gray-500" title="Mix of live, cached, and estimated data">⚫ Mixed</span>
+            </div>
+            <div className="text-xs text-gray-500">
+              <span className="font-medium">What this means:</span> Live = fresh from provider, Cached = saved data, Estimated = calculated guess, Mixed = combination of all
+            </div>
           </div>
           
           <div className="flex items-center space-x-4">
