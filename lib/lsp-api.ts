@@ -463,7 +463,7 @@ export async function fetchLSPPrice(lsp: LSP, channelSizeSat: number = 1000000):
 }
 
 // Extract pricing from different LSP response formats
-function extractMsatFromOrder(order: Record<string, any>): number | null {
+function extractMsatFromOrder(order: Record<string, unknown>): number | null {
   // Try direct msat field first
   if (typeof order?.total_fee_msat === 'number') {
     return order.total_fee_msat;
