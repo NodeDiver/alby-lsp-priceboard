@@ -14,6 +14,9 @@ const PRICES_KEY = 'alby:lsp:prices';
 const LAST_UPDATE_KEY = 'alby:lsp:last_update';
 const PRICE_HISTORY_KEY = 'alby:lsp:price_history';
 
+// Per-LSP latest price keys
+const getLspPriceKey = (lspId: string) => `alby:lsp:price:${lspId}`;
+
 // Save latest prices to database with pipeline and atomic operations
 export async function savePricesToDB(prices: LSPPrice[]): Promise<boolean> {
   try {
@@ -183,45 +186,6 @@ export async function getDatabaseStatus(): Promise<{
   }
 }
 
-// Per-LSP caching functions for individual LSP fallback
-export async function getLastGoodPriceForLSP(lspId: string): Promise<LSPPrice | null> {
-  try {
-    if (!isRedisConfigured()) {
-      console.error('Upstash Redis not configured');
-      return null;
-    }
-
-    const key = `alby:lsp:price:${lspId}`;
-    const json = await redis.get<string>(key);
-    
-    if (!json) {
-      return null;
-    }
-
-    const price = JSON.parse(json) as LSPPrice;
-    return price;
-  } catch (error) {
-    console.error(`Error getting last good price for LSP ${lspId}:`, error);
-    return null;
-  }
-}
-
-export async function saveLatestForLsp(lspId: string, price: LSPPrice): Promise<boolean> {
-  try {
-    if (!isRedisConfigured()) {
-      console.error('Upstash Redis not configured');
-      return false;
-    }
-
-    const key = `alby:lsp:price:${lspId}`;
-    // Save with 24 hour TTL for per-LSP cache
-    await redis.set(key, JSON.stringify(price), { ex: 86400 });
-    return true;
-  } catch (error) {
-    console.error(`Error saving latest price for LSP ${lspId}:`, error);
-    return false;
-  }
-}
 
 // Save all prices with per-LSP individual caching
 export async function savePricesWithPerLSPCache(prices: LSPPrice[]): Promise<boolean> {
@@ -260,5 +224,37 @@ export async function savePricesWithPerLSPCache(prices: LSPPrice[]): Promise<boo
   } catch (error) {
     console.error('Error saving prices with per-LSP cache:', error);
     return false;
+  }
+}
+
+// Per-LSP latest price helpers
+export async function saveLatestForLsp(lspId: string, price: LSPPrice): Promise<boolean> {
+  try {
+    if (!isRedisConfigured()) {
+      console.error('Upstash Redis not configured');
+      return false;
+    }
+
+    const key = getLspPriceKey(lspId);
+    await redis.set(key, JSON.stringify(price), { ex: 24 * 60 * 60 }); // 24 hour TTL
+    return true;
+  } catch (error) {
+    console.error(`Error saving latest price for LSP ${lspId}:`, error);
+    return false;
+  }
+}
+
+export async function getLastGoodPriceForLSP(lspId: string): Promise<LSPPrice | null> {
+  try {
+    if (!isRedisConfigured()) {
+      return null;
+    }
+
+    const key = getLspPriceKey(lspId);
+    const raw = await redis.get<string>(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch (error) {
+    console.error(`Error getting last good price for LSP ${lspId}:`, error);
+    return null;
   }
 }

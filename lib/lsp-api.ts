@@ -1,6 +1,55 @@
 import { LSP } from './lsps';
 import { getLastGoodPriceForLSP, saveLatestForLsp } from './db';
 
+// Error taxonomy for better error handling
+export enum LspErrorCode {
+  URL_NOT_FOUND = 'URL_NOT_FOUND',
+  TIMEOUT = 'TIMEOUT',
+  BAD_STATUS = 'BAD_STATUS',
+  INVALID_JSON = 'INVALID_JSON',
+  SCHEMA_MISMATCH = 'SCHEMA_MISMATCH',
+  CHANNEL_SIZE_TOO_SMALL = 'CHANNEL_SIZE_TOO_SMALL',
+  CHANNEL_SIZE_TOO_LARGE = 'CHANNEL_SIZE_TOO_LARGE',
+  RATE_LIMITED = 'RATE_LIMITED',
+  TLS_ERROR = 'TLS_ERROR',
+  CORS_BLOCKED = 'CORS_BLOCKED',
+  UNKNOWN = 'UNKNOWN'
+}
+
+// Helper to map errors to typed codes
+function toLspError(error: unknown, response?: Response): { code: LspErrorCode; message: string } {
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+    
+    if (message.includes('timeout') || message.includes('aborted')) {
+      return { code: LspErrorCode.TIMEOUT, message: error.message };
+    }
+    if (message.includes('tls') || message.includes('certificate')) {
+      return { code: LspErrorCode.TLS_ERROR, message: error.message };
+    }
+    if (message.includes('cors') || message.includes('cross-origin')) {
+      return { code: LspErrorCode.CORS_BLOCKED, message: error.message };
+    }
+    if (message.includes('fetch')) {
+      return { code: LspErrorCode.URL_NOT_FOUND, message: error.message };
+    }
+  }
+  
+  if (response) {
+    if (response.status === 404) {
+      return { code: LspErrorCode.URL_NOT_FOUND, message: 'LSP endpoint not found' };
+    }
+    if (response.status === 429) {
+      return { code: LspErrorCode.RATE_LIMITED, message: 'Rate limited by LSP' };
+    }
+    if (response.status >= 400) {
+      return { code: LspErrorCode.BAD_STATUS, message: `HTTP ${response.status}` };
+    }
+  }
+  
+  return { code: LspErrorCode.UNKNOWN, message: error instanceof Error ? error.message : 'Unknown error' };
+}
+
 // LNServer candidate URLs for autodiscovery
 const LNSERVER_CANDIDATES = [
   'https://www.lnserver.com/lsp/wave',        // User's suggestion (likely UI route)
@@ -142,23 +191,6 @@ export interface LSPS1InvoiceResponse {
   created_at: string;
 }
 
-export enum LspErrorCode {
-  URL_NOT_FOUND = 'URL_NOT_FOUND',
-  TIMEOUT = 'TIMEOUT',
-  BAD_STATUS = 'BAD_STATUS',
-  INVALID_JSON = 'INVALID_JSON',
-  SCHEMA_MISMATCH = 'SCHEMA_MISMATCH',
-  CHANNEL_SIZE_TOO_SMALL = 'CHANNEL_SIZE_TOO_SMALL',
-  CHANNEL_SIZE_TOO_LARGE = 'CHANNEL_SIZE_TOO_LARGE',
-  ENDPOINT_UNSUPPORTED = 'ENDPOINT_UNSUPPORTED',
-  RATE_LIMITED = 'RATE_LIMITED',
-  TLS_ERROR = 'TLS_ERROR',
-  CORS_BLOCKED = 'CORS_BLOCKED',
-  NETWORK_ERROR = 'NETWORK_ERROR',
-  DNS_ERROR = 'DNS_ERROR',
-  CONNECTION_REFUSED = 'CONNECTION_REFUSED',
-  UNKNOWN = 'UNKNOWN',
-}
 
 export interface LSPPrice {
   lsp_id: string;
@@ -176,42 +208,6 @@ export interface LSPPrice {
   error_code?: LspErrorCode;
 }
 
-// Error classification helper
-function toLspError(e: unknown, status?: number): { code: LspErrorCode; message: string } {
-  if (typeof e === 'object' && e && 'name' in e && (e as Error).name === 'TimeoutError') {
-    return { code: LspErrorCode.TIMEOUT, message: 'Request timed out' };
-  }
-  if (status === 404) return { code: LspErrorCode.URL_NOT_FOUND, message: 'Endpoint not found' };
-  if (status === 429) return { code: LspErrorCode.RATE_LIMITED, message: 'Rate limited' };
-  if (status && status >= 500) return { code: LspErrorCode.BAD_STATUS, message: `Server error ${status}` };
-  if (e instanceof TypeError) {
-    // Check for DNS errors first (more specific)
-    if (e.message.includes('ENOTFOUND') || e.message.includes('getaddrinfo ENOTFOUND')) {
-      return { code: LspErrorCode.DNS_ERROR, message: 'Domain not found' };
-    }
-    if (e.message.includes('ECONNREFUSED')) {
-      return { code: LspErrorCode.CONNECTION_REFUSED, message: 'Connection refused' };
-    }
-    if (e.message.includes('CERT')) {
-      return { code: LspErrorCode.TLS_ERROR, message: 'SSL certificate error' };
-    }
-    if (e.message.includes('fetch failed')) {
-      return { code: LspErrorCode.NETWORK_ERROR, message: 'Network connection failed' };
-    }
-  }
-  if (e instanceof Error) {
-    if (e.message.includes('ENOTFOUND')) {
-      return { code: LspErrorCode.DNS_ERROR, message: 'Domain not found' };
-    }
-    if (e.message.includes('ECONNREFUSED')) {
-      return { code: LspErrorCode.CONNECTION_REFUSED, message: 'Connection refused' };
-    }
-    if (e.message.includes('timeout')) {
-      return { code: LspErrorCode.TIMEOUT, message: 'Request timed out' };
-    }
-  }
-  return { code: LspErrorCode.UNKNOWN, message: e instanceof Error ? e.message : 'Unknown error' };
-}
 
 // Fetch LSP info using LSPS1 protocol (matching Alby Hub implementation)
 export async function fetchLSPInfo(lsp: LSP): Promise<{ info: LSPS1GetInfoResponse | null; error?: { code: LspErrorCode; message: string } }> {
@@ -238,7 +234,7 @@ export async function fetchLSPInfo(lsp: LSP): Promise<{ info: LSPS1GetInfoRespon
     });
 
     if (!response.ok) {
-      const errorInfo = toLspError(null, response.status);
+      const errorInfo = toLspError(null, response);
       console.error(`Failed to fetch info from ${lsp.name}: ${response.status} ${response.statusText} - ${errorInfo.message}`);
       return { info: null, error: errorInfo };
     }
@@ -299,7 +295,7 @@ export async function createLSPOrder(
     });
 
     if (!response.ok) {
-      const errorInfo = toLspError(null, response.status);
+      const errorInfo = toLspError(null, response);
       console.error(`Failed to create order with ${lsp.name}: ${response.status} ${response.statusText} - ${errorInfo.message}`);
       return null;
     }

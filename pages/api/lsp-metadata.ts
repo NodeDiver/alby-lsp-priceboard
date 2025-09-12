@@ -99,7 +99,7 @@ async function fetchSingleLspMetaSafe(lsp: LSP): Promise<LspMetaResponse> {
   };
 }
 
-function extractTimestamp(meta: LspMetaResponse): string {
+function extractTimestamp(): string {
   // If you add a timestamp in metadata later, return it here; for now use "now"
   return new Date().toISOString();
 }
@@ -144,9 +144,13 @@ async function fetchLspMetaLive(lsp: LSP): Promise<{ ok: true; payload: LspMetaR
     };
 
     return { ok: true, payload };
-  } catch (e: any) {
-    if (e?.name === 'TimeoutError') return { ok: false, code: 'TIMEOUT', msg: 'Request timed out' };
-    if (e instanceof TypeError) return { ok: false, code: 'URL_INVALID', msg: 'Invalid URL or network error' };
+  } catch (e: unknown) {
+    if (e && typeof e === 'object' && 'name' in e && e.name === 'TimeoutError') {
+      return { ok: false, code: 'TIMEOUT', msg: 'Request timed out' };
+    }
+    if (e instanceof TypeError) {
+      return { ok: false, code: 'URL_INVALID', msg: 'Invalid URL or network error' };
+    }
     return { ok: false, code: 'UNKNOWN', msg: 'Unknown error' };
   }
 }
