@@ -4,6 +4,11 @@ import { LSPPrice } from './lsp-api';
 // Initialize Redis client
 const redis = Redis.fromEnv();
 
+// Check if Redis is properly configured
+const isRedisConfigured = () => {
+  return !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
+};
+
 // Database keys with namespacing
 const PRICES_KEY = 'alby:lsp:prices';
 const LAST_UPDATE_KEY = 'alby:lsp:last_update';
@@ -12,7 +17,7 @@ const PRICE_HISTORY_KEY = 'alby:lsp:price_history';
 // Save latest prices to database with pipeline and atomic operations
 export async function savePricesToDB(prices: LSPPrice[]): Promise<boolean> {
   try {
-    if (!redis) {
+    if (!isRedisConfigured()) {
       console.error('Upstash Redis not configured');
       return false;
     }
@@ -46,7 +51,7 @@ export async function savePricesToDB(prices: LSPPrice[]): Promise<boolean> {
 // Get latest prices from database
 export async function getLatestPrices(): Promise<LSPPrice[]> {
   try {
-    if (!redis) {
+    if (!isRedisConfigured()) {
       console.error('Upstash Redis not configured');
       return [];
     }
@@ -62,7 +67,7 @@ export async function getLatestPrices(): Promise<LSPPrice[]> {
 // Get last update timestamp
 export async function getLastUpdateTime(): Promise<string | null> {
   try {
-    if (!redis) {
+    if (!isRedisConfigured()) {
       return null;
     }
 
@@ -76,7 +81,7 @@ export async function getLastUpdateTime(): Promise<string | null> {
 // Get price history from LIST
 export async function getPriceHistory(): Promise<Array<{timestamp: string, prices: LSPPrice[]}>> {
   try {
-    if (!redis) {
+    if (!isRedisConfigured()) {
       return [];
     }
 
@@ -112,7 +117,7 @@ export async function getLSPPrices(lspId: string): Promise<LSPPrice[]> {
 // Clear all data (useful for testing/reset)
 export async function clearAllData(): Promise<boolean> {
   try {
-    if (!redis) {
+    if (!isRedisConfigured()) {
       return false;
     }
 
@@ -136,7 +141,8 @@ export async function getDatabaseStatus(): Promise<{
   isStale: boolean;
 }> {
   try {
-    if (!redis) {
+    // Check if Redis is properly configured first
+    if (!isRedisConfigured()) {
       return {
         hasData: false,
         lastUpdate: null,
@@ -180,7 +186,7 @@ export async function getDatabaseStatus(): Promise<{
 // Per-LSP caching functions for individual LSP fallback
 export async function getLastGoodPriceForLSP(lspId: string): Promise<LSPPrice | null> {
   try {
-    if (!redis) {
+    if (!isRedisConfigured()) {
       console.error('Upstash Redis not configured');
       return null;
     }
@@ -202,7 +208,7 @@ export async function getLastGoodPriceForLSP(lspId: string): Promise<LSPPrice | 
 
 export async function saveLatestForLsp(lspId: string, price: LSPPrice): Promise<boolean> {
   try {
-    if (!redis) {
+    if (!isRedisConfigured()) {
       console.error('Upstash Redis not configured');
       return false;
     }
@@ -220,7 +226,7 @@ export async function saveLatestForLsp(lspId: string, price: LSPPrice): Promise<
 // Save all prices with per-LSP individual caching
 export async function savePricesWithPerLSPCache(prices: LSPPrice[]): Promise<boolean> {
   try {
-    if (!redis) {
+    if (!isRedisConfigured()) {
       console.error('Upstash Redis not configured');
       return false;
     }
