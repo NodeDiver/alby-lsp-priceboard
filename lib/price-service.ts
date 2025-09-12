@@ -18,7 +18,7 @@ export class PriceService {
   }
 
   // Fetch prices from all LSPs and save to database
-  public async fetchAndSavePrices(): Promise<LSPPrice[]> {
+  public async fetchAndSavePrices(channelSizeSat: number = 1000000): Promise<LSPPrice[]> {
     if (this.isFetching) {
       return await getLatestPricesFromDB();
     }
@@ -34,7 +34,7 @@ export class PriceService {
     try {
       
       // Fetch prices from all LSPs
-      const prices = await fetchAllLSPPrices();
+      const prices = await fetchAllLSPPrices(channelSizeSat);
       
       if (prices.length > 0) {
         // Save to database
@@ -55,26 +55,29 @@ export class PriceService {
   }
 
   // Force fetch prices regardless of time interval
-  public async forceFetchPrices(): Promise<LSPPrice[]> {
+  public async forceFetchPrices(channelSizeSat: number = 1000000): Promise<LSPPrice[]> {
     this.lastFetchTime = null;
-    return await this.fetchAndSavePrices();
+    return await this.fetchAndSavePrices(channelSizeSat);
   }
 
   // Get latest prices (from cache or fetch if needed)
-  public async getLatestPrices(): Promise<LSPPrice[]> {
+  public async getLatestPrices(channelSizeSat: number = 1000000): Promise<LSPPrice[]> {
     const cachedPrices = await getLatestPricesFromDB();
     
-    if (cachedPrices.length === 0) {
-      return await this.fetchAndSavePrices();
+    // Filter cached prices by channel size
+    const filteredCachedPrices = cachedPrices.filter(price => price.channel_size_sat === channelSizeSat);
+    
+    if (filteredCachedPrices.length === 0) {
+      return await this.fetchAndSavePrices(channelSizeSat);
     }
     
     // Check if we need to refresh
     if (this.shouldRefreshPrices()) {
       // Fetch in background without blocking
-      this.fetchAndSavePrices().catch(console.error);
+      this.fetchAndSavePrices(channelSizeSat).catch(console.error);
     }
     
-    return cachedPrices;
+    return filteredCachedPrices;
   }
 
   // Check if prices should be refreshed (with jitter to avoid thundering herd)
@@ -114,14 +117,14 @@ export class PriceService {
 export const priceService = PriceService.getInstance();
 
 // Convenience functions
-export async function fetchAndSavePrices(): Promise<LSPPrice[]> {
-  return await priceService.fetchAndSavePrices();
+export async function fetchAndSavePrices(channelSizeSat: number = 1000000): Promise<LSPPrice[]> {
+  return await priceService.fetchAndSavePrices(channelSizeSat);
 }
 
-export async function getLatestPrices(): Promise<LSPPrice[]> {
-  return await priceService.getLatestPrices();
+export async function getLatestPrices(channelSizeSat: number = 1000000): Promise<LSPPrice[]> {
+  return await priceService.getLatestPrices(channelSizeSat);
 }
 
-export async function forceFetchPrices(): Promise<LSPPrice[]> {
-  return await priceService.forceFetchPrices();
+export async function forceFetchPrices(channelSizeSat: number = 1000000): Promise<LSPPrice[]> {
+  return await priceService.forceFetchPrices(channelSizeSat);
 }
