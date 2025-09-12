@@ -345,19 +345,19 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
               <div className="flex items-center space-x-2">
                 <div className={`px-2 py-1 rounded-full text-xs font-medium ${
                   dataSource === 'live'
-                    ? 'bg-green-100 text-green-800'
+                    ? 'bg-gray-100 text-gray-800'
                     : dataSource === 'cached'
-                    ? 'bg-yellow-100 text-yellow-800'
+                    ? 'bg-gray-200 text-gray-700'
                     : dataSource === 'estimated'
-                    ? 'bg-blue-100 text-blue-800'
+                    ? 'bg-gray-300 text-gray-600'
                     : dataSource === 'mixed'
-                    ? 'bg-purple-100 text-purple-800'
+                    ? 'bg-gray-400 text-gray-500'
                     : 'bg-gray-100 text-gray-800'
                 }`}>
-                  {dataSource === 'live' ? '🟢 Live' :
-                   dataSource === 'cached' ? '🟡 Cached' :
-                   dataSource === 'estimated' ? '🔵 Estimated' :
-                   dataSource === 'mixed' ? '🟣 Mixed' :
+                  {dataSource === 'live' ? '⚫ Live' :
+                   dataSource === 'cached' ? '⚫ Cached' :
+                   dataSource === 'estimated' ? '⚫ Estimated' :
+                   dataSource === 'mixed' ? '⚫ Mixed' :
                    '⚪ Unknown'}
                 </div>
                 {dataSourceDescription && (

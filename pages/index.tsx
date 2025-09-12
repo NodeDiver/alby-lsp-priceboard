@@ -244,10 +244,10 @@ export default function Home() {
           {/* Data Source Legend */}
           <div className="flex items-center space-x-2 text-sm text-gray-600">
             <span>Data sources:</span>
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">🟢 Live</span>
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">🟡 Cached</span>
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">🔵 Estimated</span>
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">🟣 Mixed</span>
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">⚫ Live</span>
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700">⚫ Cached</span>
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-300 text-gray-600">⚫ Estimated</span>
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-400 text-gray-500">⚫ Mixed</span>
           </div>
           
           <div className="flex items-center space-x-4">
