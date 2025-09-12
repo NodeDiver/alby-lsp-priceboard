@@ -3,6 +3,7 @@ import { PriceTable, DisplayPrice } from '../components/PriceTable';
 import { LSP } from '../lib/lsps';
 import { COMMON_CURRENCIES } from '../lib/currency';
 
+
 export default function Home() {
   const [prices, setPrices] = useState<DisplayPrice[]>([]);
   const [loading, setLoading] = useState(true);
@@ -13,9 +14,10 @@ export default function Home() {
   const [selectedCurrency, setSelectedCurrency] = useState<string>('usd'); // Default to USD
   const [dataSource, setDataSource] = useState<string>('unknown');
   const [dataSourceDescription, setDataSourceDescription] = useState<string>('');
+  const [abortController, setAbortController] = useState<AbortController | null>(null);
 
   // Retry function for individual LSPs
-  const handleRetryLSP = async (lspId: string) => {
+  const handleRetryLSP = async () => {
     try {
       setLoading(true);
       setError(null);
@@ -45,12 +47,24 @@ export default function Home() {
   };
 
   // Fetch prices from API
-  const fetchPrices = async (channelSize: number = selectedChannelSize) => {
+  const fetchPrices = async (channelSize: number = selectedChannelSize, fresh: boolean = false) => {
+    // Cancel any in-flight request
+    if (abortController) {
+      abortController.abort();
+    }
+    
+    const controller = new AbortController();
+    setAbortController(controller);
+    
     try {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`/api/prices?channelSize=${channelSize}`);
+      const url = `/api/prices?channelSize=${channelSize}${fresh ? '&fresh=1' : ''}`;
+      const response = await fetch(url, { 
+        cache: 'no-store',
+        signal: controller.signal
+      });
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -67,10 +81,13 @@ export default function Home() {
         throw new Error(data.message || 'Failed to fetch prices');
       }
     } catch (err) {
-      console.error('Error fetching prices:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch prices');
+      if (err instanceof Error && err.name !== 'AbortError') {
+        console.error('Error fetching prices:', err);
+        setError(err.message || 'Failed to fetch prices');
+      }
     } finally {
       setLoading(false);
+      setAbortController(null);
     }
   };
 
@@ -93,11 +110,18 @@ export default function Home() {
   useEffect(() => {
     fetchPrices();
     fetchLSPData();
+    
+    // Cleanup function to abort any in-flight requests
+    return () => {
+      if (abortController) {
+        abortController.abort();
+      }
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Refresh prices manually
+  // Refresh prices manually (force fresh fetch)
   const handleRefresh = () => {
-    fetchPrices(selectedChannelSize);
+    fetchPrices(selectedChannelSize, true);
   };
 
   // Handle channel size change
@@ -208,7 +232,7 @@ export default function Home() {
             lspMetadata={lspMetadata} 
             selectedChannelSize={selectedChannelSize}
             selectedCurrency={selectedCurrency}
-            lastUpdate={lastUpdate}
+            lastUpdate={lastUpdate || undefined}
             dataSource={dataSource}
             dataSourceDescription={dataSourceDescription}
             onRetry={handleRetryLSP}
@@ -216,7 +240,16 @@ export default function Home() {
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-6 flex justify-end">
+        <div className="mt-6 flex justify-between items-center">
+          {/* Data Source Legend */}
+          <div className="flex items-center space-x-2 text-sm text-gray-600">
+            <span>Data sources:</span>
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">🟢 Live</span>
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">🟡 Cached</span>
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">🔵 Estimated</span>
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">🟣 Mixed</span>
+          </div>
+          
           <div className="flex items-center space-x-4">
             <button
               onClick={handleRefresh}
@@ -239,11 +272,15 @@ export default function Home() {
         <div className="mt-8 bg-white rounded-lg shadow p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Public API Access</h3>
           <p className="text-sm text-gray-500 mb-4 italic">
-            {dataSource === 'real' || dataSource === 'real_fresh' 
-              ? `Note: Using real-time data from LSPs (${dataSourceDescription})`
-              : dataSource === 'mock_fallback'
+            {dataSource === 'live' 
+              ? `Note: Using live data from LSPs (${dataSourceDescription})`
+              : dataSource === 'cached'
+              ? `Note: Using cached data (${dataSourceDescription})`
+              : dataSource === 'estimated'
               ? 'Note: Using estimated pricing (some LSPs unavailable)'
-              : 'Note: Currently using mock data for development - real LSP integration pending'
+              : dataSource === 'mixed'
+              ? 'Note: Mixed data sources (some live, some cached/estimated)'
+              : 'Note: Data source unknown - check debug info for details'
             }
           </p>
           <p className="text-sm text-gray-600 mb-4">
@@ -256,6 +293,7 @@ export default function Home() {
               <div className="bg-gray-50 rounded p-3 font-mono text-sm">
                 <div>GET /api/prices</div>
                 <div className="text-gray-500 mt-1">Optional: ?channelSize=1000000 (1M-10M sats)</div>
+                <div className="text-gray-500 mt-1">Optional: ?fresh=1 (force live fetch)</div>
               </div>
             </div>
             
@@ -266,14 +304,18 @@ export default function Home() {
   "success": true,
   "last_update": "2025-09-05T16:24:06.744Z",
   "total_lsps": 4,
+  "data_source": "live",
+  "data_source_description": "All LSPs responding with live data",
   "prices": [
     {
       "lsp_id": "olympus",
       "lsp_name": "Olympus", 
       "channel_size": 1000000,
       "price": 12000,
+      "price_msat": 12000,
       "channel_fee_percent": 0.012,
-      "timestamp": "2025-09-05T16:24:06.744Z"
+      "timestamp": "2025-09-05T16:24:06.744Z",
+      "source": "live"
     }
   ]
 }`}</pre>
@@ -286,6 +328,8 @@ export default function Home() {
                 <div>• <strong>No authentication required</strong> - completely open API</div>
                 <div>• <strong>CORS enabled</strong> - works from any website</div>
                 <div>• <strong>Channel size filtering</strong> - add ?channelSize=2000000 for 2M sats</div>
+                <div>• <strong>Fresh data option</strong> - add ?fresh=1 to force live fetch</div>
+                <div>• <strong>Price units</strong> - price field contains millisatoshis (msat), divide by 1000 for sats</div>
                 <div>• <strong>Real-time data</strong> - prices update every 10 minutes automatically</div>
               </div>
             </div>
@@ -294,9 +338,10 @@ export default function Home() {
               <h4 className="text-sm font-medium text-gray-900 mb-2">Limitations</h4>
               <div className="text-sm text-gray-600 space-y-1">
                 <div>• Rate limit: ~100 requests/minute (Vercel free tier)</div>
-                <div>• Data retention: Latest prices only (no historical data)</div>
+                <div>• Data retention: Public API exposes latest snapshot only (backend stores history)</div>
                 <div>• Channel sizes: 1M-10M sats supported</div>
                 <div>• LSPs: Currently 4 providers (Olympus, LNServer, Megalith, Flashsats)</div>
+                <div>• Price units: All prices returned in millisatoshis (msat)</div>
               </div>
             </div>
           </div>
@@ -305,16 +350,28 @@ export default function Home() {
             <h4 className="text-sm font-medium text-gray-900 mb-2">Current Status</h4>
             <div className="text-xs text-gray-600 space-y-1">
               <div>• ✅ API endpoint active and responding</div>
-              {dataSource === 'real' || dataSource === 'real_fresh' ? (
+              {dataSource === 'live' ? (
                 <>
-                  <div>• ✅ Real-time LSP data fetching active</div>
+                  <div>• ✅ Live LSP data fetching active</div>
                   <div>• ✅ LSPS1 protocol implementation working</div>
-                  <div>• ⚠️ Some LSPs may be unavailable (using estimated pricing)</div>
+                  <div>• ✅ All LSPs responding with real-time data</div>
+                </>
+              ) : dataSource === 'cached' ? (
+                <>
+                  <div>• ✅ Cached data available (LSPs temporarily unavailable)</div>
+                  <div>• ✅ LSPS1 protocol implementation working</div>
+                  <div>• ⚠️ Some LSPs may be unavailable (using cached data)</div>
+                </>
+              ) : dataSource === 'estimated' ? (
+                <>
+                  <div>• ✅ Estimated pricing active (LSPs unavailable)</div>
+                  <div>• ✅ LSPS1 protocol implementation working</div>
+                  <div>• ⚠️ All LSPs unavailable (using estimated pricing)</div>
                 </>
               ) : (
                 <>
-                  <div>• ✅ Mock data enabled for development</div>
-                  <div>• ⏳ Vercel KV configuration pending (real data storage)</div>
+                  <div>• ✅ System operational</div>
+                  <div>• ⏳ Vercel KV configuration pending (caching/performance)</div>
                   <div>• ⏳ Cron jobs will activate after Vercel deployment</div>
                 </>
               )}
