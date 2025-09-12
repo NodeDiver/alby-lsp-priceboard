@@ -62,6 +62,12 @@ async function mapLspError(response: Response): Promise<{ code: LspErrorCode; me
     if (message.includes('connect') || message.includes('peer') || message.includes('not connected')) {
       return { code: LspErrorCode.PEER_NOT_CONNECTED, message: 'Node must be connected to LSP' };
     }
+    if (message.includes('token') || message.includes('InvalidToken')) {
+      return { code: LspErrorCode.SCHEMA_MISMATCH, message: 'Invalid or missing token' };
+    }
+    if (message.includes('rate') || message.includes('limit') || message.includes('too many')) {
+      return { code: LspErrorCode.RATE_LIMITED, message: 'Rate limited by LSP' };
+    }
     if (message.includes('schema') || message.includes('invalid') || message.includes('missing')) {
       return { code: LspErrorCode.SCHEMA_MISMATCH, message: 'Invalid request format' };
     }
@@ -288,7 +294,7 @@ export async function createLSPOrder(
   info?: LSPS1GetInfoResponse
 ): Promise<LSPS1CreateOrderResponse | null> {
   try {
-    const orderRequest = {
+    const orderRequest: Record<string, unknown> = {
       lsp_balance_sat: String(channelSizeSat), // sats as string
       client_balance_sat: "0",
       required_channel_confirmations: info?.min_required_channel_confirmations ?? 3,
@@ -296,8 +302,12 @@ export async function createLSPOrder(
       channel_expiry_blocks: Math.min(13140, info?.max_channel_expiry_blocks ?? 13140),
       announce_channel: false,
       public_key: '028260d14351cfddedf5f171da5235fa958349e5d22cd75d9a6e3a8cf3f52aa16c', // Real Lightning node public key
-      token: `priceboard-${Date.now()}`
     };
+
+    // Only add token for LSPs that require it (not Olympus)
+    if (lsp.id !== 'olympus') {
+      orderRequest.token = `priceboard-${Date.now()}`;
+    }
 
     // Resolve the base URL (with autodiscovery for LNServer)
     const baseUrl = await resolveLspBase(lsp);
@@ -323,6 +333,15 @@ export async function createLSPOrder(
 
     if (!response.ok) {
       const errorInfo = await mapLspError(response);
+      // Log response body for debugging, especially for 400 errors
+      if (response.status === 400) {
+        try {
+          const body = await response.text();
+          console.error(`${lsp.name} 400 error body:`, body);
+        } catch {
+          console.error(`${lsp.name} 400 error (could not read body)`);
+        }
+      }
       console.error(`Failed to create order with ${lsp.name}: ${response.status} ${response.statusText} - ${errorInfo.message}`);
       return null;
     }
@@ -347,6 +366,11 @@ export async function createLSPOrder(
 export async function fetchLSPPrice(lsp: LSP, channelSizeSat: number = 1000000): Promise<LSPPrice | null> {
   const maxRetries = 2;
   let lastError: string = '';
+  
+  // Add delay for Flashsats to avoid rate limiting
+  if (lsp.id === 'flashsats') {
+    await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
+  }
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
@@ -383,7 +407,7 @@ export async function fetchLSPPrice(lsp: LSP, channelSizeSat: number = 1000000):
       // Try to create order to get actual pricing
       const order = await createLSPOrder(lsp, channelSizeSat, infoResult.info);
       if (order) {
-        const msat = extractMsatFromOrder(order);
+        const msat = extractMsatFromOrder(order as unknown as Record<string, unknown>);
         if (msat && msat > 0) {
           console.log(`Successfully fetched price from ${lsp.name}: ${msat} msat`);
           
@@ -470,10 +494,12 @@ function extractMsatFromOrder(order: Record<string, unknown>): number | null {
   }
 
   // Try Flashsats format: payment.bolt11.fee_total_sat or order_total_sat
-  const feeSat = order?.payment?.bolt11?.fee_total_sat ?? order?.payment?.bolt11?.order_total_sat;
+  const payment = order?.payment as Record<string, unknown> | undefined;
+  const bolt11 = payment?.bolt11 as Record<string, unknown> | undefined;
+  const feeSat = bolt11?.fee_total_sat ?? bolt11?.order_total_sat;
   if (feeSat != null) {
-    const n = typeof feeSat === 'string' ? parseInt(feeSat, 10) : feeSat;
-    if (Number.isFinite(n)) return n * 1000; // sats -> msat
+    const n = typeof feeSat === 'string' ? parseInt(feeSat, 10) : (typeof feeSat === 'number' ? feeSat : 0);
+    if (Number.isFinite(n) && n > 0) return n * 1000; // sats -> msat
   }
 
   // Try other possible fields
