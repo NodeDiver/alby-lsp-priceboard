@@ -2,6 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { getLSPById } from '../lib/lsps';
 import { convertSatsToCurrency, CurrencyConversion } from '../lib/currency';
 
+// Helper functions for unit conversion
+const msatToSat = (msat: number) => Math.round(msat / 1000);
+const formatSats = (sats: number) =>
+  sats >= 1_000_000 ? `${(sats / 1_000_000).toFixed(1)}M` :
+  sats >= 1_000 ? `${(sats / 1_000).toFixed(1)}K` : `${sats}`;
+
 export interface DisplayPrice {
   lsp_id: string;
   lsp_name: string;
@@ -18,10 +24,19 @@ export interface DisplayPrice {
   error_code?: string | null;
 }
 
+interface LSPMetadata {
+  id: string;
+  name: string;
+  metadata?: {
+    logo?: string;
+    icon?: string;
+  };
+}
+
 interface PriceTableProps {
   prices: DisplayPrice[];
   loading?: boolean;
-  lspMetadata?: any[];
+  lspMetadata?: LSPMetadata[];
   selectedChannelSize?: number;
   selectedCurrency?: string;
   lastUpdate?: string;
@@ -39,6 +54,7 @@ function RetryButton({ lspId, onRetry }: { lspId: string; onRetry?: (lspId: stri
       onClick={() => onRetry(lspId)}
       className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded hover:bg-blue-200 transition-colors"
       title="Retry this LSP"
+      aria-label={`Retry fetching data for ${lspId}`}
     >
       🔄 Retry
     </button>
@@ -93,6 +109,7 @@ function StatusBadge({ source, staleSeconds, errorCode, error }: {
       <span 
         className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getErrorColor(errorCode)}`}
         title={error || `Error: ${errorCode}`}
+        aria-label={`Error: ${errorCode.replace(/_/g, ' ').toLowerCase()}`}
       >
         {getErrorIcon(errorCode)} {errorCode.replace(/_/g, ' ').toLowerCase()}
       </span>
@@ -102,26 +119,26 @@ function StatusBadge({ source, staleSeconds, errorCode, error }: {
   switch (source) {
     case 'live':
       return (
-        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800" aria-label="Live data">
           ✓ Live
         </span>
       );
     case 'cached':
       const minutes = staleSeconds ? Math.floor(staleSeconds / 60) : 0;
       return (
-        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800" title={`Cached ${minutes}m ago`}>
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800" title={`Cached ${minutes}m ago`} aria-label={`Cached data, ${minutes} minutes old`}>
           ⚠ Cached
         </span>
       );
     case 'estimated':
       return (
-        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800" title="Estimated pricing">
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800" title="Estimated pricing" aria-label="Estimated pricing">
           ≈ Estimated
         </span>
       );
     default:
       return (
-        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800" aria-label="Unknown data source">
           ? Unknown
         </span>
       );
@@ -129,11 +146,11 @@ function StatusBadge({ source, staleSeconds, errorCode, error }: {
 }
 
 // LSP Icon Component with proper fallback
-function LSPIcon({ lspId, lspName, lspData }: { lspId: string; lspName: string; lspData?: any }) {
+function LSPIcon({ lspName, lspData }: { lspName: string; lspData?: LSPMetadata }) {
   const [imageError, setImageError] = useState(false);
   
   // Get icon URL from LSP metadata (following Alby Hub pattern)
-  const iconUrl = lspData?.metadata?.logo || lspData?.metadata?.icon || lspData?.logo;
+  const iconUrl = lspData?.metadata?.logo || lspData?.metadata?.icon;
   
   if (imageError || !iconUrl) {
     return (
@@ -160,31 +177,43 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
   const [currencyConversions, setCurrencyConversions] = useState<{ [key: string]: CurrencyConversion }>({});
   const [conversionLoading, setConversionLoading] = useState(false);
 
-  // Convert prices to selected currency
+  // Convert only visible prices to selected currency
   useEffect(() => {
-    const convertPrices = async () => {
-      if (prices.length === 0) return;
-      
+    let cancelled = false;
+
+    const convertVisible = async () => {
+      if (!prices.length) return;
+
       setConversionLoading(true);
-      const conversions: { [key: string]: CurrencyConversion } = {};
-      
-      for (const price of prices) {
-        if (price.price > 0) {
+      // Filter to only the rows we'll show (one per LSP for selected channel size)
+      const visible = prices.filter(p => p.channel_size === selectedChannelSize && p.price > 0);
+
+      // Run conversions in parallel
+      const entries = await Promise.all(
+        visible.map(async p => {
           try {
-            const conversion = await convertSatsToCurrency(price.price, selectedCurrency);
-            conversions[`${price.lsp_id}_${price.channel_size}`] = conversion;
-          } catch (error) {
-            console.error(`Failed to convert ${price.lsp_id}:`, error);
+            // Fix: Convert msat to sats before currency conversion
+            const feeSats = msatToSat(p.price);
+            const conv = await convertSatsToCurrency(feeSats, selectedCurrency);
+            return [`${p.lsp_id}_${p.channel_size}`, conv] as const;
+          } catch (e) {
+            console.error(`Failed to convert ${p.lsp_id}:`, e);
+            return null;
           }
-        }
-      }
-      
-      setCurrencyConversions(conversions);
+        })
+      );
+
+      if (cancelled) return;
+
+      const map: { [k: string]: CurrencyConversion } = {};
+      for (const e of entries) if (e) map[e[0]] = e[1];
+      setCurrencyConversions(map);
       setConversionLoading(false);
     };
 
-    convertPrices();
-  }, [prices, selectedCurrency]);
+    convertVisible();
+    return () => { cancelled = true; };
+  }, [prices, selectedCurrency, selectedChannelSize]);
 
   if (loading) {
     return (
@@ -202,28 +231,18 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
     );
   }
 
-  // Get unique channel sizes and LSPs
-  const channelSizes = [...new Set(prices.map(p => p.channel_size))].sort((a, b) => a - b);
+  // Get unique LSPs
   const lsps = [...new Set(prices.map(p => p.lsp_id))];
-
-  // Helper function to format satoshis
-  const formatSats = (sats: number): string => {
-    if (sats >= 1000000) {
-      return `${(sats / 1000000).toFixed(1)}M`;
-    } else if (sats >= 1000) {
-      return `${(sats / 1000).toFixed(1)}K`;
-    }
-    return sats.toString();
-  };
-
-  // Helper function to format fee percentage
-  const formatPercentage = (percent: number): string => {
-    return `${(percent * 100).toFixed(2)}%`;
-  };
 
   return (
     <div className="overflow-x-auto bg-white rounded-lg shadow">
-      <table className="w-full border-collapse">
+      <table className="w-full border-collapse" role="table" aria-label="LSP Price Comparison">
+        <thead>
+          <tr className="bg-gray-50 border-b border-gray-200">
+            <th className="text-left p-4 font-medium text-gray-700" scope="col">Provider</th>
+            <th className="text-center p-4 font-medium text-gray-700" scope="col">Fee</th>
+          </tr>
+        </thead>
         <tbody>
           {lsps.map(lspId => {
             const lspPrices = prices.filter(p => p.lsp_id === lspId);
@@ -236,7 +255,6 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
                 <td className="p-4 font-medium text-gray-900">
                   <div className="flex items-center space-x-3">
                     <LSPIcon 
-                      lspId={lspId} 
                       lspName={lspName} 
                       lspData={lspData}
                     />
@@ -284,7 +302,7 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
                     <td className="text-center p-4">
                       <div className="space-y-1">
                         <div className="font-semibold text-gray-900">
-                          {formatSats(price.price)} sats
+                          {formatSats(msatToSat(price.price))} sats
                         </div>
                         <div className="text-xs text-gray-500">
                           {conversionLoading ? (
@@ -326,17 +344,20 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
             {dataSource && (
               <div className="flex items-center space-x-2">
                 <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  dataSource === 'real' || dataSource === 'real_fresh'
-                    ? 'bg-green-100 text-green-800' 
-                    : dataSource === 'mock' 
+                  dataSource === 'live'
+                    ? 'bg-green-100 text-green-800'
+                    : dataSource === 'cached'
                     ? 'bg-yellow-100 text-yellow-800'
-                    : dataSource === 'mock_fallback'
-                    ? 'bg-orange-100 text-orange-800'
+                    : dataSource === 'estimated'
+                    ? 'bg-blue-100 text-blue-800'
+                    : dataSource === 'mixed'
+                    ? 'bg-purple-100 text-purple-800'
                     : 'bg-gray-100 text-gray-800'
                 }`}>
-                  {dataSource === 'real' || dataSource === 'real_fresh' ? '🟢 Real Data' : 
-                   dataSource === 'mock' ? '🟡 Mock Data' : 
-                   dataSource === 'mock_fallback' ? '🟠 Partial Data' :
+                  {dataSource === 'live' ? '🟢 Live' :
+                   dataSource === 'cached' ? '🟡 Cached' :
+                   dataSource === 'estimated' ? '🔵 Estimated' :
+                   dataSource === 'mixed' ? '🟣 Mixed' :
                    '⚪ Unknown'}
                 </div>
                 {dataSourceDescription && (
