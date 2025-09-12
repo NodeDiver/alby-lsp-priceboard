@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint",
+    "start:prod": "next start -p 3000",
+    "lint": "next lint --max-warnings=0",
+    "typecheck": "tsc --noEmit",
     "vercel:deploy": "vercel --prod",
     "docker:build": "docker build -t alby-lsp-priceboard .",
     "docker:run": "docker run -p 3000:3000 alby-lsp-priceboard",
@@ -14,6 +16,7 @@
   },
   "dependencies": {
     "@getalby/lightning-tools": "^6.0.0",
+    "@upstash/ratelimit": "^2.0.6",
     "@upstash/redis": "^1.35.3",
     "next": "15.5.0",
     "react": "19.1.0",
