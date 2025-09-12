@@ -245,10 +245,10 @@ export default function Home() {
           <div className="flex items-center space-x-4 text-sm text-gray-600">
             <div className="flex items-center space-x-2">
               <span>Data sources:</span>
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800" title="Fresh data directly from the LSP">⚫ Live</span>
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700" title="Saved data from earlier (LSP temporarily down)">⚫ Cached</span>
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-300 text-gray-600" title="Calculated estimate (LSP not responding)">⚫ Estimated</span>
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-400 text-gray-500" title="Mix of live, cached, and estimated data">⚫ Mixed</span>
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800" title="Fresh data directly from the LSP"><span className="w-2 h-2 rounded-full bg-green-500 mr-1"></span>Live</span>
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700" title="Saved data from earlier (LSP temporarily down)"><span className="w-2 h-2 rounded-full bg-yellow-500 mr-1"></span>Cached</span>
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-300 text-gray-600" title="Calculated estimate (LSP not responding)"><span className="w-2 h-2 rounded-full bg-blue-500 mr-1"></span>Estimated</span>
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-400 text-gray-500" title="Mix of live, cached, and estimated data"><span className="w-2 h-2 rounded-full bg-purple-500 mr-1"></span>Mixed</span>
             </div>
             <div className="text-xs text-gray-500">
               <span className="font-medium">What this means:</span> Live = fresh from provider, Cached = saved data, Estimated = calculated guess, Mixed = combination of all

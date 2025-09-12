@@ -120,26 +120,26 @@ function StatusBadge({ source, staleSeconds, errorCode, error }: {
     case 'live':
       return (
         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800" aria-label="Live data - fresh from LSP">
-          ✓ Live
+          <span className="w-2 h-2 rounded-full bg-green-500 mr-1"></span>Live
         </span>
       );
     case 'cached':
       const minutes = staleSeconds ? Math.floor(staleSeconds / 60) : 0;
       return (
         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700" title={`Cached ${minutes}m ago`} aria-label={`Cached data, ${minutes} minutes old`}>
-          ⚠ Cached
+          <span className="w-2 h-2 rounded-full bg-yellow-500 mr-1"></span>Cached
         </span>
       );
     case 'estimated':
       return (
         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-300 text-gray-600" title="Estimated pricing - LSP unavailable" aria-label="Estimated pricing - LSP unavailable">
-          ≈ Estimated
+          <span className="w-2 h-2 rounded-full bg-blue-500 mr-1"></span>Estimated
         </span>
       );
     default:
       return (
         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800" aria-label="Unknown data source">
-          ? Unknown
+          <span className="w-2 h-2 rounded-full bg-gray-500 mr-1"></span>Unknown
         </span>
       );
   }
@@ -354,11 +354,27 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
                     ? 'bg-gray-400 text-gray-500'
                     : 'bg-gray-100 text-gray-800'
                 }`}>
-                  {dataSource === 'live' ? '⚫ Live' :
-                   dataSource === 'cached' ? '⚫ Cached' :
-                   dataSource === 'estimated' ? '⚫ Estimated' :
-                   dataSource === 'mixed' ? '⚫ Mixed' :
-                   '⚪ Unknown'}
+                  {dataSource === 'live' ? (
+                    <>
+                      <span className="w-2 h-2 rounded-full bg-green-500 mr-1"></span>Live
+                    </>
+                  ) : dataSource === 'cached' ? (
+                    <>
+                      <span className="w-2 h-2 rounded-full bg-yellow-500 mr-1"></span>Cached
+                    </>
+                  ) : dataSource === 'estimated' ? (
+                    <>
+                      <span className="w-2 h-2 rounded-full bg-blue-500 mr-1"></span>Estimated
+                    </>
+                  ) : dataSource === 'mixed' ? (
+                    <>
+                      <span className="w-2 h-2 rounded-full bg-purple-500 mr-1"></span>Mixed
+                    </>
+                  ) : (
+                    <>
+                      <span className="w-2 h-2 rounded-full bg-gray-500 mr-1"></span>Unknown
+                    </>
+                  )}
                 </div>
                 {dataSourceDescription && (
                   <span className="text-xs text-gray-500" title={dataSourceDescription}>
