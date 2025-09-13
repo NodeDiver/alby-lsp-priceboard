@@ -287,6 +287,31 @@ export async function fetchLSPInfo(lsp: LSP): Promise<{ info: LSPS1GetInfoRespon
   }
 }
 
+// Build a strictly LSPS1-friendly body (strings + correct field names)
+function buildOrderBodyFor(lspId: string, info: LSPS1GetInfoResponse, channelSizeSat: number, clientPubkey: string) {
+  const sats = String(channelSizeSat);
+  const base: Record<string, unknown> = {
+    public_key: clientPubkey,                 // YOUR node pubkey
+    channel_size_sat: sats,                   // string
+    lsp_balance_sat: sats,                    // string
+    client_balance_sat: "0",                  // string
+    announce_channel: false,                  // correct field name (not announcement_channel)
+    // conservative defaults bounded by get_info:
+    funding_confirms_within_blocks: info?.min_funding_confirms_within_blocks ?? 6,
+    required_channel_confirmations: info?.min_required_channel_confirmations ?? 3,
+    channel_expiry_blocks: Math.min(13140, info?.max_channel_expiry_blocks ?? 144),
+  };
+
+  // Provider-specific tweaks if needed:
+  const overrides: Record<string, Record<string, unknown>> = {
+    olympus: { /* keep token off */ },
+    megalith: { /* keep token off; ensure strings */ },
+    flashsats: { /* parse fee from payment.bolt11 fallback */ },
+  };
+  
+  return { ...base, ...(overrides[lspId] ?? {}) };
+}
+
 // Create order to get pricing using LSPS1 protocol (matching Alby Hub implementation)
 export async function createLSPOrder(
   lsp: LSP, 
@@ -294,20 +319,28 @@ export async function createLSPOrder(
   info?: LSPS1GetInfoResponse
 ): Promise<LSPS1CreateOrderResponse | null> {
   try {
-    const orderRequest: Record<string, unknown> = {
-      lsp_balance_sat: String(channelSizeSat), // sats as string
-      client_balance_sat: "0",
-      required_channel_confirmations: info?.min_required_channel_confirmations ?? 3,
-      funding_confirms_within_blocks: info?.min_funding_confirms_within_blocks ?? 6,
-      channel_expiry_blocks: Math.min(13140, info?.max_channel_expiry_blocks ?? 13140),
-      announce_channel: false,
-      public_key: '028260d14351cfddedf5f171da5235fa958349e5d22cd75d9a6e3a8cf3f52aa16c', // Real Lightning node public key
-    };
-
-    // Only add token for LSPs that require it (not Olympus)
-    if (lsp.id !== 'olympus') {
-      orderRequest.token = `priceboard-${Date.now()}`;
+    // Validate channel size against LSP limits
+    if (info) {
+      const minChannelBalance = parseInt(info.min_channel_balance_sat, 10);
+      const maxChannelBalance = parseInt(info.max_channel_balance_sat, 10);
+      
+      if (channelSizeSat < minChannelBalance) {
+        console.error(`${lsp.name}: Channel size too small. Requested: ${channelSizeSat}, Min: ${minChannelBalance}`);
+        return null;
+      }
+      if (channelSizeSat > maxChannelBalance) {
+        console.error(`${lsp.name}: Channel size too large. Requested: ${channelSizeSat}, Max: ${maxChannelBalance}`);
+        return null;
+      }
     }
+
+    // Build LSPS1-compliant request body
+    const orderRequest = buildOrderBodyFor(
+      lsp.id, 
+      info || {} as LSPS1GetInfoResponse, 
+      channelSizeSat, 
+      '028260d14351cfddedf5f171da5235fa958349e5d22cd75d9a6e3a8cf3f52aa16c'
+    );
 
     // Resolve the base URL (with autodiscovery for LNServer)
     const baseUrl = await resolveLspBase(lsp);
@@ -319,35 +352,39 @@ export async function createLSPOrder(
 
     // URL safety: prevent double slashes
     const orderUrl = new URL('create_order', baseUrl + '/').toString();
+    
+    // Log the request for debugging
+    console.log(`Creating order with ${lsp.name}:`, JSON.stringify(orderRequest, null, 2));
+    
     const response = await fetch(orderUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'User-Agent': 'Alby-LSP-PriceBoard/1.0',
+        'User-Agent': 'Alby-LSP-Priceboard/1.0 (+https://github.com/NodeDiver/alby-lsp-priceboard)',
       },
       body: JSON.stringify(orderRequest),
       // Add timeout to prevent hanging requests
       signal: AbortSignal.timeout(15000), // 15 second timeout for order creation
     });
 
+    // Read response body safely (never lose it)
+    const rawBody = await response.text().catch(() => '');
+    let data: any = null;
+    try { 
+      data = rawBody ? JSON.parse(rawBody) : null; 
+    } catch (parseError) {
+      console.error(`${lsp.name} response parse error:`, parseError);
+    }
+
     if (!response.ok) {
       const errorInfo = await mapLspError(response);
-      // Log response body for debugging, especially for 400 errors
-      if (response.status === 400) {
-        try {
-          const body = await response.text();
-          console.error(`${lsp.name} 400 error body:`, body);
-        } catch {
-          console.error(`${lsp.name} 400 error (could not read body)`);
-        }
-      }
+      // Always log the full response body for debugging
+      console.error(`[${lsp.name}] ${response.status} ${response.statusText} body:`, rawBody || '(empty)');
       console.error(`Failed to create order with ${lsp.name}: ${response.status} ${response.statusText} - ${errorInfo.message}`);
       return null;
     }
 
-    const data = await response.json();
-    
     // Basic validation - just check if we have some kind of order response
     if (!data || typeof data !== 'object') {
       console.error(`Invalid order response from ${lsp.name}:`, data);
@@ -362,14 +399,50 @@ export async function createLSPOrder(
   }
 }
 
+// Per-LSP rate limiting and backoff strategies
+const lspRateLimits: Record<string, { lastRequest: number; cooldownMs: number }> = {};
+
+function getLspDelay(lspId: string): number {
+  const now = Date.now();
+  const limit = lspRateLimits[lspId];
+  
+  if (!limit) {
+    // Set initial cooldown based on LSP
+    const cooldowns: Record<string, number> = {
+      'flashsats': 15000,  // 15 seconds for Flashsats (rate limited)
+      'megalith': 2000,    // 2 seconds for Megalith
+      'olympus': 1000,     // 1 second for Olympus
+      'lnserver-wave': 1000, // 1 second for LNServer Wave
+    };
+    
+    lspRateLimits[lspId] = {
+      lastRequest: now,
+      cooldownMs: cooldowns[lspId] || 1000
+    };
+    return 0;
+  }
+  
+  const timeSinceLastRequest = now - limit.lastRequest;
+  const remainingCooldown = Math.max(0, limit.cooldownMs - timeSinceLastRequest);
+  
+  if (remainingCooldown > 0) {
+    console.log(`${lspId} rate limited, waiting ${remainingCooldown}ms`);
+    return remainingCooldown;
+  }
+  
+  limit.lastRequest = now;
+  return 0;
+}
+
 // Fetch price for a specific LSP with per-LSP fallback logic
 export async function fetchLSPPrice(lsp: LSP, channelSizeSat: number = 1000000): Promise<LSPPrice | null> {
   const maxRetries = 2;
   let lastError: string = '';
   
-  // Add delay for Flashsats to avoid rate limiting
-  if (lsp.id === 'flashsats') {
-    await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
+  // Apply per-LSP rate limiting
+  const delay = getLspDelay(lsp.id);
+  if (delay > 0) {
+    await new Promise(resolve => setTimeout(resolve, delay));
   }
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
