@@ -77,13 +77,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   try {
     const channelSize = parseChannelSize(req.query.channelSize);
     const force = req.query.fresh === '1';
+    const bypassRateLimit = req.query.force === '1';
 
-    console.log(`Fetching prices for channel size ${channelSize} sats (force: ${force})`);
+    console.log(`Fetching prices for channel size ${channelSize} sats (force: ${force}, bypass rate limit: ${bypassRateLimit})`);
 
     // Use priceService for better caching and throttling
-    const rows = force
-      ? await priceService.forceFetchPrices(channelSize)
-      : await priceService.getLatestPrices(channelSize);
+    let rows;
+    if (bypassRateLimit) {
+      // Force fetch with rate limiting bypassed
+      rows = await priceService.forceFetchPrices(channelSize, true);
+    } else if (force) {
+      // Force fetch but respect rate limiting
+      rows = await priceService.forceFetchPrices(channelSize, false);
+    } else {
+      // Normal fetch with caching
+      rows = await priceService.getLatestPrices(channelSize);
+    }
 
     // Map to API response format
     const prices = rows.map(price => ({

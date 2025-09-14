@@ -15,6 +15,7 @@ export default function Home() {
   const [dataSource, setDataSource] = useState<string>('unknown');
   const [dataSourceDescription, setDataSourceDescription] = useState<string>('');
   const [abortController, setAbortController] = useState<AbortController | null>(null);
+  const [forceFetching, setForceFetching] = useState<boolean>(false);
 
   // Retry function for individual LSPs
   const handleRetryLSP = async () => {
@@ -122,6 +123,46 @@ export default function Home() {
   // Refresh prices manually (force fresh fetch)
   const handleRefresh = () => {
     fetchPrices(selectedChannelSize, true);
+  };
+
+  // Force fetch prices (bypass all rate limiting and caching)
+  const handleForceFetch = async () => {
+    // Cancel any in-flight request first
+    if (abortController) {
+      abortController.abort();
+    }
+    
+    try {
+      setForceFetching(true);
+      setLoading(false); // Clear any existing loading state
+      setError(null);
+      
+      // Force fetch with fresh=1 to bypass caching
+      const response = await fetch(`/api/prices?channelSize=${selectedChannelSize}&fresh=1&force=1`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        console.log('Force fetch successful:', data.prices.length, 'prices received');
+        setPrices(data.prices);
+        setLastUpdate(data.last_update);
+        setDataSource(data.data_source);
+        setDataSourceDescription(data.data_source_description);
+        setLoading(false); // Ensure loading is false after successful fetch
+      } else {
+        console.error('Force fetch failed:', data.message);
+        setError(data.message || 'Failed to fetch prices');
+      }
+    } catch (err) {
+      console.error('Force fetch error:', err);
+      setError(err instanceof Error ? err.message : 'Unknown error occurred');
+    } finally {
+      setForceFetching(false);
+    }
   };
 
   // Handle channel size change
@@ -262,6 +303,15 @@ export default function Home() {
               className="px-4 py-2 bg-slate-500 text-white rounded-md hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Refreshing...' : 'Refresh Prices'}
+            </button>
+            
+            <button
+              onClick={handleForceFetch}
+              disabled={forceFetching}
+              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Force fetch fresh prices, bypassing all rate limits and caching"
+            >
+              {forceFetching ? '⚡ Force Fetching...' : '⚡ Force Fetch'}
             </button>
             
             <button

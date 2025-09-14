@@ -370,7 +370,7 @@ export async function createLSPOrder(
 
     // Read response body safely (never lose it)
     const rawBody = await response.text().catch(() => '');
-    let data: any = null;
+    let data: unknown = null;
     try { 
       data = rawBody ? JSON.parse(rawBody) : null; 
     } catch (parseError) {
@@ -391,7 +391,7 @@ export async function createLSPOrder(
       return null;
     }
 
-    return data;
+    return data as LSPS1CreateOrderResponse;
   } catch (error) {
     const errorInfo = toLspError(error);
     console.error(`Error creating order with ${lsp.name}: ${errorInfo.message}`, error);
@@ -409,15 +409,15 @@ function getLspDelay(lspId: string): number {
   if (!limit) {
     // Set initial cooldown based on LSP
     const cooldowns: Record<string, number> = {
-      'flashsats': 15000,  // 15 seconds for Flashsats (rate limited)
-      'megalith': 2000,    // 2 seconds for Megalith
-      'olympus': 1000,     // 1 second for Olympus
-      'lnserver-wave': 1000, // 1 second for LNServer Wave
+      'flashsats': 3 * 60 * 60 * 1000,  // 3 hours for Flashsats (very rate limited)
+      'megalith': 60 * 60 * 1000,       // 1 hour for Megalith (whitelist required)
+      'olympus': 10 * 60 * 1000,        // 10 minutes for Olympus
+      'lnserver-wave': 10 * 60 * 1000,  // 10 minutes for LNServer Wave
     };
     
     lspRateLimits[lspId] = {
       lastRequest: now,
-      cooldownMs: cooldowns[lspId] || 1000
+      cooldownMs: cooldowns[lspId] || 10 * 60 * 1000  // 10 minutes default
     };
     return 0;
   }
@@ -426,7 +426,8 @@ function getLspDelay(lspId: string): number {
   const remainingCooldown = Math.max(0, limit.cooldownMs - timeSinceLastRequest);
   
   if (remainingCooldown > 0) {
-    console.log(`${lspId} rate limited, waiting ${remainingCooldown}ms`);
+    const minutes = Math.round(remainingCooldown / (60 * 1000));
+    console.log(`${lspId} rate limited, waiting ${minutes} minutes (${remainingCooldown}ms)`);
     return remainingCooldown;
   }
   
@@ -559,6 +560,84 @@ export async function fetchLSPPrice(lsp: LSP, channelSizeSat: number = 1000000):
   return createErrorPrice(lsp, channelSizeSat, lastError, errorInfo.code);
 }
 
+// Fetch price for a specific LSP bypassing rate limiting
+export async function fetchLSPPriceBypass(lsp: LSP, channelSizeSat: number = 1000000): Promise<LSPPrice | null> {
+  const maxRetries = 2;
+  let lastError: string = '';
+  
+  // Skip rate limiting - go directly to API calls
+  console.log(`Fetching price from ${lsp.name} (bypassing rate limit) for channel size ${channelSizeSat} sats`);
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(`Fetching price from ${lsp.name} (attempt ${attempt}/${maxRetries}) for channel size ${channelSizeSat} sats`);
+      
+      // Get LSP info first
+      const infoResult = await fetchLSPInfo(lsp);
+      if (!infoResult.info) {
+        lastError = typeof infoResult.error === 'string' ? infoResult.error : 'Failed to get LSP info';
+        continue;
+      }
+
+      // Create order to get pricing
+      const orderResult = await createLSPOrder(lsp, channelSizeSat, infoResult.info);
+      if (!orderResult) {
+        lastError = 'Failed to create order';
+        continue;
+      }
+
+      // Extract pricing from order
+      const totalFeeMsat = extractMsatFromOrder(orderResult as unknown as Record<string, unknown>);
+      if (totalFeeMsat === null) {
+        lastError = 'Invalid order response';
+        continue;
+      }
+
+      // Calculate fees
+      const channelFeePercent = (orderResult.channel_fee_percent || 0) * 100;
+      const channelFeeBaseMsat = orderResult.channel_fee_base_msat || 0;
+      const leaseFeeBaseMsat = orderResult.lease_fee_base_msat || 0;
+      const leaseFeeBasis = orderResult.lease_fee_basis || 0;
+
+      // Return successful price
+      return {
+        lsp_id: lsp.id,
+        lsp_name: lsp.name,
+        channel_size_sat: channelSizeSat,
+        total_fee_msat: totalFeeMsat,
+        channel_fee_percent: channelFeePercent,
+        channel_fee_base_msat: channelFeeBaseMsat,
+        lease_fee_base_msat: leaseFeeBaseMsat,
+        lease_fee_basis: leaseFeeBasis,
+        timestamp: new Date().toISOString(),
+        error: undefined,
+        source: 'live'
+      };
+    } catch (error) {
+      const errorInfo = toLspError(error);
+      lastError = errorInfo.message;
+      console.error(`Error fetching from ${lsp.name} (attempt ${attempt}):`, error);
+      
+      if (attempt === maxRetries) {
+        // Try to get cached price as fallback
+        const cachedPrice = await getLastGoodPriceForLSP(lsp.id);
+        if (cachedPrice) {
+          console.log(`Using cached price for ${lsp.name} as fallback`);
+          return {
+            ...cachedPrice,
+            source: 'cached',
+            stale_seconds: Math.floor((Date.now() - Date.parse(cachedPrice.timestamp)) / 1000)
+          };
+        }
+      }
+    }
+  }
+
+  // No cache available - return error with estimated fallback
+  const errorInfo = toLspError(null);
+  return createErrorPrice(lsp, channelSizeSat, lastError, errorInfo.code);
+}
+
 // Extract pricing from different LSP response formats
 function extractMsatFromOrder(order: Record<string, unknown>): number | null {
   // Try direct msat field first
@@ -640,16 +719,21 @@ function estimateLSPPrice(lsp: LSP, channelSizeSat: number): {
 }
 
 // Fetch prices from all active LSPs (matching Alby Hub implementation)
-export async function fetchAllLSPPrices(channelSizeSat: number = 1000000): Promise<LSPPrice[]> {
+export async function fetchAllLSPPrices(channelSizeSat: number = 1000000, bypassRateLimit: boolean = false): Promise<LSPPrice[]> {
   const { getActiveLSPs } = await import('./lsps');
   const activeLSPs = getActiveLSPs();
   
-  console.log(`Fetching prices from ${activeLSPs.length} LSPs for channel size ${channelSizeSat} sats`);
+  console.log(`Fetching prices from ${activeLSPs.length} LSPs for channel size ${channelSizeSat} sats (bypass rate limit: ${bypassRateLimit})`);
   
   // Use Promise.allSettled to ensure all requests complete even if some fail
   const pricePromises = activeLSPs.map(async (lsp) => {
     try {
-      return await fetchLSPPrice(lsp, channelSizeSat);
+      if (bypassRateLimit) {
+        // Bypass rate limiting by calling fetchLSPPrice with skipRateLimit
+        return await fetchLSPPriceBypass(lsp, channelSizeSat);
+      } else {
+        return await fetchLSPPrice(lsp, channelSizeSat);
+      }
     } catch (error) {
       console.error(`Unexpected error fetching from ${lsp.name}:`, error);
       const errorInfo = toLspError(error);

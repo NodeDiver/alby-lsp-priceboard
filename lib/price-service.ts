@@ -7,6 +7,7 @@ export class PriceService {
   private isFetching: boolean = false;
   private lastFetchTime: Date | null = null;
   private fetchIntervalMs = 10 * 60 * 1000; // 10 minutes
+  private inMemoryCache: Map<number, LSPPrice[]> = new Map(); // channelSize -> prices
 
   private constructor() {}
 
@@ -42,6 +43,9 @@ export class PriceService {
         if (saved) {
           this.lastFetchTime = new Date();
         }
+        
+        // Also save to in-memory cache for local development
+        this.inMemoryCache.set(channelSizeSat, prices);
       }
       
       return prices;
@@ -55,8 +59,20 @@ export class PriceService {
   }
 
   // Force fetch prices regardless of time interval
-  public async forceFetchPrices(channelSizeSat: number = 1000000): Promise<LSPPrice[]> {
+  public async forceFetchPrices(channelSizeSat: number = 1000000, bypassRateLimit: boolean = false): Promise<LSPPrice[]> {
     this.lastFetchTime = null;
+    if (bypassRateLimit) {
+      // Bypass rate limiting by directly calling fetchAllLSPPrices
+      const { fetchAllLSPPrices } = await import('./lsp-api');
+      const prices = await fetchAllLSPPrices(channelSizeSat, true);
+      
+      // Save to in-memory cache
+      if (prices.length > 0) {
+        this.inMemoryCache.set(channelSizeSat, prices);
+      }
+      
+      return prices;
+    }
     return await this.fetchAndSavePrices(channelSizeSat);
   }
 
@@ -68,7 +84,26 @@ export class PriceService {
     const filteredCachedPrices = cachedPrices.filter(price => price.channel_size_sat === channelSizeSat);
     
     if (filteredCachedPrices.length === 0) {
-      return await this.fetchAndSavePrices(channelSizeSat);
+      // No cached prices for this channel size
+      // Check if we should fetch fresh or return empty
+      if (this.shouldRefreshPrices()) {
+        return await this.fetchAndSavePrices(channelSizeSat);
+      } else {
+        // Too soon to fetch fresh, try in-memory cache as fallback
+        const inMemoryPrices = this.inMemoryCache.get(channelSizeSat);
+        if (inMemoryPrices && inMemoryPrices.length > 0) {
+          console.log(`Using in-memory cache for ${channelSizeSat} sats (${inMemoryPrices.length} prices)`);
+          // Mark as cached data
+          return inMemoryPrices.map(price => ({
+            ...price,
+            source: 'cached' as const,
+            stale_seconds: Math.floor((Date.now() - Date.parse(price.timestamp)) / 1000)
+          }));
+        }
+        
+        // No data available
+        return [];
+      }
     }
     
     // Check if we need to refresh
@@ -125,6 +160,6 @@ export async function getLatestPrices(channelSizeSat: number = 1000000): Promise
   return await priceService.getLatestPrices(channelSizeSat);
 }
 
-export async function forceFetchPrices(channelSizeSat: number = 1000000): Promise<LSPPrice[]> {
-  return await priceService.forceFetchPrices(channelSizeSat);
+export async function forceFetchPrices(channelSizeSat: number = 1000000, bypassRateLimit: boolean = false): Promise<LSPPrice[]> {
+  return await priceService.forceFetchPrices(channelSizeSat, bypassRateLimit);
 }
