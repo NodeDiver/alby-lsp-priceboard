@@ -59,8 +59,31 @@ export async function getLatestPrices(): Promise<LSPPrice[]> {
       return [];
     }
 
-    const pricesJson = await redis.get<string>(PRICES_KEY);
-    return pricesJson ? JSON.parse(pricesJson) : [];
+    const pricesData = await redis.get(PRICES_KEY);
+    
+    // Handle different data types that Redis might return
+    if (!pricesData) {
+      return [];
+    }
+    
+    // If it's already an array, return it
+    if (Array.isArray(pricesData)) {
+      return pricesData;
+    }
+    
+    // If it's a string, parse it
+    if (typeof pricesData === 'string') {
+      return JSON.parse(pricesData);
+    }
+    
+    // If it's an object, try to convert to array
+    if (typeof pricesData === 'object') {
+      console.warn('Redis returned object instead of JSON string, attempting conversion');
+      return Array.isArray(pricesData) ? pricesData : [pricesData];
+    }
+    
+    console.warn('Unexpected data type from Redis:', typeof pricesData);
+    return [];
   } catch (error) {
     console.error('Error getting latest prices from database:', error);
     return [];
