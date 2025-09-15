@@ -44,8 +44,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     output += `📊 SUMMARY:\n`;
     output += `Total LSPs: ${Object.keys(rateLimitStatus).length}\n`;
-    output += `Rate Limited: ${Object.values(rateLimitStatus).filter((s: any) => s.isRateLimited).length}\n`;
-    output += `Available: ${Object.values(rateLimitStatus).filter((s: any) => !s.isRateLimited).length}\n`;
+    output += `Rate Limited: ${Object.values(rateLimitStatus).filter((s: { isRateLimited: boolean }) => s.isRateLimited).length}\n`;
+    output += `Available: ${Object.values(rateLimitStatus).filter((s: { isRateLimited: boolean }) => !s.isRateLimited).length}\n`;
     
     res.status(200).send(output);
   } catch (error) {
