@@ -92,16 +92,16 @@ GET /api/prices?channelSize=1000000
 
 ### 📊 **Data Source Indicators**
 The API response includes data source information:
-- **`data_source: "real"`** - Real-time data from LSP APIs
-- **`data_source: "mock"`** - Mock data for development/testing
-- **`data_source: "mock_fallback"`** - Mock data (fallback when no real data available)
+- **`data_source: "live"`** - Live data from LSP APIs
+- **`data_source: "cached"`** - Cached data from previous successful fetch
+- **`data_source: "unavailable"`** - LSP unavailable or no data available
 
 The frontend displays a visual indicator:
-- 🟢 **Real Data** - Live pricing from LSPs
-- 🟡 **Mock Data** - Simulated pricing for development
-- ⚪ **Unknown** - Data source not determined
+- 🟢 **Live Data** - Fresh pricing from LSPs
+- 🟡 **Cached Data** - Previously fetched pricing
+- 🔴 **Unavailable** - LSP unavailable or no data
 
-### Features
+### API Features
 - **No authentication required** - completely open API
 - **CORS enabled** - works from any website
 - **Channel size filtering** - add `?channelSize=2000000` for 2M sats
@@ -139,7 +139,6 @@ The frontend displays a visual indicator:
 ### 🚀 Ready for Production
 - All core features implemented and tested
 - Professional UI/UX design
-- Comprehensive error handling
 - Clean, maintainable codebase
 - Production-ready deployment configuration
 
