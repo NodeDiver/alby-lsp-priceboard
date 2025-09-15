@@ -84,24 +84,24 @@ export class PriceService {
     const filteredCachedPrices = cachedPrices.filter(price => price.channel_size_sat === channelSizeSat);
     
     if (filteredCachedPrices.length === 0) {
-      // No cached prices for this channel size
-      // Check if we should fetch fresh or return empty
+      // No cached prices for this channel size in Redis
+      // First check in-memory cache
+      const inMemoryPrices = this.inMemoryCache.get(channelSizeSat);
+      if (inMemoryPrices && inMemoryPrices.length > 0) {
+        console.log(`Using in-memory cache for ${channelSizeSat} sats (${inMemoryPrices.length} prices)`);
+        // Mark as cached data
+        return inMemoryPrices.map(price => ({
+          ...price,
+          source: 'cached' as const,
+          stale_seconds: Math.floor((Date.now() - Date.parse(price.timestamp)) / 1000)
+        }));
+      }
+      
+      // No in-memory cache either, check if we should fetch fresh
       if (this.shouldRefreshPrices()) {
         return await this.fetchAndSavePrices(channelSizeSat);
       } else {
-        // Too soon to fetch fresh, try in-memory cache as fallback
-        const inMemoryPrices = this.inMemoryCache.get(channelSizeSat);
-        if (inMemoryPrices && inMemoryPrices.length > 0) {
-          console.log(`Using in-memory cache for ${channelSizeSat} sats (${inMemoryPrices.length} prices)`);
-          // Mark as cached data
-          return inMemoryPrices.map(price => ({
-            ...price,
-            source: 'cached' as const,
-            stale_seconds: Math.floor((Date.now() - Date.parse(price.timestamp)) / 1000)
-          }));
-        }
-        
-        // No data available
+        // Too soon to fetch fresh, return empty
         return [];
       }
     }
