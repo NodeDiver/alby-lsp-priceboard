@@ -66,7 +66,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const bypassRateLimit = req.query.force === '1';
     const lspId = req.query.lspId as string | undefined;
 
-    console.log(`UI: Fetching prices for channel size ${channelSize} sats (force: ${force}, bypass rate limit: ${bypassRateLimit}${lspId ? `, LSP: ${lspId}` : ''})`);
+    console.log(`UI: Fetching prices for channel size ${channelSize} sats (fresh: ${force}, bypass rate limit: ${bypassRateLimit}${lspId ? `, LSP: ${lspId}` : ''})`);
 
     const priceService = PriceService.getInstance();
     let rows;
@@ -83,8 +83,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Refresh prices - try live first, fallback to cached
       rows = await priceService.refreshPrices(channelSize);
     } else {
-      // Smart caching - show cached first, fetch live in background
-      rows = await priceService.getSmartPrices(channelSize);
+      // Cached only - no background fetching
+      rows = await priceService.getCachedPricesOnly(channelSize);
     }
 
     // Map to API response format

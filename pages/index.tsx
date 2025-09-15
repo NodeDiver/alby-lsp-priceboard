@@ -115,7 +115,7 @@ export default function Home() {
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Refresh prices manually (force fresh fetch)
+  // Refresh prices manually (force fresh fetch with live data)
   const handleRefresh = () => {
     setLoading(true);
     fetchPrices(selectedChannelSize, true).finally(() => setLoading(false));
@@ -303,8 +303,9 @@ export default function Home() {
               onClick={handleRefresh}
               disabled={loading}
               className="px-4 py-2 bg-slate-500 text-white rounded-md hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Fetch live data from LSPs (respects rate limits)"
             >
-              {loading ? 'Refreshing...' : 'Refresh Prices'}
+              {loading ? 'Fetching Live Data...' : 'Fetch Live Data'}
             </button>
             
             
