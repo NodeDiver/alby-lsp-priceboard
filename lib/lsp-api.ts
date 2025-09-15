@@ -234,7 +234,7 @@ export interface LSPPrice {
   lease_fee_basis: number;
   timestamp: string;
   error?: string;
-  source?: 'live' | 'cached' | 'estimated';
+  source?: 'live' | 'cached' | 'unavailable';
   stale_seconds?: number; // only when cached
   error_code?: LspErrorCode;
 }
@@ -507,23 +507,9 @@ export async function fetchLSPPrice(lsp: LSP, channelSizeSat: number = 1000000):
         }
       }
 
-      // Fallback: Estimate fees based on LSP info and channel size
-      console.log(`Using estimated pricing for ${lsp.name} (order creation failed)`);
-      const estimatedPrice = estimateLSPPrice(lsp, channelSizeSat);
-      
-      return {
-        lsp_id: lsp.id,
-        lsp_name: lsp.name,
-        channel_size_sat: channelSizeSat,
-        total_fee_msat: estimatedPrice.total_fee_msat,
-        channel_fee_percent: estimatedPrice.channel_fee_percent,
-        channel_fee_base_msat: estimatedPrice.channel_fee_base_msat,
-        lease_fee_base_msat: estimatedPrice.lease_fee_base_msat,
-        lease_fee_basis: estimatedPrice.lease_fee_basis,
-        timestamp: new Date().toISOString(),
-        source: 'estimated',
-        error: 'Live fetch failed; showing estimated price'
-      };
+      // No live data available - return error
+      console.log(`No live data available for ${lsp.name} (order creation failed)`);
+      return createErrorPrice(lsp, channelSizeSat, 'Live fetch failed; no data available', LspErrorCode.BAD_STATUS);
 
     } catch (error) {
       const errorInfo = toLspError(error);
@@ -555,7 +541,7 @@ export async function fetchLSPPrice(lsp: LSP, channelSizeSat: number = 1000000):
     };
   }
 
-  // No cache available - return error with estimated fallback
+  // No cache available - return error
   const errorInfo = toLspError(null);
   return createErrorPrice(lsp, channelSizeSat, lastError, errorInfo.code);
 }
@@ -633,7 +619,7 @@ export async function fetchLSPPriceBypass(lsp: LSP, channelSizeSat: number = 100
     }
   }
 
-  // No cache available - return error with estimated fallback
+  // No cache available - return error
   const errorInfo = toLspError(null);
   return createErrorPrice(lsp, channelSizeSat, lastError, errorInfo.code);
 }
@@ -676,47 +662,10 @@ function createErrorPrice(lsp: LSP, channelSizeSat: number, error: string, error
     timestamp: new Date().toISOString(),
     error: error,
     error_code: errorCode || LspErrorCode.UNKNOWN,
-    source: 'estimated'
+    source: 'unavailable'
   };
 }
 
-// Estimate LSP pricing based on channel size and LSP characteristics
-function estimateLSPPrice(lsp: LSP, channelSizeSat: number): {
-  total_fee_msat: number;
-  channel_fee_percent: number;
-  channel_fee_base_msat: number;
-  lease_fee_base_msat: number;
-  lease_fee_basis: number;
-} {
-  // Base pricing model - these are realistic estimates based on typical LSP pricing
-  const baseFees = {
-    olympus: { base: 10000, percent: 0.01 },
-    lnserver: { base: 8000, percent: 0.008 },
-    megalith: { base: 12000, percent: 0.012 },
-    flashsats: { base: 9000, percent: 0.009 }
-  };
-
-  const lspPricing = baseFees[lsp.id as keyof typeof baseFees] || { base: 10000, percent: 0.01 };
-  
-  // Calculate fees based on channel size
-  const baseFeeMsat = lspPricing.base * (channelSizeSat / 1000000); // Scale with channel size
-  const percentFeeMsat = channelSizeSat * lspPricing.percent * 1000; // Convert to msat
-  const totalFeeMsat = Math.round(baseFeeMsat + percentFeeMsat);
-  
-  // Split fees between channel and lease components
-  const channelFeeBaseMsat = Math.round(totalFeeMsat * 0.4);
-  const leaseFeeBaseMsat = Math.round(totalFeeMsat * 0.6);
-  const channelFeePercent = lspPricing.percent * 0.4;
-  const leaseFeeBasis = lspPricing.percent * 0.6;
-
-  return {
-    total_fee_msat: totalFeeMsat,
-    channel_fee_percent: channelFeePercent,
-    channel_fee_base_msat: channelFeeBaseMsat,
-    lease_fee_base_msat: leaseFeeBaseMsat,
-    lease_fee_basis: leaseFeeBasis
-  };
-}
 
 // Fetch prices from all active LSPs (matching Alby Hub implementation)
 export async function fetchAllLSPPrices(channelSizeSat: number = 1000000, bypassRateLimit: boolean = false): Promise<LSPPrice[]> {

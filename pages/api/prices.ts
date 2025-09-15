@@ -47,10 +47,10 @@ function getDataSourceDescription(source: string): string {
       return 'Live data from LSP APIs';
     case 'cached':
       return 'Cached data from previous successful fetch';
-    case 'estimated':
-      return 'Estimated pricing (LSP unavailable)';
+    case 'unavailable':
+      return 'LSP unavailable';
     case 'mixed':
-      return 'Mixed data (some live, some cached/estimated)';
+      return 'Mixed data (some live, some cached/unavailable)';
     default:
       return 'Unknown data source';
   }
@@ -81,18 +81,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
 
     console.log(`Fetching prices for channel size ${channelSize} sats (force: ${force}, bypass rate limit: ${bypassRateLimit})`);
 
-    // Use priceService for better caching and throttling
-    let rows;
-    if (bypassRateLimit) {
-      // Force fetch with rate limiting bypassed
-      rows = await priceService.forceFetchPrices(channelSize, true);
-    } else if (force) {
-      // Force fetch but respect rate limiting
-      rows = await priceService.forceFetchPrices(channelSize, false);
-    } else {
-      // Normal fetch with caching
-      rows = await priceService.getLatestPrices(channelSize);
-    }
+    // API endpoint is read-only - only serve cached data
+    console.log(`API: Serving cached data only for channel size ${channelSize} sats`);
+    const rows = await priceService.getCachedPricesOnly(channelSize);
 
     // Map to API response format
     const prices = rows.map(price => ({

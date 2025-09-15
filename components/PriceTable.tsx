@@ -19,7 +19,7 @@ export interface DisplayPrice {
   lease_fee_basis: number;
   timestamp: string;
   error: string | null;
-  source?: 'live' | 'cached' | 'estimated' | 'unknown';
+  source?: 'live' | 'cached' | 'unavailable' | 'unknown';
   stale_seconds?: number | null;
   error_code?: string | null;
 }
@@ -62,11 +62,12 @@ function RetryButton({ lspId, onRetry }: { lspId: string; onRetry?: (lspId: stri
 }
 
 // Status Badge Component
-function StatusBadge({ source, staleSeconds, errorCode, error }: { 
+function StatusBadge({ source, staleSeconds, errorCode, error, timestamp }: { 
   source?: string; 
   staleSeconds?: number | null; 
   errorCode?: string | null;
   error?: string | null;
+  timestamp?: string;
 }) {
   if (errorCode) {
     const getErrorIcon = (code: string) => {
@@ -83,6 +84,10 @@ function StatusBadge({ source, staleSeconds, errorCode, error }: {
         case 'SCHEMA_MISMATCH': return '🔧';
         case 'CHANNEL_SIZE_TOO_SMALL': return '📏';
         case 'CHANNEL_SIZE_TOO_LARGE': return '📏';
+        case 'CACHE_UNAVAILABLE': return '💾';
+        case 'LIVE_DATA_UNAVAILABLE': return '📡';
+        case 'PEER_NOT_CONNECTED': return '🔗';
+        case 'WHITELIST_REQUIRED': return '🔐';
         default: return '❌';
       }
     };
@@ -101,46 +106,85 @@ function StatusBadge({ source, staleSeconds, errorCode, error }: {
         case 'SCHEMA_MISMATCH': return 'bg-gray-200 text-gray-700';
         case 'CHANNEL_SIZE_TOO_SMALL': return 'bg-gray-200 text-gray-700';
         case 'CHANNEL_SIZE_TOO_LARGE': return 'bg-gray-200 text-gray-700';
+        case 'CACHE_UNAVAILABLE': return 'bg-orange-100 text-orange-600';
+        case 'LIVE_DATA_UNAVAILABLE': return 'bg-red-100 text-red-600';
+        case 'PEER_NOT_CONNECTED': return 'bg-blue-100 text-blue-600';
+        case 'WHITELIST_REQUIRED': return 'bg-purple-100 text-purple-600';
         default: return 'bg-gray-300 text-gray-600';
       }
     };
 
     return (
-      <span 
-        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getErrorColor(errorCode)}`}
-        title={error || `Error: ${errorCode}`}
-        aria-label={`Error: ${errorCode.replace(/_/g, ' ').toLowerCase()}`}
-      >
-        {getErrorIcon(errorCode)} {errorCode.replace(/_/g, ' ').toLowerCase()}
-      </span>
+      <div className="flex flex-col space-y-1">
+        <span 
+          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getErrorColor(errorCode)}`}
+          title={error || `Error: ${errorCode}`}
+          aria-label={`Error: ${errorCode.replace(/_/g, ' ').toLowerCase()}`}
+        >
+          {getErrorIcon(errorCode)} {errorCode.replace(/_/g, ' ').toLowerCase()}
+        </span>
+        {timestamp && (
+          <span className="text-xs text-gray-500">
+            Last: {new Date(timestamp).toLocaleString()}
+          </span>
+        )}
+      </div>
     );
   }
 
   switch (source) {
     case 'live':
       return (
-        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800" aria-label="Live data - fresh from LSP">
-          <span className="w-2 h-2 rounded-full bg-green-500 mr-1"></span>Live
-        </span>
+        <div className="flex flex-col space-y-1">
+          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800" aria-label="Live data - fresh from LSP">
+            <span className="w-2 h-2 rounded-full bg-green-500 mr-1"></span>Live
+          </span>
+          {timestamp && (
+            <span className="text-xs text-gray-500">
+              Last: {new Date(timestamp).toLocaleString()}
+            </span>
+          )}
+        </div>
       );
     case 'cached':
       const minutes = staleSeconds ? Math.floor(staleSeconds / 60) : 0;
       return (
-        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700" title={`Cached ${minutes}m ago`} aria-label={`Cached data, ${minutes} minutes old`}>
-          <span className="w-2 h-2 rounded-full bg-yellow-500 mr-1"></span>Cached
-        </span>
+        <div className="flex flex-col space-y-1">
+          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700" title={`Cached ${minutes}m ago`} aria-label={`Cached data, ${minutes} minutes old`}>
+            <span className="w-2 h-2 rounded-full bg-yellow-500 mr-1"></span>Cached
+          </span>
+          {timestamp && (
+            <span className="text-xs text-gray-500">
+              Last: {new Date(timestamp).toLocaleString()}
+            </span>
+          )}
+        </div>
       );
-    case 'estimated':
+    case 'unavailable':
       return (
-        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-300 text-gray-600" title="Estimated pricing - LSP unavailable" aria-label="Estimated pricing - LSP unavailable">
-          <span className="w-2 h-2 rounded-full bg-blue-500 mr-1"></span>Estimated
-        </span>
+        <div className="flex flex-col space-y-1">
+          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-600" title="LSP unavailable" aria-label="LSP unavailable">
+            <span className="w-2 h-2 rounded-full bg-red-500 mr-1"></span>Unavailable
+          </span>
+          {timestamp && (
+            <span className="text-xs text-gray-500">
+              Last: {new Date(timestamp).toLocaleString()}
+            </span>
+          )}
+        </div>
       );
     default:
       return (
-        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800" aria-label="Unknown data source">
-          <span className="w-2 h-2 rounded-full bg-gray-500 mr-1"></span>Unknown
-        </span>
+        <div className="flex flex-col space-y-1">
+          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800" aria-label="Unknown data source">
+            <span className="w-2 h-2 rounded-full bg-gray-500 mr-1"></span>Unknown
+          </span>
+          {timestamp && (
+            <span className="text-xs text-gray-500">
+              Last: {new Date(timestamp).toLocaleString()}
+            </span>
+          )}
+        </div>
       );
   }
 }
@@ -270,6 +314,7 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
                         staleSeconds={lspPrices[0]?.stale_seconds}
                         errorCode={lspPrices[0]?.error_code}
                         error={lspPrices[0]?.error}
+                        timestamp={lspPrices[0]?.timestamp}
                       />
                     </div>
                   </div>
@@ -337,54 +382,9 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
       
       <div className="p-4 bg-gray-50 text-sm text-gray-600 border-t border-gray-200">
         <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            {lastUpdate && (
-              <span>Last: {new Date(lastUpdate).toLocaleString()}</span>
-            )}
-            {dataSource && (
-              <div className="flex items-center space-x-2">
-                <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  dataSource === 'live'
-                    ? 'bg-gray-100 text-gray-800'
-                    : dataSource === 'cached'
-                    ? 'bg-gray-200 text-gray-700'
-                    : dataSource === 'estimated'
-                    ? 'bg-gray-300 text-gray-600'
-                    : dataSource === 'mixed'
-                    ? 'bg-gray-400 text-gray-500'
-                    : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {dataSource === 'live' ? (
-                    <>
-                      <span className="w-2 h-2 rounded-full bg-green-500 mr-1"></span>Live
-                    </>
-                  ) : dataSource === 'cached' ? (
-                    <>
-                      <span className="w-2 h-2 rounded-full bg-yellow-500 mr-1"></span>Cached
-                    </>
-                  ) : dataSource === 'estimated' ? (
-                    <>
-                      <span className="w-2 h-2 rounded-full bg-blue-500 mr-1"></span>Estimated
-                    </>
-                  ) : dataSource === 'mixed' ? (
-                    <>
-                      <span className="w-2 h-2 rounded-full bg-purple-500 mr-1"></span>Mixed
-                    </>
-                  ) : (
-                    <>
-                      <span className="w-2 h-2 rounded-full bg-gray-500 mr-1"></span>Unknown
-                    </>
-                  )}
-                </div>
-                {dataSourceDescription && (
-                  <span className="text-xs text-gray-500" title={dataSourceDescription}>
-                    {dataSourceDescription}
-                  </span>
-                )}
-              </div>
-            )}
+          <div className="text-sm text-gray-600">
+            {prices.length} price entries
           </div>
-          <span>{prices.length} price entries</span>
         </div>
       </div>
     </div>

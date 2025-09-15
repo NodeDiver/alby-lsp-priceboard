@@ -6,7 +6,7 @@ import { COMMON_CURRENCIES } from '../lib/currency';
 
 export default function Home() {
   const [prices, setPrices] = useState<DisplayPrice[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<string | null>(null);
   const [lspMetadata, setLspMetadata] = useState<LSP[]>([]);
@@ -17,10 +17,9 @@ export default function Home() {
   const [abortController, setAbortController] = useState<AbortController | null>(null);
   const [forceFetching, setForceFetching] = useState<boolean>(false);
 
-  // Retry function for individual LSPs
+  // Retry function for individual LSPs (non-blocking)
   const handleRetryLSP = async () => {
     try {
-      setLoading(true);
       setError(null);
       
       // Fetch fresh data for all LSPs (the API will handle per-LSP logic)
@@ -42,12 +41,10 @@ export default function Home() {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
-    } finally {
-      setLoading(false);
     }
   };
 
-  // Fetch prices from API
+  // Fetch prices from API (non-blocking)
   const fetchPrices = async (channelSize: number = selectedChannelSize, fresh: boolean = false) => {
     // Cancel any in-flight request
     if (abortController) {
@@ -58,10 +55,9 @@ export default function Home() {
     setAbortController(controller);
     
     try {
-      setLoading(true);
       setError(null);
       
-      const url = `/api/prices?channelSize=${channelSize}${fresh ? '&fresh=1' : ''}`;
+      const url = `/api/prices-ui?channelSize=${channelSize}${fresh ? '&fresh=1' : ''}`;
       const response = await fetch(url, { 
         cache: 'no-store',
         signal: controller.signal
@@ -87,7 +83,6 @@ export default function Home() {
         setError(err.message || 'Failed to fetch prices');
       }
     } finally {
-      setLoading(false);
       setAbortController(null);
     }
   };
@@ -122,10 +117,11 @@ export default function Home() {
 
   // Refresh prices manually (force fresh fetch)
   const handleRefresh = () => {
-    fetchPrices(selectedChannelSize, true);
+    setLoading(true);
+    fetchPrices(selectedChannelSize, true).finally(() => setLoading(false));
   };
 
-  // Force fetch prices (bypass all rate limiting and caching)
+  // Force fetch prices (bypass all rate limiting and caching) - non-blocking
   const handleForceFetch = async () => {
     // Cancel any in-flight request first
     if (abortController) {
@@ -134,11 +130,10 @@ export default function Home() {
     
     try {
       setForceFetching(true);
-      setLoading(false); // Clear any existing loading state
       setError(null);
       
       // Force fetch with fresh=1 to bypass caching
-      const response = await fetch(`/api/prices?channelSize=${selectedChannelSize}&fresh=1&force=1`);
+      const response = await fetch(`/api/prices-ui?channelSize=${selectedChannelSize}&fresh=1&force=1`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -152,7 +147,6 @@ export default function Home() {
         setLastUpdate(data.last_update);
         setDataSource(data.data_source);
         setDataSourceDescription(data.data_source_description);
-        setLoading(false); // Ensure loading is false after successful fetch
       } else {
         console.error('Force fetch failed:', data.message);
         setError(data.message || 'Failed to fetch prices');
@@ -267,9 +261,22 @@ export default function Home() {
                           </div>
             </div>
           </div>
+          
+          {/* Non-blocking loading indicator */}
+          {(loading || forceFetching) && (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                <span className="text-sm text-blue-700">
+                  {forceFetching ? 'Force fetching fresh data...' : 'Refreshing data...'}
+                </span>
+              </div>
+            </div>
+          )}
+          
           <PriceTable 
             prices={prices} 
-            loading={loading} 
+            loading={false} 
             lspMetadata={lspMetadata} 
             selectedChannelSize={selectedChannelSize}
             selectedCurrency={selectedCurrency}
@@ -286,13 +293,11 @@ export default function Home() {
           <div className="flex items-center space-x-4 text-sm text-gray-600">
             <div className="flex items-center space-x-2">
               <span>Data sources:</span>
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800" title="Fresh data directly from the LSP"><span className="w-2 h-2 rounded-full bg-green-500 mr-1"></span>Live</span>
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700" title="Saved data from earlier (LSP temporarily down)"><span className="w-2 h-2 rounded-full bg-yellow-500 mr-1"></span>Cached</span>
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-300 text-gray-600" title="Calculated estimate (LSP not responding)"><span className="w-2 h-2 rounded-full bg-blue-500 mr-1"></span>Estimated</span>
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-400 text-gray-500" title="Mix of live, cached, and estimated data"><span className="w-2 h-2 rounded-full bg-purple-500 mr-1"></span>Mixed</span>
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800" title="Real-time data from LSP APIs"><span className="w-2 h-2 rounded-full bg-green-500 mr-1"></span>Live</span>
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700" title="Previously fetched data"><span className="w-2 h-2 rounded-full bg-yellow-500 mr-1"></span>Cached</span>
             </div>
             <div className="text-xs text-gray-500">
-              <span className="font-medium">What this means:</span> Live = fresh from provider, Cached = saved data, Estimated = calculated guess, Mixed = combination of all
+              <span className="font-medium">Live:</span> Real-time pricing from LSPs • <span className="font-medium">Cached:</span> Previously fetched data
             </div>
           </div>
           
