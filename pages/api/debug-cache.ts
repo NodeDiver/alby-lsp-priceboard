@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const priceService = PriceService.getInstance();
     
     // Get in-memory cache (local development)
-    const inMemoryCache = (priceService as any).inMemoryCache;
+    const inMemoryCache = (priceService as { inMemoryCache: Map<number, LSPPrice[]> }).inMemoryCache;
     const cacheEntries = Array.from(inMemoryCache.entries()).map(([channelSize, prices]) => ({
       channelSize,
       count: prices.length,
@@ -30,9 +30,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }));
 
     // Get Redis cache (production)
-    const { getLatestPricesFromDB } = await import('../../lib/db');
-    const redisPrices = await getLatestPricesFromDB();
-    const redisEntries = redisPrices.reduce((acc, price) => {
+    const { getLatestPrices } = await import('../../lib/db');
+    const redisPrices = await getLatestPrices();
+    const redisEntries = redisPrices.reduce((acc: Record<number, LSPPrice[]>, price) => {
       const channelSize = price.channel_size_sat;
       if (!acc[channelSize]) acc[channelSize] = [];
       acc[channelSize].push({
@@ -44,7 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         error: price.error
       });
       return acc;
-    }, {} as Record<number, any[]>);
+    }, {} as Record<number, LSPPrice[]>);
 
     res.status(200).json({
       success: true,

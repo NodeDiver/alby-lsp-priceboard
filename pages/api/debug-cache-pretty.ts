@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const priceService = PriceService.getInstance();
     
     // Get in-memory cache (local development)
-    const inMemoryCache = (priceService as any).inMemoryCache;
+    const inMemoryCache = (priceService as { inMemoryCache: Map<number, LSPPrice[]> }).inMemoryCache;
     const cacheEntries = Array.from(inMemoryCache.entries()).map(([channelSize, prices]) => ({
       channelSize,
       count: prices.length,
@@ -30,9 +30,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }));
 
     // Get Redis cache (production)
-    const { getLatestPricesFromDB } = await import('../../lib/db');
-    const redisPrices = await getLatestPricesFromDB();
-    const redisEntries = redisPrices.reduce((acc, price) => {
+    const { getLatestPrices } = await import('../../lib/db');
+    const redisPrices = await getLatestPrices();
+    const redisEntries = redisPrices.reduce((acc: Record<number, LSPPrice[]>, price) => {
       const channelSize = price.channel_size_sat;
       if (!acc[channelSize]) acc[channelSize] = [];
       acc[channelSize].push({
@@ -44,16 +44,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         error: price.error
       });
       return acc;
-    }, {} as Record<number, any[]>);
+    }, {} as Record<number, LSPPrice[]>);
 
     // Pretty format for terminal
-    const formatPrice = (price: any) => {
+    const formatPrice = (price: LSPPrice) => {
       const feeSats = Math.round(price.total_fee_msat / 1000);
       const status = price.error ? '❌' : price.source === 'live' ? '🟢' : '🟡';
       return `${status} ${price.lsp_name}: ${feeSats} sats (${price.source})`;
     };
 
-    const formatChannel = (channelSize: number, prices: any[]) => {
+    const formatChannel = (channelSize: number, prices: LSPPrice[]) => {
       const sizeLabel = channelSize >= 1000000 ? `${channelSize/1000000}M` : `${channelSize/1000}K`;
       return `\n📊 Channel Size: ${sizeLabel} sats (${prices.length} LSPs)\n` +
              prices.map(formatPrice).join('\n');
