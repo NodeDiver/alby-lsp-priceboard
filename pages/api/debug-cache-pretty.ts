@@ -46,24 +46,42 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return acc;
     }, {} as Record<number, any[]>);
 
-    res.status(200).json({
-      success: true,
-      timestamp: new Date().toISOString(),
-      inMemoryCache: {
-        entries: cacheEntries,
-        totalChannels: cacheEntries.length,
-        totalPrices: cacheEntries.reduce((sum, entry) => sum + entry.count, 0)
-      },
-      redisCache: {
-        entries: Object.entries(redisEntries).map(([channelSize, prices]) => ({
-          channelSize: parseInt(channelSize),
-          count: prices.length,
-          prices
-        })),
-        totalChannels: Object.keys(redisEntries).length,
-        totalPrices: Object.values(redisEntries).reduce((sum, prices) => sum + prices.length, 0)
-      }
-    });
+    // Pretty format for terminal
+    const formatPrice = (price: any) => {
+      const feeSats = Math.round(price.total_fee_msat / 1000);
+      const status = price.error ? '❌' : price.source === 'live' ? '🟢' : '🟡';
+      return `${status} ${price.lsp_name}: ${feeSats} sats (${price.source})`;
+    };
+
+    const formatChannel = (channelSize: number, prices: any[]) => {
+      const sizeLabel = channelSize >= 1000000 ? `${channelSize/1000000}M` : `${channelSize/1000}K`;
+      return `\n📊 Channel Size: ${sizeLabel} sats (${prices.length} LSPs)\n` +
+             prices.map(formatPrice).join('\n');
+    };
+
+    const inMemoryOutput = cacheEntries.length > 0 
+      ? `\n🧠 IN-MEMORY CACHE (Local Dev):\n` + 
+        cacheEntries.map(entry => formatChannel(entry.channelSize, entry.prices)).join('\n')
+      : `\n🧠 IN-MEMORY CACHE: Empty`;
+
+    const redisOutput = Object.keys(redisEntries).length > 0
+      ? `\n🗄️  REDIS CACHE (Production):\n` +
+        Object.entries(redisEntries).map(([channelSize, prices]) => 
+          formatChannel(parseInt(channelSize), prices)
+        ).join('\n')
+      : `\n🗄️  REDIS CACHE: Empty`;
+
+    const summary = `\n📈 SUMMARY:
+🧠 In-Memory: ${cacheEntries.reduce((sum, entry) => sum + entry.count, 0)} prices across ${cacheEntries.length} channel sizes
+🗄️  Redis: ${Object.values(redisEntries).reduce((sum, prices) => sum + prices.length, 0)} prices across ${Object.keys(redisEntries).length} channel sizes`;
+
+    const output = `🔍 CACHED DATA DEBUG REPORT
+${inMemoryOutput}
+${redisOutput}
+${summary}
+`;
+
+    res.status(200).send(output);
   } catch (error) {
     console.error('Debug cache error:', error);
     res.status(500).json({
