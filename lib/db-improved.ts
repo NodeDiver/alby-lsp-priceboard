@@ -9,15 +9,19 @@ const isRedisConfigured = () => {
   return !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
 };
 
-// IMPROVED DATABASE STRUCTURE - No redundancy
+// IMPROVED DATABASE STRUCTURE
+// Single source of truth with better organization
+
+// Main prices with metadata
+const PRICES_KEY = 'alby:lsp:prices';
 const METADATA_KEY = 'alby:lsp:metadata';
 const HISTORY_KEY = 'alby:lsp:history';
 
 // Per-channel-size prices (better organization)
 const getChannelPricesKey = (channelSize: number) => `alby:lsp:channel:${channelSize}`;
 
-// Save latest prices to database with improved structure
-export async function savePricesToDB(prices: LSPPrice[]): Promise<boolean> {
+// Save prices with improved structure
+export async function savePricesToDBImproved(prices: LSPPrice[]): Promise<boolean> {
   try {
     if (!isRedisConfigured()) {
       console.error('Upstash Redis not configured');
@@ -25,7 +29,7 @@ export async function savePricesToDB(prices: LSPPrice[]): Promise<boolean> {
     }
 
     const now = new Date().toISOString();
-    // Remove unused variable
+    const channelSize = prices[0]?.channel_size_sat || 1000000;
     
     // Group prices by channel size for better organization
     const pricesByChannel = prices.reduce((acc, price) => {
@@ -73,11 +77,10 @@ export async function savePricesToDB(prices: LSPPrice[]): Promise<boolean> {
   }
 }
 
-// Get latest prices from database for specific channel size
-export async function getLatestPrices(channelSize: number = 1000000): Promise<LSPPrice[]> {
+// Get prices for specific channel size
+export async function getPricesForChannel(channelSize: number): Promise<LSPPrice[]> {
   try {
     if (!isRedisConfigured()) {
-      console.error('Upstash Redis not configured');
       return [];
     }
 
@@ -89,11 +92,11 @@ export async function getLatestPrices(channelSize: number = 1000000): Promise<LS
     // Handle different data types
     if (Array.isArray(data)) return data;
     if (typeof data === 'string') return JSON.parse(data);
-    if (typeof data === 'object') return Array.isArray(data) ? data : [];
+    if (typeof data === 'object') return Array.isArray(data) ? data : [data];
     
     return [];
   } catch (error) {
-    console.error('Error getting latest prices from database:', error);
+    console.error('Error getting prices for channel:', error);
     return [];
   }
 }
@@ -116,8 +119,8 @@ export async function getAvailableChannelSizes(): Promise<number[]> {
   }
 }
 
-// Get metadata (includes last update timestamp)
-export async function getMetadata(): Promise<{lastUpdate: string, totalChannels: number, totalPrices: number, channelSizes: number[]} | null> {
+// Get metadata
+export async function getMetadata(): Promise<any> {
   try {
     if (!isRedisConfigured()) {
       return null;
@@ -131,73 +134,35 @@ export async function getMetadata(): Promise<{lastUpdate: string, totalChannels:
   }
 }
 
-// Get last update timestamp (for backward compatibility)
-export async function getLastUpdateTime(): Promise<string | null> {
-  try {
-    const metadata = await getMetadata();
-    return metadata?.lastUpdate || null;
-  } catch (error) {
-    console.error('Error getting last update time:', error);
-    return null;
-  }
-}
-
-// Get price history from LIST
-export async function getPriceHistory(): Promise<Array<{timestamp: string, prices: LSPPrice[]}>> {
+// Get price history
+export async function getPriceHistory(limit: number = 20): Promise<any[]> {
   try {
     if (!isRedisConfigured()) {
       return [];
     }
 
-    // Get all entries from the LIST (most recent first)
-    const historyEntries = await redis.lrange<string>(HISTORY_KEY, 0, -1);
-    return historyEntries.map(entry => JSON.parse(entry));
+    const history = await redis.lrange(HISTORY_KEY, 0, limit - 1);
+    return history.map(entry => JSON.parse(entry as string));
   } catch (error) {
     console.error('Error getting price history:', error);
     return [];
   }
 }
 
-// Get prices for a specific LSP
-export async function getLSPPrices(lspId: string): Promise<LSPPrice[]> {
-  try {
-    const history = await getPriceHistory();
-    const lspPrices: LSPPrice[] = [];
-    
-    history.forEach(entry => {
-      const lspPrice = entry.prices.find(price => price.lsp_id === lspId);
-      if (lspPrice) {
-        lspPrices.push(lspPrice);
-      }
-    });
-    
-    return lspPrices;
-  } catch (error) {
-    console.error(`Error getting prices for LSP ${lspId}:`, error);
-    return [];
-  }
-}
-
-
-
-
-// Clear all relevant cache keys
-export async function clearCache(): Promise<string[]> {
+// Clear all data
+export async function clearAllData(): Promise<string[]> {
   try {
     if (!isRedisConfigured()) {
-      console.error('Upstash Redis not configured');
       return [];
     }
-    
-    // Get all keys with our namespace
+
     const keys = await redis.keys('alby:lsp:*');
     if (keys.length > 0) {
       await redis.del(...keys);
     }
     return keys;
   } catch (error) {
-    console.error('Error clearing cache:', error);
+    console.error('Error clearing data:', error);
     return [];
   }
 }
-

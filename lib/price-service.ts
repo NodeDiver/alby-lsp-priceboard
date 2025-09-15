@@ -1,5 +1,5 @@
-import { fetchAllLSPPrices, LSPPrice } from './lsp-api';
-import { savePricesWithPerLSPCache, getLatestPrices as getLatestPricesFromDB } from './db';
+import { fetchAllLSPPrices, LSPPrice, LspErrorCode } from './lsp-api';
+import { savePricesToDB, getLatestPrices as getLatestPricesFromDB } from './db';
 
 // Price fetching service
 export class PriceService {
@@ -21,13 +21,13 @@ export class PriceService {
   // Fetch prices from all LSPs and save to database
   public async fetchAndSavePrices(channelSizeSat: number = 1000000): Promise<LSPPrice[]> {
     if (this.isFetching) {
-      return await getLatestPricesFromDB();
+      return await getLatestPricesFromDB(channelSizeSat);
     }
 
     // Check if we need to fetch (based on time interval)
     if (this.lastFetchTime && 
         Date.now() - this.lastFetchTime.getTime() < this.fetchIntervalMs) {
-      return await getLatestPricesFromDB();
+      return await getLatestPricesFromDB(channelSizeSat);
     }
 
     this.isFetching = true;
@@ -39,7 +39,7 @@ export class PriceService {
       
       if (prices.length > 0) {
         // Save to database
-        const saved = await savePricesWithPerLSPCache(prices);
+        const saved = await savePricesToDB(prices);
         if (saved) {
           this.lastFetchTime = new Date();
         }
@@ -52,7 +52,7 @@ export class PriceService {
     } catch (error) {
       console.error('Error in price fetch service:', error);
       // Return cached prices if available
-      return await getLatestPricesFromDB();
+      return await getLatestPricesFromDB(channelSizeSat);
     } finally {
       this.isFetching = false;
     }
@@ -82,11 +82,10 @@ export class PriceService {
     const activeLSPs = getActiveLSPs();
     
     // First, get all cached prices for this channel size
-    const cachedPrices = await getLatestPricesFromDB();
-    const filteredCachedPrices = cachedPrices.filter(price => price.channel_size_sat === channelSizeSat);
+    const cachedPrices = await getLatestPricesFromDB(channelSizeSat);
     
     // Check in-memory cache if no Redis cache
-    let availablePrices = filteredCachedPrices;
+    let availablePrices = cachedPrices;
     if (availablePrices.length === 0) {
       const inMemoryPrices = this.inMemoryCache.get(channelSizeSat);
       if (inMemoryPrices && inMemoryPrices.length > 0) {
@@ -123,7 +122,7 @@ export class PriceService {
           lease_fee_basis: 0,
           timestamp: new Date().toISOString(),
           error: 'Cached data unavailable',
-          error_code: 'CACHE_UNAVAILABLE',
+          error_code: LspErrorCode.CACHE_UNAVAILABLE,
           source: 'unavailable' as const
         };
       }
@@ -155,8 +154,8 @@ export class PriceService {
     const activeLSPs = getActiveLSPs();
     
     // Get existing cached prices for fallback
-    const cachedPrices = await getLatestPricesFromDB();
-    const filteredCachedPrices = cachedPrices.filter(price => price.channel_size_sat === channelSizeSat);
+    const cachedPrices = await getLatestPricesFromDB(channelSizeSat);
+    // Prices are already filtered by channel size in the new structure
     
     const promises = activeLSPs.map(async (lsp) => {
       try {
@@ -172,7 +171,7 @@ export class PriceService {
           return { ...convertedPrice, source: 'live' as const };
         } else {
           // No live data - try cached data for this LSP
-          const cachedPrice = filteredCachedPrices.find(price => price.lsp_id === lsp.id);
+          const cachedPrice = availablePrices.find(price => price.lsp_id === lsp.id);
           if (cachedPrice) {
             console.log(`Using cached data for ${lsp.name} (no live data available)`);
             return { ...cachedPrice, source: 'cached' as const };
@@ -190,7 +189,7 @@ export class PriceService {
               lease_fee_basis: 0,
               timestamp: new Date().toISOString(),
               error: 'Unable to fetch live data',
-              error_code: 'LIVE_DATA_UNAVAILABLE',
+              error_code: LspErrorCode.LIVE_DATA_UNAVAILABLE,
               source: 'unavailable' as const
             };
           }
@@ -198,7 +197,7 @@ export class PriceService {
       } catch (error) {
         console.error(`Error fetching data for ${lsp.name}:`, error);
         // Try cached data as fallback
-        const cachedPrice = filteredCachedPrices.find(price => price.lsp_id === lsp.id);
+        const cachedPrice = availablePrices.find(price => price.lsp_id === lsp.id);
         if (cachedPrice) {
           console.log(`Using cached data for ${lsp.name} (error occurred)`);
           return { ...cachedPrice, source: 'cached' as const };
@@ -214,7 +213,7 @@ export class PriceService {
             lease_fee_basis: 0,
             timestamp: new Date().toISOString(),
             error: 'Unable to fetch live data',
-            error_code: 'LIVE_DATA_UNAVAILABLE',
+            error_code: LspErrorCode.LIVE_DATA_UNAVAILABLE,
             source: 'unavailable' as const
           };
         }
@@ -226,7 +225,7 @@ export class PriceService {
     // Save successful live data to cache
     const livePrices = prices.filter(price => price.source === 'live');
     if (livePrices.length > 0) {
-      await savePricesWithPerLSPCache(livePrices);
+      await savePricesToDB(livePrices);
       this.inMemoryCache.set(channelSizeSat, livePrices);
       console.log(`Saved ${livePrices.length} live prices to cache`);
     }
@@ -244,16 +243,16 @@ export class PriceService {
     switch (price.error_code) {
       case 'BAD_STATUS':
         if (price.error?.includes('Peer not connected')) {
-          newErrorCode = 'PEER_NOT_CONNECTED';
+          newErrorCode = LspErrorCode.PEER_NOT_CONNECTED;
           newError = 'Peer not connected - please connect to this LSP';
         } else if (price.error?.includes('Contact The Megalith Node')) {
-          newErrorCode = 'WHITELIST_REQUIRED';
+          newErrorCode = LspErrorCode.WHITELIST_REQUIRED;
           newError = 'Whitelist required - contact LSP for access';
         } else if (price.error?.includes('Too many orders')) {
-          newErrorCode = 'RATE_LIMITED';
+          newErrorCode = LspErrorCode.RATE_LIMITED;
           newError = 'Rate limited - too many requests';
         } else {
-          newErrorCode = 'LIVE_DATA_UNAVAILABLE';
+          newErrorCode = LspErrorCode.LIVE_DATA_UNAVAILABLE;
           newError = 'Unable to fetch live data';
         }
         break;
@@ -278,11 +277,11 @@ export class PriceService {
     const activeLSPs = getActiveLSPs();
     
     // Get cached prices from database
-    const cachedPrices = await getLatestPricesFromDB();
-    const filteredCachedPrices = cachedPrices.filter(price => price.channel_size_sat === channelSizeSat);
+    const cachedPrices = await getLatestPricesFromDB(channelSizeSat);
+    // Prices are already filtered by channel size in the new structure
     
     // Check in-memory cache if no Redis cache
-    let availablePrices = filteredCachedPrices;
+    let availablePrices = cachedPrices;
     if (availablePrices.length === 0) {
       const inMemoryPrices = this.inMemoryCache.get(channelSizeSat);
       if (inMemoryPrices && inMemoryPrices.length > 0) {
@@ -319,7 +318,7 @@ export class PriceService {
           lease_fee_basis: 0,
           timestamp: new Date().toISOString(),
           error: 'Cached data unavailable',
-          error_code: 'CACHE_UNAVAILABLE',
+          error_code: LspErrorCode.CACHE_UNAVAILABLE,
           source: 'unavailable' as const
         };
       }
@@ -330,12 +329,12 @@ export class PriceService {
 
   // Get latest prices (from cache or fetch if needed)
   public async getLatestPrices(channelSizeSat: number = 1000000): Promise<LSPPrice[]> {
-    const cachedPrices = await getLatestPricesFromDB();
+    const cachedPrices = await getLatestPricesFromDB(channelSizeSat);
     
     // Filter cached prices by channel size
-    const filteredCachedPrices = cachedPrices.filter(price => price.channel_size_sat === channelSizeSat);
+    // Prices are already filtered by channel size in the new structure
     
-    if (filteredCachedPrices.length === 0) {
+    if (availablePrices.length === 0) {
       // No cached prices for this channel size in Redis
       // First check in-memory cache
       const inMemoryPrices = this.inMemoryCache.get(channelSizeSat);
@@ -364,7 +363,7 @@ export class PriceService {
       this.fetchAndSavePrices(channelSizeSat).catch(console.error);
     }
     
-    return filteredCachedPrices;
+    return availablePrices;
   }
 
   // Check if prices should be refreshed (with jitter to avoid thundering herd)

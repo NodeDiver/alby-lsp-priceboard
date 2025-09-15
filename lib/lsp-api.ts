@@ -1,5 +1,5 @@
 import { LSP } from './lsps';
-import { getLastGoodPriceForLSP, saveLatestForLsp } from './db';
+// Removed old individual LSP caching functions - using improved structure
 
 // Error taxonomy for better error handling
 export enum LspErrorCode {
@@ -14,6 +14,9 @@ export enum LspErrorCode {
   TLS_ERROR = 'TLS_ERROR',
   CORS_BLOCKED = 'CORS_BLOCKED',
   PEER_NOT_CONNECTED = 'PEER_NOT_CONNECTED',
+  WHITELIST_REQUIRED = 'WHITELIST_REQUIRED',
+  LIVE_DATA_UNAVAILABLE = 'LIVE_DATA_UNAVAILABLE',
+  CACHE_UNAVAILABLE = 'CACHE_UNAVAILABLE',
   UNKNOWN = 'UNKNOWN'
 }
 
@@ -402,6 +405,30 @@ export async function createLSPOrder(
 // Per-LSP rate limiting and backoff strategies
 const lspRateLimits: Record<string, { lastRequest: number; cooldownMs: number }> = {};
 
+// Export function to get current rate limit status
+export function getRateLimitStatus() {
+  const now = Date.now();
+  const status: Record<string, any> = {};
+  
+  Object.entries(lspRateLimits).forEach(([lspId, limit]) => {
+    const timeSinceLastRequest = now - limit.lastRequest;
+    const remainingCooldown = Math.max(0, limit.cooldownMs - timeSinceLastRequest);
+    const isRateLimited = remainingCooldown > 0;
+    
+    status[lspId] = {
+      lastRequest: new Date(limit.lastRequest).toISOString(),
+      cooldownMs: limit.cooldownMs,
+      timeSinceLastRequest: timeSinceLastRequest,
+      remainingCooldown: remainingCooldown,
+      isRateLimited: isRateLimited,
+      remainingMinutes: Math.round(remainingCooldown / (60 * 1000)),
+      cooldownMinutes: Math.round(limit.cooldownMs / (60 * 1000))
+    };
+  });
+  
+  return status;
+}
+
 function getLspDelay(lspId: string): number {
   const now = Date.now();
   const limit = lspRateLimits[lspId];
@@ -499,7 +526,7 @@ export async function fetchLSPPrice(lsp: LSP, channelSizeSat: number = 1000000):
           };
 
           // Save this successful price for future fallback
-          await saveLatestForLsp(lsp.id, livePrice);
+          // Individual LSP caching removed - using improved structure
           
           return livePrice;
         } else {
@@ -527,7 +554,8 @@ export async function fetchLSPPrice(lsp: LSP, channelSizeSat: number = 1000000):
   console.log(`All retries failed for ${lsp.name}, trying cached fallback...`);
   
   // Try to get cached price for this LSP
-  const cachedPrice = await getLastGoodPriceForLSP(lsp.id);
+  // Individual LSP caching removed - using improved structure
+  const cachedPrice: LSPPrice | null = null;
   if (cachedPrice) {
     const staleSeconds = Math.floor((Date.now() - new Date(cachedPrice.timestamp).getTime()) / 1000);
     console.log(`Using cached price for ${lsp.name} (${staleSeconds}s old)`);
@@ -606,7 +634,8 @@ export async function fetchLSPPriceBypass(lsp: LSP, channelSizeSat: number = 100
       
       if (attempt === maxRetries) {
         // Try to get cached price as fallback
-        const cachedPrice = await getLastGoodPriceForLSP(lsp.id);
+        // Individual LSP caching removed - using improved structure
+  const cachedPrice: LSPPrice | null = null;
         if (cachedPrice) {
           console.log(`Using cached price for ${lsp.name} as fallback`);
           return {
