@@ -2,7 +2,7 @@
 
 A real-time Lightning Service Provider (LSP) price comparison tool that helps users make informed decisions when opening Lightning channels.
 
-🎉 **BREAKTHROUGH**: We now have **LIVE DATA** from 2 LSPs (LNServer Wave & Megalith) with proper LSPS1 protocol implementation!
+🧪 **EXPERIMENTAL PHASE**: We are currently in the experimental phase with LSP integration. Live data availability is inconsistent - some days we manage to get live data from LSPs, other days we don't. We're facing various technical challenges, including the requirement for a Lightning node that must be peered to the LSPs at the moment of data fetching.
 
 🌐 **Live Demo**: [https://alby-lsp-priceboard-qe4ir4olm-nodii-teams-yes.vercel.app/](https://alby-lsp-priceboard-qe4ir4olm-nodii-teams-yes.vercel.app/)
 
@@ -19,8 +19,8 @@ This project addresses [Alby Hub Issue #1001](https://github.com/getAlby/hub/iss
 
 ## Features
 
-- **🟢 LIVE DATA** from 2 LSPs (LNServer Wave & Megalith) using proper LSPS1 protocol
-- **🟡 CACHED/UNAVAILABLE DATA** for 2 LSPs (Olympus & Flashsats) with smart fallback handling
+- **🟢 EXPERIMENTAL LIVE DATA** from LSPs using LSPS1 protocol (availability varies)
+- **🟡 CACHED/UNAVAILABLE DATA** with smart fallback handling when live data is not available
 - **Real-time price comparison** across 4 working LSPs
 - **Multi-currency support** with live conversion using Alby's Lightning Tools
 - **Channel size filtering** (1M-10M sats) - all sizes now work correctly
@@ -107,12 +107,27 @@ The frontend displays a visual indicator:
 - **Channel size filtering** - add `?channelSize=2000000` for 2M sats
 - **Real-time data** - prices update daily automatically
 
+## Current Challenges
+
+### 🚧 **Technical Limitations**
+- **Node Peering Requirement**: LSPs require a Lightning node to be peered at the moment of data fetching
+- **Inconsistent Availability**: Live data availability varies day-to-day due to LSP requirements
+- **Rate Limiting**: Some LSPs have strict rate limits (e.g., Flashsats: 3-hour cooldowns)
+- **Whitelist Requirements**: Some LSPs require manual whitelisting (e.g., Megalith)
+- **Peer Connection Issues**: LSPs may reject requests if the node is not properly connected
+
+### 📊 **Current LSP Status**
+- **LNServer Wave**: ✅ Occasionally provides live data
+- **Megalith**: ❌ Requires whitelisting and proper peering
+- **Olympus**: ❌ Requires node peering connection
+- **Flashsats**: ⏳ Rate limited (3-hour cooldowns)
+
 ## Development Status
 
 ### ✅ Completed Features
 - **Core Infrastructure**: Next.js app with TypeScript and Tailwind CSS
-- **🟢 LIVE LSP Integration**: 2 LSPs (LNServer Wave & Megalith) with real-time LSPS1 protocol data
-- **🟡 SMART FALLBACK**: 2 LSPs (Olympus & Flashsats) with intelligent caching and error handling
+- **🟢 EXPERIMENTAL LSP Integration**: LSPs with LSPS1 protocol data (availability inconsistent)
+- **🟡 SMART FALLBACK**: Intelligent caching and error handling when live data is unavailable
 - **Price Management**: Automated fetching and caching system with per-LSP fallbacks
 - **Multi-Currency Support**: Real-time conversion using Alby Lightning Tools
 - **User Interface**: Responsive price comparison table with filtering and status indicators
