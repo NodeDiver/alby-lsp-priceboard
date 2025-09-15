@@ -44,6 +44,8 @@ interface PriceTableProps {
   dataSource?: string;
   dataSourceDescription?: string;
   onRetry?: (lspId: string) => void;
+  onForceFetch?: (lspId: string) => void;
+  forceFetching?: Record<string, boolean>;
 }
 
 // Retry Button Component
@@ -58,6 +60,31 @@ function RetryButton({ lspId, onRetry }: { lspId: string; onRetry?: (lspId: stri
       aria-label={`Retry fetching data for ${lspId}`}
     >
       🔄 Retry
+    </button>
+  );
+}
+
+// Force Fetch Button Component
+function ForceFetchButton({ 
+  lspId, 
+  onForceFetch, 
+  isForceFetching 
+}: { 
+  lspId: string; 
+  onForceFetch?: (lspId: string) => void;
+  isForceFetching?: boolean;
+}) {
+  if (!onForceFetch) return null;
+  
+  return (
+    <button
+      onClick={() => onForceFetch(lspId)}
+      disabled={isForceFetching}
+      className="ml-2 px-2 py-1 text-xs bg-red-100 text-red-800 rounded hover:bg-red-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      title="Force fetch fresh data for this LSP (bypass rate limits)"
+      aria-label={`Force fetch fresh data for ${lspId}`}
+    >
+      {isForceFetching ? '⚡ Fetching...' : '⚡ Force'}
     </button>
   );
 }
@@ -220,7 +247,7 @@ function LSPIcon({ lspName, lspData }: { lspName: string; lspData?: LSPMetadata 
 }
 
 
-export function PriceTable({ prices, loading = false, lspMetadata = [], selectedChannelSize = 1000000, selectedCurrency = 'usd', onRetry }: PriceTableProps) {
+export function PriceTable({ prices, loading = false, lspMetadata = [], selectedChannelSize = 1000000, selectedCurrency = 'usd', onRetry, onForceFetch, forceFetching = {} }: PriceTableProps) {
   const [currencyConversions, setCurrencyConversions] = useState<{ [key: string]: CurrencyConversion }>({});
   const [conversionLoading, setConversionLoading] = useState(false);
 
@@ -308,9 +335,16 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
                     <div className="flex flex-col">
                       <div className="flex items-center">
                         <span>{lspName}</span>
-                        {lspPrices[0]?.error_code && (
-                          <RetryButton lspId={lspId} onRetry={onRetry} />
-                        )}
+                        <div className="flex items-center space-x-1">
+                          {lspPrices[0]?.error_code && (
+                            <RetryButton lspId={lspId} onRetry={onRetry} />
+                          )}
+                          <ForceFetchButton 
+                            lspId={lspId} 
+                            onForceFetch={onForceFetch}
+                            isForceFetching={forceFetching[lspId]}
+                          />
+                        </div>
                       </div>
                       <StatusBadge 
                         source={lspPrices[0]?.source}

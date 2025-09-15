@@ -147,6 +147,69 @@ export class PriceService {
     return await this.fetchLiveDataPerLSP(channelSizeSat, bypassRateLimit);
   }
 
+  // Force fetch a single LSP
+  public async forceFetchSingleLSP(lspId: string, channelSizeSat: number = 1000000): Promise<LSPPrice[]> {
+    console.log(`Force fetching prices for LSP ${lspId} at ${channelSizeSat} sats`);
+    
+    const { getActiveLSPs } = await import('./lsps');
+    const { fetchLSPPriceBypass } = await import('./lsp-api');
+    const activeLSPs = getActiveLSPs();
+    
+    // Find the specific LSP
+    const targetLSP = activeLSPs.find(lsp => lsp.id === lspId);
+    if (!targetLSP) {
+      console.error(`LSP ${lspId} not found`);
+      return [];
+    }
+    
+    // Get existing cached prices for fallback
+    const cachedPrices = await getLatestPricesFromDB(channelSizeSat);
+    
+    try {
+      // Force fetch the specific LSP
+      const livePrice = await fetchLSPPriceBypass(targetLSP, channelSizeSat);
+      
+      if (livePrice && livePrice.source === 'live') {
+        console.log(`Got live data for ${targetLSP.name}`);
+        // Convert old error codes to new ones
+        const convertedPrice = this.convertErrorCodes(livePrice);
+        const result = { ...convertedPrice, source: 'live' as const };
+        
+        // Save to cache
+        await savePricesToDB([result]);
+        this.inMemoryCache.set(channelSizeSat, [result]);
+        
+        // Return all prices (the specific LSP + others from cache)
+        const otherPrices = cachedPrices.filter(p => p.lsp_id !== lspId);
+        return [result, ...otherPrices];
+      } else {
+        // No live data - return cached data for this LSP if available
+        const cachedPrice = cachedPrices.find(p => p.lsp_id === lspId);
+        if (cachedPrice) {
+          console.log(`Using cached data for ${targetLSP.name} (no live data available)`);
+          return cachedPrices;
+        } else {
+          // No cached data either - return unavailable for this LSP
+          const unavailablePrice = this.createErrorPrice(lspId, targetLSP.name, channelSizeSat, LspErrorCode.LIVE_DATA_UNAVAILABLE, 'Unable to fetch live data');
+          const otherPrices = cachedPrices.filter(p => p.lsp_id !== lspId);
+          return [unavailablePrice, ...otherPrices];
+        }
+      }
+    } catch (error) {
+      console.error(`Error force fetching data for ${targetLSP.name}:`, error);
+      // Try cached data as fallback
+      const cachedPrice = cachedPrices.find(p => p.lsp_id === lspId);
+      if (cachedPrice) {
+        console.log(`Using cached data for ${targetLSP.name} (error occurred)`);
+        return cachedPrices;
+      } else {
+        const errorPrice = this.createErrorPrice(lspId, targetLSP.name, channelSizeSat, LspErrorCode.LIVE_DATA_UNAVAILABLE, 'Unable to fetch live data');
+        const otherPrices = cachedPrices.filter(p => p.lsp_id !== lspId);
+        return [errorPrice, ...otherPrices];
+      }
+    }
+  }
+
   // Fetch live data per LSP, with fallback to cached data
   private async fetchLiveDataPerLSP(channelSizeSat: number, bypassRateLimit: boolean): Promise<LSPPrice[]> {
     const { getActiveLSPs } = await import('./lsps');
@@ -234,6 +297,23 @@ export class PriceService {
   }
 
   // Convert old error codes to new readable ones
+  private createErrorPrice(lspId: string, lspName: string, channelSize: number, errorCode: LspErrorCode, errorMessage: string): LSPPrice {
+    return {
+      lsp_id: lspId,
+      lsp_name: lspName,
+      channel_size_sat: channelSize,
+      total_fee_msat: 0,
+      channel_fee_percent: 0,
+      channel_fee_base_msat: 0,
+      lease_fee_base_msat: 0,
+      lease_fee_basis: 0,
+      timestamp: new Date().toISOString(),
+      error: errorMessage,
+      error_code: errorCode,
+      source: 'unavailable' as const
+    };
+  }
+
   private convertErrorCodes(price: LSPPrice): LSPPrice {
     if (!price.error_code) return price;
     

@@ -64,15 +64,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const channelSize = parseChannelSize(req.query.channelSize);
     const force = req.query.fresh === '1';
     const bypassRateLimit = req.query.force === '1';
+    const lspId = req.query.lspId as string | undefined;
 
-    console.log(`UI: Fetching prices for channel size ${channelSize} sats (force: ${force}, bypass rate limit: ${bypassRateLimit})`);
+    console.log(`UI: Fetching prices for channel size ${channelSize} sats (force: ${force}, bypass rate limit: ${bypassRateLimit}${lspId ? `, LSP: ${lspId}` : ''})`);
 
     const priceService = PriceService.getInstance();
     let rows;
     
     if (bypassRateLimit) {
-      // Force fetch with rate limiting bypassed
-      rows = await priceService.forceFetchPricesNew(channelSize, true);
+      if (lspId) {
+        // Force fetch specific LSP with rate limiting bypassed
+        rows = await priceService.forceFetchSingleLSP(lspId, channelSize);
+      } else {
+        // Force fetch all LSPs with rate limiting bypassed
+        rows = await priceService.forceFetchPricesNew(channelSize, true);
+      }
     } else if (force) {
       // Refresh prices - try live first, fallback to cached
       rows = await priceService.refreshPrices(channelSize);
