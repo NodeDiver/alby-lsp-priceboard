@@ -7,7 +7,7 @@ This guide covers deploying the Alby LSP Price Board to production. The applicat
 - **Docker**: Containerized deployment for any platform  
 - **Local Development**: Both npm and Docker options available
 
-**Current Status**: Live on Vercel with 4 working LSPs - 2 providing LIVE data via LSPS1 protocol, 2 with estimated data.
+**Current Status**: Live on Vercel with 4 working LSPs - 2 providing LIVE data via LSPS1 protocol, 2 with smart fallback handling. Latest features include individual LSP timestamps, smart caching, and non-blocking UI.
 
 ## 🚀 Vercel Deployment (Recommended)
 
@@ -117,8 +117,9 @@ curl https://your-domain.vercel.app/api/debug
 ```
 
 ### 2. Expected Responses
-- **Main page**: LSP price comparison table with live/estimated indicators
-- **API prices**: JSON with current LSP pricing data (live + estimated)
+- **Main page**: LSP price comparison table with individual timestamps and status indicators
+- **API prices**: JSON with current LSP pricing data (cached data only)
+- **API prices-ui**: JSON with smart caching and live data fetching
 - **API debug**: System status and configuration info
 
 ### 3. Cron Job Verification

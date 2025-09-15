@@ -34,7 +34,7 @@ function getDataSourceDescription(source: string): string {
 }
 
 // Helper function to determine overall data source
-function determineDataSource(prices: any[]): string {
+function determineDataSource(prices: LSPPrice[]): string {
   const sources = prices.map(p => p.source).filter(Boolean);
   const uniqueSources = [...new Set(sources)];
   

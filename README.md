@@ -2,9 +2,16 @@
 
 A real-time Lightning Service Provider (LSP) price comparison tool that helps users make informed decisions when opening Lightning channels.
 
-🎉 **BREAKTHROUGH**: We now have **LIVE DATA** from 2 LSPs (Megalith & LNServer Wave) with proper LSPS1 protocol implementation!
+🎉 **BREAKTHROUGH**: We now have **LIVE DATA** from 2 LSPs (LNServer Wave & Megalith) with proper LSPS1 protocol implementation!
 
 🌐 **Live Demo**: [https://alby-lsp-priceboard-qe4ir4olm-nodii-teams-yes.vercel.app/](https://alby-lsp-priceboard-qe4ir4olm-nodii-teams-yes.vercel.app/)
+
+## 🚀 **Latest Updates (September 2025)**
+- **✅ Individual LSP Timestamps**: Each LSP now shows its own last update time
+- **✅ Smart Caching System**: Shows cached data immediately, fetches live data in background
+- **✅ Non-blocking UI**: Price table never blocks, always shows current status
+- **✅ Enhanced Error Handling**: Specific error messages for each LSP (peer connection, whitelist, rate limits)
+- **✅ API/UI Separation**: Read-only API endpoint + dedicated UI endpoint for different use cases
 
 ## Problem Solved
 
@@ -12,8 +19,8 @@ This project addresses [Alby Hub Issue #1001](https://github.com/getAlby/hub/iss
 
 ## Features
 
-- **🟢 LIVE DATA** from 2 LSPs (Megalith & LNServer Wave) using proper LSPS1 protocol
-- **🟡 ESTIMATED DATA** for 2 LSPs (Olympus & Flashsats) with realistic pricing models
+- **🟢 LIVE DATA** from 2 LSPs (LNServer Wave & Megalith) using proper LSPS1 protocol
+- **🟡 CACHED/UNAVAILABLE DATA** for 2 LSPs (Olympus & Flashsats) with smart fallback handling
 - **Real-time price comparison** across 4 working LSPs
 - **Multi-currency support** with live conversion using Alby's Lightning Tools
 - **Channel size filtering** (1M-10M sats) - all sizes now work correctly
@@ -104,8 +111,8 @@ The frontend displays a visual indicator:
 
 ### ✅ Completed Features
 - **Core Infrastructure**: Next.js app with TypeScript and Tailwind CSS
-- **🟢 LIVE LSP Integration**: 2 LSPs (Megalith & LNServer Wave) with real-time LSPS1 protocol data
-- **🟡 ESTIMATED LSP Integration**: 2 LSPs (Olympus & Flashsats) with realistic pricing models
+- **🟢 LIVE LSP Integration**: 2 LSPs (LNServer Wave & Megalith) with real-time LSPS1 protocol data
+- **🟡 SMART FALLBACK**: 2 LSPs (Olympus & Flashsats) with intelligent caching and error handling
 - **Price Management**: Automated fetching and caching system with per-LSP fallbacks
 - **Multi-Currency Support**: Real-time conversion using Alby Lightning Tools
 - **User Interface**: Responsive price comparison table with filtering and status indicators

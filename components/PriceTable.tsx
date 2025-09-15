@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { getLSPById } from '../lib/lsps';
 import { convertSatsToCurrency, CurrencyConversion } from '../lib/currency';
 
@@ -207,9 +208,11 @@ function LSPIcon({ lspName, lspData }: { lspName: string; lspData?: LSPMetadata 
   }
   
   return (
-    <img 
+    <Image 
       src={iconUrl} 
       alt={`${lspName} logo`}
+      width={32}
+      height={32}
       className="w-8 h-8 rounded-full object-cover"
       onError={() => setImageError(true)}
     />
@@ -217,7 +220,7 @@ function LSPIcon({ lspName, lspData }: { lspName: string; lspData?: LSPMetadata 
 }
 
 
-export function PriceTable({ prices, loading = false, lspMetadata = [], selectedChannelSize = 1000000, selectedCurrency = 'usd', lastUpdate, dataSource, dataSourceDescription, onRetry }: PriceTableProps) {
+export function PriceTable({ prices, loading = false, lspMetadata = [], selectedChannelSize = 1000000, selectedCurrency = 'usd', onRetry }: PriceTableProps) {
   const [currencyConversions, setCurrencyConversions] = useState<{ [key: string]: CurrencyConversion }>({});
   const [conversionLoading, setConversionLoading] = useState(false);
 
