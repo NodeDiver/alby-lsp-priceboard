@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { PriceService } from '../../lib/price-service';
+import { LSPPrice } from '../../lib/lsp-api';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   res.setHeader('Content-Type', 'text/plain');
@@ -13,7 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const priceService = PriceService.getInstance();
     
     // Get in-memory cache
-    const inMemoryCache = (priceService as { inMemoryCache: Map<number, any[]> }).inMemoryCache;
+    const inMemoryCache = (priceService as { inMemoryCache: Map<number, LSPPrice[]> }).inMemoryCache;
     const cacheEntries = Array.from(inMemoryCache.entries());
     
     // Get Redis cache
@@ -43,7 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (redisPrices.length === 0) {
       output += '  Empty\n';
     } else {
-      const redisByChannel = redisPrices.reduce((acc: Record<number, any[]>, price) => {
+      const redisByChannel = redisPrices.reduce((acc: Record<number, LSPPrice[]>, price) => {
         const channelSize = price.channel_size_sat;
         if (!acc[channelSize]) acc[channelSize] = [];
         acc[channelSize].push(price);
