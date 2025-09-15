@@ -171,7 +171,7 @@ export class PriceService {
           return { ...convertedPrice, source: 'live' as const };
         } else {
           // No live data - try cached data for this LSP
-          const cachedPrice = availablePrices.find(price => price.lsp_id === lsp.id);
+          const cachedPrice = cachedPrices.find(price => price.lsp_id === lsp.id);
           if (cachedPrice) {
             console.log(`Using cached data for ${lsp.name} (no live data available)`);
             return { ...cachedPrice, source: 'cached' as const };
@@ -197,7 +197,7 @@ export class PriceService {
       } catch (error) {
         console.error(`Error fetching data for ${lsp.name}:`, error);
         // Try cached data as fallback
-        const cachedPrice = availablePrices.find(price => price.lsp_id === lsp.id);
+        const cachedPrice = cachedPrices.find(price => price.lsp_id === lsp.id);
         if (cachedPrice) {
           console.log(`Using cached data for ${lsp.name} (error occurred)`);
           return { ...cachedPrice, source: 'cached' as const };
@@ -329,12 +329,13 @@ export class PriceService {
 
   // Get latest prices (from cache or fetch if needed)
   public async getLatestPrices(channelSizeSat: number = 1000000): Promise<LSPPrice[]> {
+    // Get cached prices for this channel size
     const cachedPrices = await getLatestPricesFromDB(channelSizeSat);
     
     // Filter cached prices by channel size
     // Prices are already filtered by channel size in the new structure
     
-    if (availablePrices.length === 0) {
+    if (cachedPrices.length === 0) {
       // No cached prices for this channel size in Redis
       // First check in-memory cache
       const inMemoryPrices = this.inMemoryCache.get(channelSizeSat);
@@ -363,7 +364,7 @@ export class PriceService {
       this.fetchAndSavePrices(channelSizeSat).catch(console.error);
     }
     
-    return availablePrices;
+    return cachedPrices;
   }
 
   // Check if prices should be refreshed (with jitter to avoid thundering herd)

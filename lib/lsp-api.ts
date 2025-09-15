@@ -408,7 +408,7 @@ const lspRateLimits: Record<string, { lastRequest: number; cooldownMs: number }>
 // Export function to get current rate limit status
 export function getRateLimitStatus() {
   const now = Date.now();
-  const status: Record<string, any> = {};
+  const status: Record<string, { lastRequest: string; cooldownMs: number; timeSinceLastRequest: number; remainingCooldown: number; isRateLimited: boolean; remainingMinutes: number; cooldownMinutes: number }> = {};
   
   Object.entries(lspRateLimits).forEach(([lspId, limit]) => {
     const timeSinceLastRequest = now - limit.lastRequest;
@@ -555,19 +555,7 @@ export async function fetchLSPPrice(lsp: LSP, channelSizeSat: number = 1000000):
   
   // Try to get cached price for this LSP
   // Individual LSP caching removed - using improved structure
-  const cachedPrice: LSPPrice | null = null;
-  if (cachedPrice) {
-    const staleSeconds = Math.floor((Date.now() - new Date(cachedPrice.timestamp).getTime()) / 1000);
-    console.log(`Using cached price for ${lsp.name} (${staleSeconds}s old)`);
-    
-    return {
-      ...cachedPrice,
-      source: 'cached',
-      stale_seconds: staleSeconds,
-      error: `Live fetch failed: ${lastError}`,
-      error_code: LspErrorCode.UNKNOWN
-    };
-  }
+  // No cached price available
 
   // No cache available - return error
   const errorInfo = toLspError(null);
@@ -635,15 +623,7 @@ export async function fetchLSPPriceBypass(lsp: LSP, channelSizeSat: number = 100
       if (attempt === maxRetries) {
         // Try to get cached price as fallback
         // Individual LSP caching removed - using improved structure
-  const cachedPrice: LSPPrice | null = null;
-        if (cachedPrice) {
-          console.log(`Using cached price for ${lsp.name} as fallback`);
-          return {
-            ...cachedPrice,
-            source: 'cached',
-            stale_seconds: Math.floor((Date.now() - Date.parse(cachedPrice.timestamp)) / 1000)
-          };
-        }
+        // No cached price available
       }
     }
   }

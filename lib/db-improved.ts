@@ -13,7 +13,7 @@ const isRedisConfigured = () => {
 // Single source of truth with better organization
 
 // Main prices with metadata
-const PRICES_KEY = 'alby:lsp:prices';
+// Removed unused constant
 const METADATA_KEY = 'alby:lsp:metadata';
 const HISTORY_KEY = 'alby:lsp:history';
 
@@ -29,7 +29,7 @@ export async function savePricesToDBImproved(prices: LSPPrice[]): Promise<boolea
     }
 
     const now = new Date().toISOString();
-    const channelSize = prices[0]?.channel_size_sat || 1000000;
+    // Remove unused variable
     
     // Group prices by channel size for better organization
     const pricesByChannel = prices.reduce((acc, price) => {
@@ -120,7 +120,7 @@ export async function getAvailableChannelSizes(): Promise<number[]> {
 }
 
 // Get metadata
-export async function getMetadata(): Promise<any> {
+export async function getMetadata(): Promise<{ lastUpdate: string; totalChannels: number; channelSizes: number[] } | null> {
   try {
     if (!isRedisConfigured()) {
       return null;
@@ -135,7 +135,7 @@ export async function getMetadata(): Promise<any> {
 }
 
 // Get price history
-export async function getPriceHistory(limit: number = 20): Promise<any[]> {
+export async function getPriceHistory(limit: number = 20): Promise<{ timestamp: string; channelSize: number; prices: LSPPrice[] }[]> {
   try {
     if (!isRedisConfigured()) {
       return [];

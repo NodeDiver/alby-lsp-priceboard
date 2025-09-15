@@ -26,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       output += '  🟢 LNServer Wave: 10 minutes\n';
       output += '  ⚪ Others: 10 minutes (default)\n';
     } else {
-      Object.entries(rateLimitStatus).forEach(([lspId, status]) => {
+      Object.entries(rateLimitStatus).forEach(([lspId, status]: [string, { lastRequest: string; cooldownMs: number; remainingCooldown: number; isRateLimited: boolean; remainingMinutes: number; cooldownMinutes: number }]) => {
         const statusEmoji = status.isRateLimited ? '🔴' : '🟢';
         const statusText = status.isRateLimited ? 'RATE LIMITED' : 'AVAILABLE';
         

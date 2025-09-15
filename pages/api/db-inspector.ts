@@ -24,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Get all keys with our namespace
     const allKeys = await redis.keys('alby:lsp:*');
     
-    const dbData: Record<string, any> = {};
+    const dbData: Record<string, { type: string; size: number | null; value: unknown }> = {};
     
     // Read each key
     for (const key of allKeys) {
@@ -46,7 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let redisInfo = null;
     try {
       redisInfo = await redis.info();
-    } catch (error) {
+    } catch {
       // info() might not be available in all Redis configurations
       redisInfo = { note: 'info() not available' };
     }
@@ -63,7 +63,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       data: dbData,
       summary: {
         totalKeys: allKeys.length,
-        totalSize: Object.values(dbData).reduce((sum: number, item: any) => 
+        totalSize: Object.values(dbData).reduce((sum: number, item) => 
           sum + (item.size || 0), 0
         )
       }

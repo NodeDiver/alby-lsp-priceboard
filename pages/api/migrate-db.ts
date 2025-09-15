@@ -33,7 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     output += `  Last Update: ${lastUpdate}\n\n`;
 
     // Group by channel size
-    const pricesByChannel = prices.reduce((acc: Record<number, any[]>, price: any) => {
+    const pricesByChannel = prices.reduce((acc: Record<number, LSPPrice[]>, price: LSPPrice) => {
       const size = price.channel_size_sat;
       if (!acc[size]) acc[size] = [];
       acc[size].push(price);
