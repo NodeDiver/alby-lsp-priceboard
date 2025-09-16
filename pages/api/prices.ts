@@ -44,9 +44,9 @@ function parseChannelSize(q: unknown): number {
 function getDataSourceDescription(source: string): string {
   switch (source) {
     case 'live':
-      return 'Live data from LSP APIs';
+      return 'Live data from LSP APIs (includes fresh cached data < 1 hour old)';
     case 'cached':
-      return 'Cached data from previous successful fetch';
+      return 'Cached data from previous successful fetch (> 1 hour old)';
     case 'unavailable':
       return 'LSP unavailable';
     case 'mixed':
@@ -102,8 +102,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
       error_code: price.error_code ?? null,
     }));
 
-    // Determine overall data source
-    const sources = Array.from(new Set(prices.map(p => p.source).filter(Boolean)));
+    // Determine overall data source with 1-hour rule
+    const now = new Date();
+    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000); // 1 hour ago
+    
+    // Check if cached data is fresh (less than 1 hour old)
+    const adjustedSources = prices.map(p => {
+      if (p.source === 'cached' && p.timestamp) {
+        const priceTime = new Date(p.timestamp);
+        if (priceTime > oneHourAgo) {
+          return 'live'; // Treat fresh cached data as live
+        }
+      }
+      return p.source;
+    }).filter(Boolean);
+    
+    const sources = Array.from(new Set(adjustedSources));
     const dataSource = sources.length === 1 ? sources[0]! : (sources.length > 1 ? 'mixed' : 'unknown');
 
     // Calculate last update from actual data timestamps

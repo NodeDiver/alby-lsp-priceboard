@@ -18,6 +18,14 @@ export class PriceService {
     return PriceService.instance;
   }
 
+  // Helper method to determine if cached data should be treated as "live" (less than 1 hour old)
+  private isFreshCachedData(timestamp: string): boolean {
+    const now = new Date();
+    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000); // 1 hour ago
+    const priceTime = new Date(timestamp);
+    return priceTime > oneHourAgo;
+  }
+
   // Fetch prices from all LSPs and save to database
   public async fetchAndSavePrices(channelSizeSat: number = 1000000): Promise<LSPPrice[]> {
     if (this.isFetching) {
@@ -92,7 +100,7 @@ export class PriceService {
         console.log(`Using in-memory cache for ${channelSizeSat} sats (${inMemoryPrices.length} prices)`);
         availablePrices = inMemoryPrices.map(price => ({
           ...price,
-          source: 'cached' as const,
+          source: this.isFreshCachedData(price.timestamp) ? 'live' as const : 'cached' as const,
           stale_seconds: Math.floor((Date.now() - Date.parse(price.timestamp)) / 1000)
         }));
       }
@@ -106,7 +114,7 @@ export class PriceService {
         console.log(`Returning cached data for ${lsp.name}`);
         return {
           ...cachedPrice,
-          source: 'cached' as const,
+          source: this.isFreshCachedData(cachedPrice.timestamp) ? 'live' as const : 'cached' as const,
           stale_seconds: Math.floor((Date.now() - Date.parse(cachedPrice.timestamp)) / 1000)
         };
       } else {
@@ -237,7 +245,7 @@ export class PriceService {
           const cachedPrice = cachedPrices.find(price => price.lsp_id === lsp.id);
           if (cachedPrice) {
             console.log(`Using cached data for ${lsp.name} (no live data available)`);
-            return { ...cachedPrice, source: 'cached' as const };
+            return { ...cachedPrice, source: this.isFreshCachedData(cachedPrice.timestamp) ? 'live' as const : 'cached' as const };
           } else {
             // No cached data either - return unavailable
             console.log(`No data available for ${lsp.name}`);
@@ -368,7 +376,7 @@ export class PriceService {
         console.log(`Using in-memory cache for ${channelSizeSat} sats (${inMemoryPrices.length} prices)`);
         availablePrices = inMemoryPrices.map(price => ({
           ...price,
-          source: 'cached' as const,
+          source: this.isFreshCachedData(price.timestamp) ? 'live' as const : 'cached' as const,
           stale_seconds: Math.floor((Date.now() - Date.parse(price.timestamp)) / 1000)
         }));
       }
@@ -382,7 +390,7 @@ export class PriceService {
         console.log(`Returning cached data for ${lsp.name}`);
         return {
           ...cachedPrice,
-          source: 'cached' as const,
+          source: this.isFreshCachedData(cachedPrice.timestamp) ? 'live' as const : 'cached' as const,
           stale_seconds: Math.floor((Date.now() - Date.parse(cachedPrice.timestamp)) / 1000)
         };
       } else {
@@ -424,7 +432,7 @@ export class PriceService {
         // Mark as cached data
         return inMemoryPrices.map(price => ({
           ...price,
-          source: 'cached' as const,
+          source: this.isFreshCachedData(price.timestamp) ? 'live' as const : 'cached' as const,
           stale_seconds: Math.floor((Date.now() - Date.parse(price.timestamp)) / 1000)
         }));
       }

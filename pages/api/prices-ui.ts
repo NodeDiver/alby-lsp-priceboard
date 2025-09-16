@@ -21,9 +21,9 @@ function parseChannelSize(channelSize: string | string[] | undefined): number {
 function getDataSourceDescription(source: string): string {
   switch (source) {
     case 'live':
-      return 'Live data from LSP APIs';
+      return 'Live data from LSP APIs (includes fresh cached data < 1 hour old)';
     case 'cached':
-      return 'Cached data from previous successful fetch';
+      return 'Cached data from previous successful fetch (> 1 hour old)';
     case 'unavailable':
       return 'LSP unavailable';
     case 'mixed':
@@ -35,8 +35,21 @@ function getDataSourceDescription(source: string): string {
 
 // Helper function to determine overall data source
 function determineDataSource(prices: LSPPrice[]): string {
-  const sources = prices.map(p => p.source).filter(Boolean);
-  const uniqueSources = [...new Set(sources)];
+  const now = new Date();
+  const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000); // 1 hour ago
+  
+  // Check if cached data is fresh (less than 1 hour old)
+  const adjustedSources = prices.map(p => {
+    if (p.source === 'cached' && p.timestamp) {
+      const priceTime = new Date(p.timestamp);
+      if (priceTime > oneHourAgo) {
+        return 'live'; // Treat fresh cached data as live
+      }
+    }
+    return p.source;
+  }).filter(Boolean);
+  
+  const uniqueSources = [...new Set(adjustedSources)];
   
   if (uniqueSources.length === 0) return 'unknown';
   if (uniqueSources.length === 1) return uniqueSources[0];
