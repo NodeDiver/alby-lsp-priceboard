@@ -7,7 +7,7 @@
   ],
   "functions": {
     "pages/api/cron/fetch-prices.ts": {
-      "maxDuration": 60
+      "maxDuration": 120
     }
   },
   "buildCommand": "npm run build",

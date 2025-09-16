@@ -45,7 +45,7 @@
 - `GET /api/prices-ui` - UI-specific pricing data (smart caching with live fetching)
 - `GET /api/lsp-metadata` - LSP metadata and icons
 - `GET /api/debug` - System status and health checks
-- `POST /api/cron/fetch-prices` - Automated price fetching (Vercel Cron)
+- `POST /api/cron/fetch-prices` - Automated price fetching for 1M/2M/5M/10M channels (Vercel Cron)
 
 ### Project Structure
 ```

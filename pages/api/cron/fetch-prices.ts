@@ -11,16 +11,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // Fetch prices from all LSPs and save to database
-    const prices = await fetchAndSavePrices();
+    // Fetch prices for multiple channel sizes
+    const channelSizes = [1000000, 2000000, 5000000, 10000000]; // 1M, 2M, 5M, 10M
+    const allPrices = [];
+    
+    for (const channelSize of channelSizes) {
+      console.log(`Fetching prices for ${channelSize} sats...`);
+      const prices = await fetchAndSavePrices(channelSize);
+      allPrices.push(...prices);
+    }
     
     // Return success response
     res.status(200).json({
       success: true,
-      message: 'Prices fetched and saved successfully',
-      count: prices.length,
+      message: 'Prices fetched and saved successfully for multiple channel sizes',
+      count: allPrices.length,
+      channelSizes,
       timestamp: new Date().toISOString(),
-      prices: prices.map(price => ({
+      prices: allPrices.map(price => ({
         lsp_id: price.lsp_id,
         lsp_name: price.lsp_name,
         channel_size_sat: price.channel_size_sat,
