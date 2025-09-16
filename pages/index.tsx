@@ -16,10 +16,12 @@ export default function Home() {
   const [dataSourceDescription, setDataSourceDescription] = useState<string>('');
   const [abortController, setAbortController] = useState<AbortController | null>(null);
   const [forceFetching, setForceFetching] = useState<Record<string, boolean>>({});
+  const [showNotification, setShowNotification] = useState(false);
 
   // Retry function for individual LSPs (non-blocking)
   const handleRetryLSP = async () => {
     try {
+      setShowNotification(true);
       setError(null);
       
       // Fetch fresh data for all LSPs (the API will handle per-LSP logic)
@@ -41,6 +43,8 @@ export default function Home() {
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
+    } finally {
+      setShowNotification(false);
     }
   };
 
@@ -117,13 +121,18 @@ export default function Home() {
 
   // Refresh prices manually (force fresh fetch with live data)
   const handleRefresh = () => {
+    setShowNotification(true);
     setLoading(true);
-    fetchPrices(selectedChannelSize, true).finally(() => setLoading(false));
+    fetchPrices(selectedChannelSize, true).finally(() => {
+      setLoading(false);
+      setShowNotification(false);
+    });
   };
 
   // Force fetch prices for a specific LSP (bypass rate limiting and caching)
   const handleForceFetchLSP = async (lspId: string) => {
     try {
+      setShowNotification(true);
       setForceFetching(prev => ({ ...prev, [lspId]: true }));
       setError(null);
       
@@ -151,6 +160,7 @@ export default function Home() {
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
     } finally {
       setForceFetching(prev => ({ ...prev, [lspId]: false }));
+      setShowNotification(false);
     }
   };
 
@@ -258,12 +268,12 @@ export default function Home() {
           </div>
           
           {/* Non-blocking loading indicator */}
-          {(loading || forceFetching) && (
+          {showNotification && (
             <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <div className="flex items-center">
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
                 <span className="text-sm text-blue-700">
-                  {forceFetching ? 'Force fetching fresh data...' : 'Refreshing data...'}
+                  Force fetching fresh data...
                 </span>
               </div>
             </div>
