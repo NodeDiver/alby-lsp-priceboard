@@ -186,6 +186,11 @@ export async function getDatabaseStatus(): Promise<{
   connected: boolean;
   keysCount: number;
   configured: boolean;
+  hasData: boolean;
+  isStale: boolean;
+  lastUpdate?: string;
+  priceCount: number;
+  historyCount: number;
   error?: string;
 }> {
   try {
@@ -195,22 +200,45 @@ export async function getDatabaseStatus(): Promise<{
         connected: false,
         keysCount: 0,
         configured: false,
+        hasData: false,
+        isStale: false,
+        priceCount: 0,
+        historyCount: 0,
         error: 'Redis not configured'
       };
     }
 
     // Test connection by getting all keys
     const keys = await redis.keys('alby:lsp:*');
+    
+    // Check if we have price data
+    const priceKeys = keys.filter(key => key.startsWith('alby:lsp:channel:'));
+    const hasData = priceKeys.length > 0;
+    
+    // Get metadata for staleness check
+    const metadata = await getMetadata();
+    const lastUpdate = metadata?.lastUpdate;
+    const isStale = lastUpdate ? (Date.now() - Date.parse(lastUpdate)) > (12 * 60 * 1000) : true;
+    
     return {
       connected: true,
       keysCount: keys.length,
-      configured: true
+      configured: true,
+      hasData,
+      isStale,
+      lastUpdate,
+      priceCount: metadata?.totalPrices || 0,
+      historyCount: 0 // TODO: implement history count
     };
   } catch (error) {
     return {
       connected: false,
       keysCount: 0,
       configured: isRedisConfigured(),
+      hasData: false,
+      isStale: false,
+      priceCount: 0,
+      historyCount: 0,
       error: error instanceof Error ? error.message : 'Unknown error'
     };
   }

@@ -17,8 +17,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     // Check environment variables
     const envStatus = {
-      UPSTASH_REDIS_REST_URL: !!process.env.UPSTASH_REDIS_REST_URL,
-      UPSTASH_REDIS_REST_TOKEN: !!process.env.UPSTASH_REDIS_REST_TOKEN,
+      KV_REST_API_URL: !!process.env.KV_REST_API_URL,
+      KV_REST_API_TOKEN: !!process.env.KV_REST_API_TOKEN,
       NODE_ENV: process.env.NODE_ENV || 'development',
     };
 
@@ -26,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const now = new Date().toISOString();
 
     // Determine if database is properly configured (has env vars)
-    const databaseConfigured = envStatus.UPSTASH_REDIS_REST_URL && envStatus.UPSTASH_REDIS_REST_TOKEN;
+    const databaseConfigured = envStatus.KV_REST_API_URL && envStatus.KV_REST_API_TOKEN;
 
     // Determine appropriate status code
     let statusCode = 200;
@@ -54,7 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         : 'No cached data; will fetch live from LSPs if possible',
       next_steps: databaseConfigured
         ? (dbStatus.isStale ? 'Trigger refresh or check LSP reachability' : 'All good')
-        : 'Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN for caching/performance'
+        : 'Set KV_REST_API_URL and KV_REST_API_TOKEN for caching/performance'
     });
 
   } catch (error) {
