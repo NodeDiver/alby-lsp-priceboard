@@ -294,6 +294,7 @@ export async function fetchLSPInfo(lsp: LSP): Promise<{ info: LSPS1GetInfoRespon
 function getClientPubkeyForLSP(lspId: string): string {
   const lspPubkeys: Record<string, string> = {
     'flashsats': '02e36a9c9e03ffc4bbf1bc9df64bdacd7736d4c97c01a1930578154a4c616ff478', // Dedicated key for Flashsats
+    'megalith': '0281575be148ae504458428cf31985b356d108e2c1bed1cc770f7ecef0bb593713', // Dedicated key for Megalith
     // Default key for all other LSPs
     'default': '028260d14351cfddedf5f171da5235fa958349e5d22cd75d9a6e3a8cf3f52aa16c'
   };
