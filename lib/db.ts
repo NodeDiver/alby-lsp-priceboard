@@ -11,7 +11,6 @@ const isRedisConfigured = () => {
 
 // IMPROVED DATABASE STRUCTURE - No redundancy
 const METADATA_KEY = 'alby:lsp:metadata';
-const HISTORY_KEY = 'alby:lsp:history';
 
 // Per-channel-size prices (better organization)
 const getChannelPricesKey = (channelSize: number) => `alby:lsp:channel:${channelSize}`;
@@ -52,18 +51,16 @@ export async function savePricesToDB(prices: LSPPrice[]): Promise<boolean> {
     };
     pipeline.set(METADATA_KEY, JSON.stringify(metadata)); // No TTL - store forever
     
-    // Add to history (keep last 50 entries per channel size)
+    // Add to history using timestamp-based keys for better organization
     Object.entries(pricesByChannel).forEach(([size, channelPrices]) => {
+      const historyKey = `alby:lsp:history:${size}:${now}`;
       const historyEntry = {
         timestamp: now,
         channelSize: Number(size),
         prices: channelPrices
       };
-      pipeline.lpush(HISTORY_KEY, JSON.stringify(historyEntry));
+      pipeline.set(historyKey, JSON.stringify(historyEntry));
     });
-    
-    // Keep only last 50 entries total
-    pipeline.ltrim(HISTORY_KEY, 0, 49);
     
     await pipeline.exec();
     return true;
@@ -142,16 +139,34 @@ export async function getLastUpdateTime(): Promise<string | null> {
   }
 }
 
-// Get price history from LIST
-export async function getPriceHistory(): Promise<Array<{timestamp: string, prices: LSPPrice[]}>> {
+// Get price history from timestamp-based keys
+export async function getPriceHistory(limit: number = 50): Promise<Array<{timestamp: string, channelSize: number, prices: LSPPrice[]}>> {
   try {
     if (!isRedisConfigured()) {
       return [];
     }
 
-    // Get all entries from the LIST (most recent first)
-    const historyEntries = await redis.lrange<string>(HISTORY_KEY, 0, -1);
-    return historyEntries.map(entry => JSON.parse(entry));
+    // Get all history keys and sort by timestamp (most recent first)
+    const allKeys = await redis.keys('alby:lsp:history:*');
+    const historyKeys = allKeys.filter(key => key.startsWith('alby:lsp:history:') && key !== 'alby:lsp:history');
+    
+    // Sort by timestamp (extract from key)
+    historyKeys.sort((a, b) => {
+      const timestampA = a.split(':').slice(4).join(':'); // Get timestamp part
+      const timestampB = b.split(':').slice(4).join(':');
+      return timestampB.localeCompare(timestampA); // Descending (newest first)
+    });
+    
+    // Get the data for the most recent entries
+    const limitedKeys = historyKeys.slice(0, limit);
+    const historyData = await Promise.all(
+      limitedKeys.map(async (key) => {
+        const data = await redis.get(key);
+        return data ? JSON.parse(data as string) : null;
+      })
+    );
+    
+    return historyData.filter(entry => entry !== null);
   } catch (error) {
     console.error('Error getting price history:', error);
     return [];
@@ -228,7 +243,7 @@ export async function getDatabaseStatus(): Promise<{
       isStale,
       lastUpdate,
       priceCount: metadata?.totalPrices || 0,
-      historyCount: 0 // TODO: implement history count
+      historyCount: (await redis.keys('alby:lsp:history:*')).filter(key => key !== 'alby:lsp:history').length
     };
   } catch (error) {
     return {
