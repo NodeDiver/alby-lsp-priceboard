@@ -148,7 +148,11 @@ export async function getPriceHistory(limit: number = 50): Promise<Array<{timest
 
     // Get all history keys and sort by timestamp (most recent first)
     const allKeys = await redis.keys('alby:lsp:history:*');
-    const historyKeys = allKeys.filter(key => key.startsWith('alby:lsp:history:') && key !== 'alby:lsp:history');
+    const historyKeys = allKeys.filter(key => 
+      key.startsWith('alby:lsp:history:') && 
+      key !== 'alby:lsp:history' &&
+      key.split(':').length > 4 // Ensure it has timestamp
+    );
     
     // Sort by timestamp (extract from key)
     historyKeys.sort((a, b) => {
