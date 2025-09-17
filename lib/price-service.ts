@@ -185,11 +185,14 @@ export class PriceService {
         
         // Save to cache
         await savePricesToDB([result]);
-        this.inMemoryCache.set(channelSizeSat, [result]);
+        
+        // Update in-memory cache with the new result + other LSPs
+        const otherPrices = cachedPrices.filter(p => p.lsp_id !== lspId);
+        const allPrices = [result, ...otherPrices];
+        this.inMemoryCache.set(channelSizeSat, allPrices);
         
         // Return all prices (the specific LSP + others from cache)
-        const otherPrices = cachedPrices.filter(p => p.lsp_id !== lspId);
-        return [result, ...otherPrices];
+        return allPrices;
       } else {
         // No live data - return cached data for this LSP if available
         const cachedPrice = cachedPrices.find(p => p.lsp_id === lspId);
