@@ -37,7 +37,7 @@ export async function savePricesToDB(prices: LSPPrice[]): Promise<boolean> {
     const pipeline = redis.pipeline();
     
     // FIRST: Save old data to history before overwriting
-    for (const [size, channelPrices] of Object.entries(pricesByChannel)) {
+    for (const [size] of Object.entries(pricesByChannel)) {
       const key = getChannelPricesKey(Number(size));
       
       try {

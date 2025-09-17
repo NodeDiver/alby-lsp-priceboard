@@ -16,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const parsedHistory = JSON.parse(historyData as string);
-    const goodFlashsatsData = parsedHistory.prices.find((p: any) => 
+    const goodFlashsatsData = parsedHistory.prices.find((p: { lsp_id: string; error?: string; total_fee_msat: number }) => 
       p.lsp_id === 'flashsats' && 
       !p.error && 
       p.total_fee_msat > 0
@@ -35,7 +35,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const currentPrices = JSON.parse(currentData as string);
     
     // Replace the corrupted Flashsats data with the good historical data
-    const updatedPrices = currentPrices.map((p: any) => 
+    const updatedPrices = currentPrices.map((p: { lsp_id: string }) => 
       p.lsp_id === 'flashsats' ? { ...goodFlashsatsData, source: 'cached' } : p
     );
 
