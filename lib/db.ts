@@ -40,7 +40,7 @@ export async function savePricesToDB(prices: LSPPrice[]): Promise<boolean> {
     // Save each channel size separately
     Object.entries(pricesByChannel).forEach(([size, channelPrices]) => {
       const key = getChannelPricesKey(Number(size));
-      pipeline.set(key, JSON.stringify(channelPrices), { ex: 3600 }); // 1 hour TTL
+      pipeline.set(key, JSON.stringify(channelPrices), { ex: 86400 }); // 24 hour TTL
     });
     
     // Save metadata
@@ -50,7 +50,7 @@ export async function savePricesToDB(prices: LSPPrice[]): Promise<boolean> {
       totalPrices: prices.length,
       channelSizes: Object.keys(pricesByChannel).map(Number).sort((a, b) => a - b)
     };
-    pipeline.set(METADATA_KEY, JSON.stringify(metadata), { ex: 3600 });
+    pipeline.set(METADATA_KEY, JSON.stringify(metadata), { ex: 86400 }); // 24 hour TTL
     
     // Add to history (keep last 50 entries per channel size)
     Object.entries(pricesByChannel).forEach(([size, channelPrices]) => {
