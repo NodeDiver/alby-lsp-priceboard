@@ -37,31 +37,11 @@ export async function savePricesToDB(prices: LSPPrice[]): Promise<boolean> {
 
     const pipeline = redis.pipeline();
     
-    // Save each channel size separately (merge with existing data)
-    for (const [size, channelPrices] of Object.entries(pricesByChannel)) {
+    // Save each channel size separately
+    Object.entries(pricesByChannel).forEach(([size, channelPrices]) => {
       const key = getChannelPricesKey(Number(size));
-      
-      try {
-        // Get existing data for this channel size
-        let existingPrices: LSPPrice[] = [];
-        const existingData = await redis.get(key);
-        if (existingData && typeof existingData === 'string') {
-          existingPrices = JSON.parse(existingData);
-        }
-        
-        // Merge new prices with existing prices (replace by LSP ID)
-        const newLspIds = new Set(channelPrices.map(p => p.lsp_id));
-        const existingOtherLspPrices = existingPrices.filter(p => !newLspIds.has(p.lsp_id));
-        const mergedPrices = [...channelPrices, ...existingOtherLspPrices];
-        
-        console.log(`Merging data for ${key}: ${channelPrices.length} new, ${existingOtherLspPrices.length} existing, ${mergedPrices.length} total`);
-        
-        // Save merged data directly (not using pipeline to avoid race conditions)
-        await redis.set(key, JSON.stringify(mergedPrices), { ex: 3600 }); // 1 hour TTL
-      } catch (error) {
-        console.error(`Error saving data for ${key}:`, error);
-      }
-    }
+      pipeline.set(key, JSON.stringify(channelPrices), { ex: 3600 }); // 1 hour TTL
+    });
     
     // Save metadata
     const metadata = {

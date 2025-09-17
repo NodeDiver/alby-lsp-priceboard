@@ -183,12 +183,12 @@ export class PriceService {
         const convertedPrice = this.convertErrorCodes(livePrice);
         const result = { ...convertedPrice, source: 'live' as const };
         
-        // Save to cache
-        await savePricesToDB([result]);
-        
-        // Update in-memory cache with the new result + other LSPs
+        // Merge with existing data and save all prices for this channel size
         const otherPrices = cachedPrices.filter(p => p.lsp_id !== lspId);
         const allPrices = [result, ...otherPrices];
+        
+        // Save ALL prices for this channel size (not just the single LSP)
+        await savePricesToDB(allPrices);
         this.inMemoryCache.set(channelSizeSat, allPrices);
         
         // Return all prices (the specific LSP + others from cache)
