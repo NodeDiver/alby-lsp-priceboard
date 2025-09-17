@@ -55,7 +55,7 @@ function RetryButton({ lspId, onRetry }: { lspId: string; onRetry?: (lspId: stri
   return (
     <button
       onClick={() => onRetry(lspId)}
-      className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded hover:bg-blue-200 transition-colors"
+      className="ml-2 px-2 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
       title="Retry this LSP"
       aria-label={`Retry fetching data for ${lspId}`}
     >
@@ -80,7 +80,7 @@ function ForceFetchButton({
     <button
       onClick={() => onForceFetch(lspId)}
       disabled={isForceFetching}
-      className="ml-2 px-2 py-1 text-xs bg-red-100 text-red-800 rounded hover:bg-red-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      className="ml-2 px-2 py-1 text-xs bg-gray-800 text-white rounded hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       title="Force fetch fresh data for this LSP (bypass rate limits)"
       aria-label={`Force fetch fresh data for ${lspId}`}
     >
@@ -134,8 +134,8 @@ function StatusBadge({ source, staleSeconds, errorCode, error, timestamp }: {
         case 'SCHEMA_MISMATCH': return 'bg-gray-200 text-gray-700';
         case 'CHANNEL_SIZE_TOO_SMALL': return 'bg-gray-200 text-gray-700';
         case 'CHANNEL_SIZE_TOO_LARGE': return 'bg-gray-200 text-gray-700';
-        case 'CACHE_UNAVAILABLE': return 'bg-orange-100 text-orange-600';
-        case 'LIVE_DATA_UNAVAILABLE': return 'bg-red-100 text-red-600';
+        case 'CACHE_UNAVAILABLE': return 'bg-gray-200 text-gray-800';
+        case 'LIVE_DATA_UNAVAILABLE': return 'bg-gray-300 text-gray-900';
         case 'PEER_NOT_CONNECTED': return 'bg-blue-100 text-blue-600';
         case 'WHITELIST_REQUIRED': return 'bg-purple-100 text-purple-600';
         default: return 'bg-gray-300 text-gray-600';
@@ -191,8 +191,8 @@ function StatusBadge({ source, staleSeconds, errorCode, error, timestamp }: {
     case 'unavailable':
       return (
         <div className="flex flex-col space-y-1">
-          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-600" title="LSP unavailable" aria-label="LSP unavailable">
-            <span className="w-2 h-2 rounded-full bg-red-500 mr-1"></span>Unavailable
+          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-400 text-white" title="LSP unavailable" aria-label="LSP unavailable">
+            <span className="w-2 h-2 rounded-full bg-gray-600 mr-1"></span>Unavailable
           </span>
           {timestamp && (
             <span className="text-xs text-gray-500">
@@ -371,7 +371,7 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
                   // Only show error if there's no price data at all
                   if (price.error && price.price === 0) {
                     return (
-                      <td className="text-center p-4 text-red-500">
+                      <td className="text-center p-4 text-gray-700">
                         Error
                       </td>
                     );
@@ -393,7 +393,7 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
                             <div>
                               <div>{conversion.formatted}</div>
                               {conversion.error && (
-                                <div className="text-red-500 text-xs mt-1">
+                                <div className="text-gray-600 text-xs mt-1">
                                   {conversion.error}
                                 </div>
                               )}
