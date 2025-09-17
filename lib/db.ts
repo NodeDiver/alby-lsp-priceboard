@@ -36,7 +36,34 @@ export async function savePricesToDB(prices: LSPPrice[]): Promise<boolean> {
 
     const pipeline = redis.pipeline();
     
-    // Save each channel size separately
+    // FIRST: Save old data to history before overwriting
+    for (const [size, channelPrices] of Object.entries(pricesByChannel)) {
+      const key = getChannelPricesKey(Number(size));
+      
+      try {
+        // Get existing data before overwriting
+        const existingData = await redis.get(key);
+        if (existingData && typeof existingData === 'string') {
+          const existingPrices = JSON.parse(existingData) as LSPPrice[];
+          if (existingPrices.length > 0) {
+            // Save old data to history with its original timestamp
+            const oldestTimestamp = existingPrices[0]?.timestamp || now;
+            const historyKey = `alby:lsp:history:${size}:${oldestTimestamp}`;
+            const historyEntry = {
+              timestamp: oldestTimestamp,
+              channelSize: Number(size),
+              prices: existingPrices
+            };
+            pipeline.set(historyKey, JSON.stringify(historyEntry));
+            console.log(`Saved old data to history: ${historyKey}`);
+          }
+        }
+      } catch (error) {
+        console.warn(`Could not preserve old data for ${key}:`, error);
+      }
+    }
+    
+    // THEN: Save new current data
     Object.entries(pricesByChannel).forEach(([size, channelPrices]) => {
       const key = getChannelPricesKey(Number(size));
       pipeline.set(key, JSON.stringify(channelPrices)); // No TTL - store forever
@@ -50,17 +77,6 @@ export async function savePricesToDB(prices: LSPPrice[]): Promise<boolean> {
       channelSizes: Object.keys(pricesByChannel).map(Number).sort((a, b) => a - b)
     };
     pipeline.set(METADATA_KEY, JSON.stringify(metadata)); // No TTL - store forever
-    
-    // Add to history using timestamp-based keys for better organization
-    Object.entries(pricesByChannel).forEach(([size, channelPrices]) => {
-      const historyKey = `alby:lsp:history:${size}:${now}`;
-      const historyEntry = {
-        timestamp: now,
-        channelSize: Number(size),
-        prices: channelPrices
-      };
-      pipeline.set(historyKey, JSON.stringify(historyEntry));
-    });
     
     await pipeline.exec();
     return true;
