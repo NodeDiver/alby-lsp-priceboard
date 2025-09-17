@@ -238,34 +238,43 @@ export class PriceService {
           ? await fetchLSPPriceBypass(lsp, channelSizeSat)
           : await fetchLSPPrice(lsp, channelSizeSat);
         
-        if (livePrice) {
-          console.log(`Got live data for ${lsp.name}`);
+        if (livePrice && !livePrice.error && livePrice.total_fee_msat > 0) {
+          console.log(`Got successful live data for ${lsp.name}`);
           // Convert old error codes to new ones
           const convertedPrice = this.convertErrorCodes(livePrice);
           return { ...convertedPrice, source: 'live' as const };
         } else {
-          // No live data - try cached data for this LSP
-          const cachedPrice = cachedPrices.find(price => price.lsp_id === lsp.id);
+          // Live fetch failed - try good cached data for this LSP
+          const cachedPrice = cachedPrices.find(price => 
+            price.lsp_id === lsp.id && 
+            !price.error && 
+            price.total_fee_msat > 0
+          );
           if (cachedPrice) {
-            console.log(`Using cached data for ${lsp.name} (no live data available)`);
+            console.log(`Using cached data for ${lsp.name} (live fetch failed)`);
             return { ...cachedPrice, source: this.isFreshCachedData(cachedPrice.timestamp) ? 'live' as const : 'cached' as const };
           } else {
-            // No cached data either - return unavailable
-            console.log(`No data available for ${lsp.name}`);
-            return {
-              lsp_id: lsp.id,
-              lsp_name: lsp.name,
-              channel_size_sat: channelSizeSat,
-              total_fee_msat: 0,
-              channel_fee_percent: 0,
-              channel_fee_base_msat: 0,
-              lease_fee_base_msat: 0,
-              lease_fee_basis: 0,
-              timestamp: new Date().toISOString(),
-              error: 'Unable to fetch live data',
-              error_code: LspErrorCode.LIVE_DATA_UNAVAILABLE,
-              source: 'unavailable' as const
-            };
+            // No good cached data either - return the live fetch error
+            if (livePrice && livePrice.error) {
+              console.log(`Live fetch failed for ${lsp.name}: ${livePrice.error}`);
+              return { ...livePrice, source: 'unavailable' as const };
+            } else {
+              console.log(`No data available for ${lsp.name} (no live or cached data)`);
+              return {
+                lsp_id: lsp.id,
+                lsp_name: lsp.name,
+                channel_size_sat: channelSizeSat,
+                total_fee_msat: 0,
+                channel_fee_percent: 0,
+                channel_fee_base_msat: 0,
+                lease_fee_base_msat: 0,
+                lease_fee_basis: 0,
+                timestamp: new Date().toISOString(),
+                error: 'Unable to fetch live data',
+                error_code: LspErrorCode.LIVE_DATA_UNAVAILABLE,
+                source: 'unavailable' as const
+              };
+            }
           }
         }
       } catch (error) {
@@ -296,12 +305,32 @@ export class PriceService {
     
     const prices = await Promise.all(promises);
     
-    // Save successful live data to cache
-    const livePrices = prices.filter(price => price.source === 'live');
-    if (livePrices.length > 0) {
-      await savePricesToDB(livePrices);
-      this.inMemoryCache.set(channelSizeSat, livePrices);
-      console.log(`Saved ${livePrices.length} live prices to cache`);
+    // Merge successful live data with existing cached data
+    const successfulLivePrices = prices.filter(price => 
+      price.source === 'live' && 
+      !price.error && 
+      price.total_fee_msat > 0
+    );
+    
+    if (successfulLivePrices.length > 0) {
+      // Get existing cached data
+      const existingCachedPrices = await getLatestPricesFromDB(channelSizeSat);
+      
+      // Merge: new successful data + existing data for LSPs that failed
+      const successfulLspIds = new Set(successfulLivePrices.map(p => p.lsp_id));
+      const preservedCachedPrices = existingCachedPrices.filter(p => 
+        !successfulLspIds.has(p.lsp_id) && 
+        !p.error && 
+        p.total_fee_msat > 0
+      );
+      
+      const mergedPrices = [...successfulLivePrices, ...preservedCachedPrices];
+      
+      await savePricesToDB(mergedPrices);
+      this.inMemoryCache.set(channelSizeSat, mergedPrices);
+      console.log(`Saved ${successfulLivePrices.length} new + ${preservedCachedPrices.length} preserved prices`);
+    } else {
+      console.log('No successful live prices to save - preserving existing cached data');
     }
     
     return prices;
