@@ -181,6 +181,41 @@ export async function getLSPPrices(lspId: string): Promise<LSPPrice[]> {
 
 
 
+// Get database status for debugging
+export async function getDatabaseStatus(): Promise<{
+  connected: boolean;
+  keysCount: number;
+  configured: boolean;
+  error?: string;
+}> {
+  try {
+    const configured = isRedisConfigured();
+    if (!configured) {
+      return {
+        connected: false,
+        keysCount: 0,
+        configured: false,
+        error: 'Redis not configured'
+      };
+    }
+
+    // Test connection by getting all keys
+    const keys = await redis.keys('alby:lsp:*');
+    return {
+      connected: true,
+      keysCount: keys.length,
+      configured: true
+    };
+  } catch (error) {
+    return {
+      connected: false,
+      keysCount: 0,
+      configured: isRedisConfigured(),
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
 // Clear all relevant cache keys
 export async function clearCache(): Promise<string[]> {
   try {
