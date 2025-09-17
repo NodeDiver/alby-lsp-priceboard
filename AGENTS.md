@@ -19,9 +19,9 @@
 - **Last Updated**: September 2025
 - **Deployment Status**: Live on Vercel
 - **Code Quality**: Production-ready, fully tested
-- **LSPs**: 4 working LSPs - 2 with LIVE data, 2 with smart fallback handling
-- **Breakthrough**: Successfully implemented LSPS1 protocol for live pricing
-- **Latest Features**: Individual LSP timestamps, smart caching, non-blocking UI
+- **LSPs**: 4 working LSPs - 3 with LIVE data (Olympus, LNServer Wave, Flashsats), 1 with smart fallback (Megalith)
+- **Breakthrough**: Successfully implemented LSPS1 protocol with persistent data storage
+- **Latest Features**: Per-LSP force fetch, 1-hour fresh cache rule, multi-channel cron jobs, LSP-specific public keys
 
 ## Technology Stack
 - **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
@@ -29,8 +29,8 @@
 - **Deployment**: Vercel (recommended), Docker support
 - **External APIs**: Alby Lightning Tools, LSPS1 Protocol
 - **LSPs**: 
-  - 🟢 **LIVE DATA**: LNServer Wave, Megalith (LSPS1 protocol)
-  - 🟡 **SMART FALLBACK**: Olympus, Flashsats (intelligent caching and error handling)
+  - 🟢 **LIVE DATA**: Olympus, LNServer Wave, Flashsats (LSPS1 protocol with dedicated public keys)
+  - 🟡 **SMART FALLBACK**: Megalith (intelligent caching and error handling)
 
 ## Development Guidelines
 

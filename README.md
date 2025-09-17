@@ -2,16 +2,26 @@
 
 A real-time Lightning Service Provider (LSP) price comparison tool that helps users make informed decisions when opening Lightning channels.
 
-🧪 **EXPERIMENTAL PHASE**: We are currently in the experimental phase with LSP integration. Live data availability is inconsistent - some days we manage to get live data from LSPs, other days we don't. We're facing various technical challenges, including the requirement for a Lightning node that must be peered to the LSPs at the moment of data fetching.
+✅ **PRODUCTION READY**: Successfully implemented LSPS1 protocol with live pricing data from multiple LSPs. Smart caching system ensures data persistence and optimal user experience.
 
-🌐 **Live Demo**: [https://alby-lsp-priceboard-qe4ir4olm-nodii-teams-yes.vercel.app/](https://alby-lsp-priceboard-qe4ir4olm-nodii-teams-yes.vercel.app/)
+🌐 **Live Demo**: [https://alby-lsp-priceboard.vercel.app/](https://alby-lsp-priceboard.vercel.app/)
+
+## 📸 **Screenshot**
+
+![LSP Price Board Screenshot](image.png)
+
+*Live price comparison showing real-time data from Lightning Service Providers with individual LSP timestamps, error handling, and per-LSP force fetch capabilities.*
 
 ## 🚀 **Latest Updates (September 2025)**
-- **✅ Individual LSP Timestamps**: Each LSP now shows its own last update time
+- **✅ Per-LSP Force Fetch**: Individual force fetch buttons for each LSP
+- **✅ Fresh Cache Rule**: Data < 1 hour old shows as "live", > 1 hour shows as "cached"
+- **✅ Multi-Channel Cron**: Daily automated fetching for 1M/2M/5M/10M channel sizes
+- **✅ LSP-Specific Public Keys**: Dedicated node IDs to avoid "too many orders" errors
+- **✅ Persistent Database**: Vercel KV Redis with proper data merging and history
+- **✅ Individual LSP Timestamps**: Each LSP shows its own last update time
 - **✅ Smart Caching System**: Shows cached data immediately, fetches live data in background
 - **✅ Non-blocking UI**: Price table never blocks, always shows current status
 - **✅ Enhanced Error Handling**: Specific error messages for each LSP (peer connection, whitelist, rate limits)
-- **✅ API/UI Separation**: Read-only API endpoint + dedicated UI endpoint for different use cases
 
 ## Problem Solved
 
@@ -19,15 +29,16 @@ This project addresses [Alby Hub Issue #1001](https://github.com/getAlby/hub/iss
 
 ## Features
 
-- **🟢 EXPERIMENTAL LIVE DATA** from LSPs using LSPS1 protocol (availability varies)
-- **🟡 CACHED/UNAVAILABLE DATA** with smart fallback handling when live data is not available
-- **Real-time price comparison** across 4 working LSPs
+- **🟢 LIVE DATA** from 3 working LSPs (Olympus, LNServer Wave, Flashsats) using LSPS1 protocol
+- **🟡 SMART CACHING** with 1-hour fresh rule - recent data shows as "live", older as "cached"
+- **⚡ PER-LSP FORCE FETCH** - Individual buttons to refresh data for specific LSPs
+- **Real-time price comparison** across 4 LSPs with intelligent fallback handling
 - **Multi-currency support** with live conversion using Alby's Lightning Tools
-- **Channel size filtering** (1M-10M sats) - all sizes now work correctly
+- **Channel size filtering** (1M-10M sats) - all sizes supported with persistent data
 - **Public REST API** for integration with other applications
-- **Automatic price updates** daily via Vercel Cron Jobs
-- **Clean, responsive UI** with professional design
-- **Per-LSP error handling** with detailed status indicators 
+- **Automatic price updates** daily via Vercel Cron Jobs for all channel sizes
+- **Clean, responsive UI** with professional design and individual LSP timestamps
+- **Robust error handling** with detailed status indicators and retry mechanisms 
 
 ## Technology Stack
 
