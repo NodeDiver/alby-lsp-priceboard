@@ -84,7 +84,7 @@ function ForceFetchButton({
       title="Force fetch fresh data for this LSP (bypass rate limits)"
       aria-label={`Force fetch fresh data for ${lspId}`}
     >
-      {isForceFetching ? '⚡ Fetching...' : '⚡ Force'}
+            {isForceFetching ? '💪 Fetching...' : '💪 Force'}
     </button>
   );
 }
