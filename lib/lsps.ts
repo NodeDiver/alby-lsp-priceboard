@@ -70,7 +70,7 @@ export function getLSPByURL(url: string): LSP | undefined {
 export async function fetchLSPMetadata(lsp: LSP): Promise<LSP> {
   try {
     // URL safety: prevent double slashes
-    const infoUrl = new URL('info', lsp.url).toString();
+    const infoUrl = new URL('get_info', lsp.url).toString();
     
     // Add timeout and retry logic
     const response = await fetchWithRetry(infoUrl, {
