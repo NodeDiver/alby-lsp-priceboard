@@ -1,13 +1,9 @@
 import { Redis } from '@upstash/redis';
 import { LSPPrice } from './lsp-api';
+import { isRedisConfigured, getRedisInstance } from './redis-config';
 
 // Initialize Redis client
-const redis = Redis.fromEnv();
-
-// Check if Redis is properly configured
-const isRedisConfigured = () => {
-  return !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
-};
+const redis = getRedisInstance() as Redis;
 
 // IMPROVED DATABASE STRUCTURE - No redundancy
 const METADATA_KEY = 'alby:lsp:metadata';

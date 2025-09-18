@@ -1,10 +1,8 @@
 import { Ratelimit } from '@upstash/ratelimit';
-import { Redis } from '@upstash/redis';
 import { NextResponse } from 'next/server';
+import { getRedisInstance } from './lib/redis-config';
 
-const redis = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-  ? Redis.fromEnv()
-  : null;
+const redis = getRedisInstance();
 
 const limiter = redis ? new Ratelimit({ 
   redis, 
