@@ -79,80 +79,35 @@ GET /api/prices?channelSize=1000000
 ```json
 {
   "success": true,
-  "last_update": "2025-09-05T16:24:06.744Z",
+  "data_source": "live",
   "total_lsps": 4,
-  "data_source": "mock",
-  "data_source_description": "Mock data for development/testing",
   "prices": [
     {
       "lsp_id": "olympus",
       "lsp_name": "Olympus",
       "channel_size": 1000000,
-      "price": 12000,
-      "channel_fee_percent": 0.012,
-      "timestamp": "2025-09-05T16:24:06.744Z"
+      "price": 15750000,
+      "source": "live",
+      "timestamp": "2025-09-17T12:38:44.799Z"
     }
   ]
 }
 ```
 
-### 🤝 **API Usage Guidelines**
-- **Rate Limiting**: Please don't exceed 100 requests per minute
-- **Caching**: Cache responses for at least 5 minutes to reduce load
-- **Respectful Usage**: This is a free service - use responsibly
-- **Error Handling**: Implement proper error handling for 429 (rate limit) responses
-
-### 📊 **Data Source Indicators**
-The API response includes data source information:
-- **`data_source: "live"`** - Live data from LSP APIs
-- **`data_source: "cached"`** - Cached data from previous successful fetch
-- **`data_source: "unavailable"`** - LSP unavailable or no data available
-
-The frontend displays a visual indicator:
-- 🟢 **Live Data** - Fresh pricing from LSPs
-- 🟡 **Cached Data** - Previously fetched pricing
-- 🔴 **Unavailable** - LSP unavailable or no data
-
 ### API Features
-- **No authentication required** - completely open API
-- **CORS enabled** - works from any website
-- **Channel size filtering** - add `?channelSize=2000000` for 2M sats
-- **Real-time data** - prices update daily automatically
+- **No authentication** - completely open
+- **CORS enabled** - works from any website  
+- **Channel filtering** - `?channelSize=2000000` for 2M sats
+- **Live/cached data** - automatic fallback system
+- **Rate limit**: ~100 requests/minute
 
-## Current Challenges
+## LSP Status
 
-### 🚧 **Technical Limitations**
-- **Node Peering Requirement**: LSPs require a Lightning node to be peered at the moment of data fetching
-- **Inconsistent Availability**: Live data availability varies day-to-day due to LSP requirements
-- **Rate Limiting**: Some LSPs have strict rate limits (e.g., Flashsats: 3-hour cooldowns)
-- **Whitelist Requirements**: Some LSPs require manual whitelisting (e.g., Megalith)
-- **Peer Connection Issues**: LSPs may reject requests if the node is not properly connected
-
-### 📊 **Current LSP Status**
-- **LNServer Wave**: ✅ Occasionally provides live data
-- **Megalith**: ❌ Requires whitelisting and proper peering
-- **Olympus**: ❌ Requires node peering connection
-- **Flashsats**: ⏳ Rate limited (3-hour cooldowns)
-
-## Development Status
-
-### ✅ Completed Features
-- **Core Infrastructure**: Next.js app with TypeScript and Tailwind CSS
-- **🟢 EXPERIMENTAL LSP Integration**: LSPs with LSPS1 protocol data (availability inconsistent)
-- **🟡 SMART FALLBACK**: Intelligent caching and error handling when live data is unavailable
-- **Price Management**: Automated fetching and caching system with per-LSP fallbacks
-- **Multi-Currency Support**: Real-time conversion using Alby Lightning Tools
-- **User Interface**: Responsive price comparison table with filtering and status indicators
-- **Public API**: RESTful endpoints for external integration
-- **Error Handling**: Comprehensive per-LSP error classification and UI feedback
-- **Vercel Configuration**: Live deployment with cron jobs
-- **Channel Size Support**: All sizes (1M-10M sats) now work correctly
-
-### 🚀 Ready for Production
-- All core features implemented and tested
-- Professional UI/UX design
-- Clean, maintainable codebase
-- Production-ready deployment configuration
+- **🟢 Olympus**: Live data with LSPS1 protocol
+- **🟢 LNServer Wave**: Live data with autodiscovery  
+- **🟢 Megalith**: Live data with dedicated public key
+- **🟢 Flashsats**: Live data with dedicated public key
+- **🟡 Smart fallback**: Cached data when live fetches fail
 
 ## Quick Start
 
@@ -202,18 +157,12 @@ docker run -p 3000:3000 alby-lsp-priceboard
 ```
 
 ### Configuration
-1. **Set up Vercel KV** in your Vercel dashboard
-2. **Configure environment variables** for database connection
-3. **Deploy** using your preferred method
-
-## Service Limitations
-
-This service operates on Vercel's free tier with the following constraints: **100 GB monthly data transfer** (~333K page views), **1M API requests per month** (~33K daily), **256 MB database storage**, and **4 hours CPU time monthly**. Please use the API responsibly by implementing reasonable request intervals and caching responses for at least 5 minutes. The service is designed for light to moderate usage (1,000-5,000 monthly users) and may implement rate limiting if usage exceeds free tier limits.
+Set up Vercel KV and configure environment variables for database connection.
 
 ## Contributing
 
-This project follows standard open-source practices. Feel free to submit issues and pull requests.
+Submit issues and pull requests on [GitHub](https://github.com/NodeDiver/alby-lsp-priceboard).
 
 ## License
 
-MIT License - see LICENSE file for details.
+MIT License - see LICENSE file.
