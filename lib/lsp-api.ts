@@ -265,7 +265,7 @@ export async function fetchLSPInfo(lsp: LSP): Promise<{ info: LSPS1GetInfoRespon
         'User-Agent': 'Alby-LSP-PriceBoard/1.0',
       },
       // Add timeout to prevent hanging requests
-      signal: AbortSignal.timeout(10000), // 10 second timeout
+      signal: AbortSignal.timeout(5000), // 5 second timeout
     });
 
     if (!response.ok) {
@@ -381,8 +381,8 @@ export async function createLSPOrder(
         'User-Agent': 'Alby-LSP-Priceboard/1.0 (+https://github.com/NodeDiver/alby-lsp-priceboard)',
       },
       body: JSON.stringify(orderRequest),
-      // Add timeout to prevent hanging requests
-      signal: AbortSignal.timeout(15000), // 15 second timeout for order creation
+      // Add timeout to prevent hanging requests  
+      signal: AbortSignal.timeout(8000), // 8 second timeout for order creation
     });
 
     // Read response body safely (never lose it)
@@ -721,19 +721,32 @@ export async function fetchAllLSPPrices(channelSizeSat: number = 1000000, bypass
   
   console.log(`Fetching prices from ${activeLSPs.length} LSPs for channel size ${channelSizeSat} sats (bypass rate limit: ${bypassRateLimit})`);
   
-  // Use Promise.allSettled to ensure all requests complete even if some fail
+  // Use Promise.allSettled with individual timeouts to prevent hanging
   const pricePromises = activeLSPs.map(async (lsp) => {
     try {
-      if (bypassRateLimit) {
-        // Bypass rate limiting by calling fetchLSPPrice with skipRateLimit
-        return await fetchLSPPriceBypass(lsp, channelSizeSat);
-      } else {
-        return await fetchLSPPrice(lsp, channelSizeSat);
-      }
+      // Add a timeout wrapper for each LSP to prevent hanging
+      const timeoutPromise = new Promise<LSPPrice>((_, reject) => {
+        setTimeout(() => reject(new Error(`LSP ${lsp.name} timeout after 12 seconds`)), 12000);
+      });
+      
+      const fetchPromise = bypassRateLimit 
+        ? fetchLSPPriceBypass(lsp, channelSizeSat)
+        : fetchLSPPrice(lsp, channelSizeSat);
+      
+      // Race between fetch and timeout
+      return await Promise.race([fetchPromise, timeoutPromise]);
     } catch (error) {
-      console.error(`Unexpected error fetching from ${lsp.name}:`, error);
+      console.error(`Error or timeout fetching from ${lsp.name}:`, error);
       const errorInfo = toLspError(error);
-      return createErrorPrice(lsp, channelSizeSat, `Unexpected error: ${errorInfo.message}`, errorInfo.code);
+      const isTimeout = error instanceof Error && error.message.includes('timeout');
+      const errorCode = isTimeout ? LspErrorCode.TIMEOUT : errorInfo.code;
+      const errorMessage = isTimeout ? `LSP timeout after 12 seconds` : `Unexpected error: ${errorInfo.message}`;
+      
+      return createErrorPrice(lsp, channelSizeSat, errorMessage, errorCode, { 
+        originalError: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString(),
+        lspName: lsp.name
+      });
     }
   });
   
@@ -741,20 +754,32 @@ export async function fetchAllLSPPrices(channelSizeSat: number = 1000000, bypass
   const prices: LSPPrice[] = [];
   
   results.forEach((result, index) => {
+    const lsp = activeLSPs[index];
+    
     if (result.status === 'fulfilled' && result.value) {
       prices.push(result.value);
+      console.log(`✅ ${lsp.name}: Success`);
     } else if (result.status === 'rejected') {
-      const lsp = activeLSPs[index];
-      console.error(`Failed to fetch from ${lsp.name}:`, result.reason);
+      console.error(`❌ ${lsp.name}: Failed -`, result.reason);
       const errorInfo = toLspError(result.reason);
-      prices.push(createErrorPrice(lsp, channelSizeSat, `Promise rejected: ${errorInfo.message}`, errorInfo.code));
+      const isTimeout = result.reason instanceof Error && result.reason.message.includes('timeout');
+      
+      prices.push(createErrorPrice(lsp, channelSizeSat, 
+        isTimeout ? `${lsp.name} timeout after 12 seconds` : `Promise rejected: ${errorInfo.message}`, 
+        isTimeout ? LspErrorCode.TIMEOUT : errorInfo.code,
+        {
+          rejectionReason: result.reason instanceof Error ? result.reason.message : 'Unknown rejection',
+          timestamp: new Date().toISOString(),
+          lspName: lsp.name,
+          channelSize: channelSizeSat
+        }
+      ));
     }
   });
   
   const successCount = prices.filter(p => !p.error).length;
-  const errorCount = prices.filter(p => p.error).length;
-  
-  console.log(`Price fetch completed: ${successCount} successful, ${errorCount} errors`);
+  const timeoutCount = prices.filter(p => p.error_code === LspErrorCode.TIMEOUT).length;
+  console.log(`📊 LSP Fetch Summary: ${successCount} successful, ${timeoutCount} timeouts, ${activeLSPs.length - successCount} total failed`);
   
   return prices;
 }
