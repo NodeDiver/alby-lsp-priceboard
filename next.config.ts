@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   typescript: {
-    ignoreBuildErrors: true // Temporarily ignore build errors for type validation issues
+    ignoreBuildErrors: true // Keep disabled due to Next.js 15 API route compatibility
   },
   eslint: {
     ignoreDuringBuilds: false // Enable linting in production
