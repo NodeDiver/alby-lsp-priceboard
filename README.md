@@ -8,20 +8,21 @@ A real-time Lightning Service Provider (LSP) price comparison tool that helps us
 
 ## 📸 **Screenshot**
 
-![LSP Price Board Screenshot](image.png)
+![LSP Price Board Comparison](public/images/lsp-price-board-comparison.jpg)
 
-*Live price comparison showing real-time data from Lightning Service Providers with individual LSP timestamps, error handling, and per-LSP force fetch capabilities.*
+*Production LSP price comparison showing live pricing data across multiple channel sizes with dedicated public keys, historical data preservation, and robust error handling.*
 
 ## 🚀 **Latest Updates (September 2025)**
+- **✅ Historical Data Preservation**: Old data archived before new fetches, never lost
+- **✅ Error Protection**: Failed fetches never overwrite good cached data  
+- **✅ Dedicated LSP Public Keys**: Separate node IDs for Flashsats and Megalith
+- **✅ Grayscale UI Theme**: Professional monochrome design with 💪 force buttons
 - **✅ Per-LSP Force Fetch**: Individual force fetch buttons for each LSP
 - **✅ Fresh Cache Rule**: Data < 1 hour old shows as "live", > 1 hour shows as "cached"
 - **✅ Multi-Channel Cron**: Daily automated fetching for 1M/2M/5M/10M channel sizes
-- **✅ LSP-Specific Public Keys**: Dedicated node IDs to avoid "too many orders" errors
-- **✅ Persistent Database**: Vercel KV Redis with proper data merging and history
-- **✅ Individual LSP Timestamps**: Each LSP shows its own last update time
+- **✅ Persistent Database**: Vercel KV Redis with no TTL expiration
 - **✅ Smart Caching System**: Shows cached data immediately, fetches live data in background
-- **✅ Non-blocking UI**: Price table never blocks, always shows current status
-- **✅ Enhanced Error Handling**: Specific error messages for each LSP (peer connection, whitelist, rate limits)
+- **✅ Enhanced Error Handling**: Specific error messages with intelligent fallback to cached data
 
 ## Problem Solved
 
