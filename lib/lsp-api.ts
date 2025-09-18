@@ -462,7 +462,7 @@ function getLspDelay(lspId: string): number {
       'flashsats': 3 * 60 * 60 * 1000,  // 3 hours for Flashsats (very rate limited)
       'megalith': 60 * 60 * 1000,       // 1 hour for Megalith (whitelist required)
       'olympus': 10 * 60 * 1000,        // 10 minutes for Olympus
-      'lnserver-wave': 10 * 60 * 1000,  // 10 minutes for LNServer Wave
+      'lnserver': 10 * 60 * 1000,  // 10 minutes for LNServer Wave
     };
     
     lspRateLimits[lspId] = {
