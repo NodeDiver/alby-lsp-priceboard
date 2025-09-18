@@ -62,10 +62,16 @@ export default function Home() {
       setError(null);
       
       const url = `/api/prices-ui?channelSize=${channelSize}${fresh ? '&fresh=1' : ''}`;
+      
+      // Add 20-second timeout to prevent hanging UI
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
+      
       const response = await fetch(url, { 
         cache: 'no-store',
         signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -82,9 +88,14 @@ export default function Home() {
         throw new Error(data.message || 'Failed to fetch prices');
       }
     } catch (err) {
-      if (err instanceof Error && err.name !== 'AbortError') {
-        console.error('Error fetching prices:', err);
-        setError(err.message || 'Failed to fetch prices');
+      if (err instanceof Error) {
+        if (err.name === 'AbortError') {
+          console.error('Request timed out after 20 seconds');
+          setError('Request timed out. One or more LSPs are taking too long to respond.');
+        } else {
+          console.error('Error fetching prices:', err);
+          setError(err.message || 'Failed to fetch prices');
+        }
       }
     } finally {
       setAbortController(null);
@@ -137,7 +148,14 @@ export default function Home() {
       setError(null);
       
       // Force fetch for specific LSP with fresh=1 to bypass caching
-      const response = await fetch(`/api/prices-ui?channelSize=${selectedChannelSize}&fresh=1&force=1&lspId=${lspId}`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000); // 20-second timeout
+      
+      const response = await fetch(`/api/prices-ui?channelSize=${selectedChannelSize}&fresh=1&force=1&lspId=${lspId}`, {
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -156,8 +174,13 @@ export default function Home() {
         setError(data.message || `Failed to fetch prices for ${lspId}`);
       }
     } catch (err) {
-      console.error(`Force fetch error for ${lspId}:`, err);
-      setError(err instanceof Error ? err.message : 'Unknown error occurred');
+      if (err instanceof Error && err.name === 'AbortError') {
+        console.error(`Force fetch timeout for ${lspId} after 20 seconds`);
+        setError(`${lspId} request timed out. This LSP is taking too long to respond.`);
+      } else {
+        console.error(`Force fetch error for ${lspId}:`, err);
+        setError(err instanceof Error ? err.message : 'Unknown error occurred');
+      }
     } finally {
       setForceFetching(prev => ({ ...prev, [lspId]: false }));
       setShowNotification(false);
