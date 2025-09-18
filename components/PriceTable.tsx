@@ -339,11 +339,13 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
                           {lspPrices[0]?.error_code && (
                             <RetryButton lspId={lspId} onRetry={onRetry} />
                           )}
-                          <ForceFetchButton 
-                            lspId={lspId} 
-                            onForceFetch={onForceFetch}
-                            isForceFetching={forceFetching[lspId]}
-                          />
+                          {(lspPrices[0]?.error_code || lspPrices[0]?.source === 'cached') && (
+                            <ForceFetchButton 
+                              lspId={lspId} 
+                              onForceFetch={onForceFetch}
+                              isForceFetching={forceFetching[lspId]}
+                            />
+                          )}
                         </div>
                       </div>
                       <StatusBadge 
