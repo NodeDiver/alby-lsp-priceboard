@@ -13,20 +13,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const redis = Redis.fromEnv();
     
-    // Clear all cache keys
-    const keys = [
-      'alby:lsp:prices',
-      'alby:lsp:last_update',
-      'alby:lsp:price_history'
-    ];
+    // Get all keys with our namespace
+    const allKeys = await redis.keys('alby:lsp:*');
+    
+    if (allKeys.length === 0) {
+      return res.status(200).json({ 
+        success: true, 
+        message: 'No cache keys found to clear',
+        clearedKeys: []
+      });
+    }
     
     // Delete all keys
-    await Promise.all(keys.map(key => redis.del(key)));
+    await redis.del(...allKeys);
     
     res.status(200).json({ 
       success: true, 
       message: 'Cache cleared successfully',
-      clearedKeys: keys
+      clearedKeys: allKeys
     });
   } catch (error) {
     console.error('Clear cache error:', error);
