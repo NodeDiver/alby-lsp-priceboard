@@ -338,7 +338,7 @@ export default function Home() {
               className="px-4 py-2 bg-slate-500 text-white rounded-md hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
               title="Fetch live data from LSPs (respects rate limits)"
             >
-              {loading ? 'Fetching Live Data...' : 'Fetch Live Data'}
+              {loading ? 'Refreshing Prices...' : 'Refresh Prices'}
             </button>
             
             
@@ -346,7 +346,7 @@ export default function Home() {
               onClick={() => window.open('/api/debug', '_blank')}
               className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
             >
-              Debug Info
+              Technical Details
             </button>
           </div>
         </div>
@@ -458,7 +458,7 @@ export default function Home() {
                   <div>• ⏳ Cron jobs will activate after Vercel deployment</div>
                 </>
               )}
-              <div>• Use Debug Info button to check detailed system status</div>
+              <div>• Use Technical Details button to check detailed system status</div>
             </div>
           </div>
         </div>
