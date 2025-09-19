@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PriceTable, DisplayPrice } from '../components/PriceTable';
 import { LSP } from '../lib/lsps';
 import { COMMON_CURRENCIES } from '../lib/currency';
+import { Tooltip } from '../components/Tooltip';
 
 
 export default function Home() {
@@ -241,7 +242,11 @@ export default function Home() {
           <div className="px-6 py-4 bg-gray-100 border-b border-gray-200">
             <div className="flex justify-between items-center">
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">LSP Price Comparison</h2>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  <Tooltip text="Lightning Service Providers - companies that open Bitcoin Lightning channels for you">
+                    LSP
+                  </Tooltip> Price Comparison
+                </h2>
                 <p className="mt-1 text-sm text-gray-600">
                   Compare Lightning Service Provider fees for different channel sizes
                 </p>
@@ -251,7 +256,9 @@ export default function Home() {
                                         <div className="flex items-center space-x-4">
                             <div className="flex items-center space-x-2">
                               <label htmlFor="channelSize" className="text-sm font-medium text-gray-700">
-                                Channel Size:
+                                <Tooltip text="How much Bitcoin capacity you want in your Lightning channel">
+                                  Channel Size:
+                                </Tooltip>
                               </label>
                               <select
                                 id="channelSize"

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { getLSPById } from '../lib/lsps';
 import { convertSatsToCurrency, CurrencyConversion } from '../lib/currency';
+import { Tooltip } from './Tooltip';
 
 // Helper functions for unit conversion
 const msatToSat = (msat: number) => Math.round(msat / 1000);
@@ -314,7 +315,11 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
         <thead>
           <tr className="bg-gray-50 border-b border-gray-200">
             <th className="text-left p-4 font-medium text-gray-700" scope="col">Provider</th>
-            <th className="text-center p-4 font-medium text-gray-700" scope="col">Fee</th>
+            <th className="text-center p-4 font-medium text-gray-700" scope="col">
+              <Tooltip text="One-time cost to open the Lightning channel">
+                Fee
+              </Tooltip>
+            </th>
           </tr>
         </thead>
         <tbody>
