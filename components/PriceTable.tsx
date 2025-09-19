@@ -300,8 +300,30 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
 
   if (!prices || prices.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
-        No price data available. Please try again later.
+      <div className="text-center py-12 text-gray-500">
+        <div className="mb-4">
+          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">Getting prices from providers...</h3>
+        <p className="text-sm text-gray-500 mb-6">
+          We&apos;re fetching the latest channel opening fees from Lightning Service Providers.
+        </p>
+        <div className="flex justify-center space-x-4">
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-slate-500 text-white rounded-md hover:bg-slate-600 transition-colors"
+          >
+            Refresh Prices
+          </button>
+          <button 
+            onClick={() => window.open('/api/debug', '_blank')}
+            className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+          >
+            Technical Details
+          </button>
+        </div>
       </div>
     );
   }
