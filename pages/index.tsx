@@ -11,8 +11,21 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<string | null>(null);
   const [lspMetadata, setLspMetadata] = useState<LSP[]>([]);
-  const [selectedChannelSize, setSelectedChannelSize] = useState<number>(1000000); // Default to 1M sats
-  const [selectedCurrency, setSelectedCurrency] = useState<string>('usd'); // Default to USD
+  // Load preferences from localStorage or use defaults
+  const [selectedChannelSize, setSelectedChannelSize] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('alby-lsp-channel-size');
+      return saved ? Number(saved) : 1000000;
+    }
+    return 1000000;
+  });
+  const [selectedCurrency, setSelectedCurrency] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('alby-lsp-currency');
+      return saved || 'usd';
+    }
+    return 'usd';
+  });
   const [dataSource, setDataSource] = useState<string>('unknown');
   const [dataSourceDescription, setDataSourceDescription] = useState<string>('');
   const [abortController, setAbortController] = useState<AbortController | null>(null);
@@ -192,11 +205,13 @@ export default function Home() {
   // Handle channel size change
   const handleChannelSizeChange = (newChannelSize: number) => {
     setSelectedChannelSize(newChannelSize);
+    localStorage.setItem('alby-lsp-channel-size', String(newChannelSize));
     fetchPrices(newChannelSize);
   };
 
   const handleCurrencyChange = (newCurrency: string) => {
     setSelectedCurrency(newCurrency);
+    localStorage.setItem('alby-lsp-currency', newCurrency);
   };
 
   return (
