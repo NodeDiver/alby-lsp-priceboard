@@ -21,7 +21,7 @@ export enum LspErrorCode {
 }
 
 // Helper to map errors to typed codes
-function toLspError(error: unknown, response?: Response): { code: LspErrorCode; message: string } {
+export function toLspError(error: unknown, response?: Response): { code: LspErrorCode; message: string } {
   if (error instanceof Error) {
     const message = error.message.toLowerCase();
     
