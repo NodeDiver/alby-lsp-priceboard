@@ -1,6 +1,35 @@
-# TODO - Project Task List
+# TODO - Project Task List v0.1
 
 A human-readable list of tasks and improvements for the Alby LSP Price Board project.
+
+## 🎯 Future Enhancements
+
+### UI and UX Improvements
+- **Fix duplicate pricing display**: Resolve any duplicate price entries showing in the table
+- **Timestamp consistency**: Ensure "Last" timestamp matches the fee column timestamp display
+- **Dark mode**: Add dark/light theme toggle for better user experience
+- **Smart force button system**: Hide force buttons behind a single unlock button (left of Technical Details, right of Refresh Prices)
+- **Intelligent refresh logic**: Hide refresh button when all LSPs show live/green data, and only refresh non-live LSPs
+- **Relocate Technical Details**: Move Technical Details button to a better location, keep only the "power" button for force features
+- **LNServer channel size messaging**: Show "Choose larger channel size" instead of error for 1M channels (LNServer doesn't support 1M)
+- **Fix LNServer 1M bug**: Show "Channel size too small" instead of "Cache unavailable" for 1M channels
+
+### Historical Data and Analytics
+- **Historical data toggle**: Add switch similar to Alby Hub app connection switch to toggle between live comparison and historical view
+- **Responsive historical table**: Replace LSP comparison with historical data table when toggled
+- **Historical data visualization**: Green for USD, Bitcoin orange for sats, with thick fun lines
+- **Time range filters**: Last week, 15 days, month, 3 months, 6 months, year, all time
+- **Paywall for extended history**: Free access for last 15 days, paid access for longer periods
+
+### Monetization Strategy
+- **Historical data paywall**: Monetize access to data older than 15 days
+- **LSP-specific data monetization**: Revenue sharing with LSPs for detailed analytics
+- **Premium features**: Advanced filtering, alerts, and historical insights
+
+### Technical Infrastructure
+- **Randomized node IDs**: System for using random node IDs that peer with LSPs first
+- **IP randomization**: Investigate methods for randomizing IP addresses and optimal frequency
+- **Advanced peering**: Automated peering system before price requests
 
 ## ✅ Recently Completed - Version 0.1 (September 2025)
 
@@ -21,54 +50,20 @@ A human-readable list of tasks and improvements for the Alby LSP Price Board pro
 - **✅ Cache Clearing**: Updated to handle new keyspace structure (`alby:lsp:channel:*`, etc.)
 - **✅ Build Configuration**: Documented TypeScript build setting (kept disabled for Next.js 15 compatibility)
 
-## 🎯 Future Enhancements (Low Priority)
+### UI Clarity Improvements
+- **✅ Clear Purpose Statement**: Added explanatory subtitle about Lightning Service Providers and channel opening
+- **✅ Essential Tooltips**: Hover explanations for LSP, Channel Size, and Fee terms
+- **✅ Collapsed API Section**: Developer-focused content hidden by default with accordion
+- **✅ Friendly Button Labels**: "Refresh Prices" and "Technical Details" instead of technical terms
+- **✅ Improved Empty States**: Helpful messages with clear actions instead of technical errors
+- **✅ Smart Price Sorting**: Default sort by lowest price for best user experience
+- **✅ Currency Clarity**: USD amounts shown in parentheses next to sats
+- **✅ Persistent Preferences**: User choices saved in localStorage and restored on page load
+- **✅ Version Information**: Footer shows v0.1 with project details
 
-### New Features
-- **Add More LSPs**: Expand beyond current 4 LSPs to include more Lightning Service Providers
-- **Historical Data Visualization**: Simple graphs showing price trends over time
-- **Admin Dashboard**: Basic interface for viewing system health and managing LSPs
-
-### UI Clarity and Onboarding (Simple)
-- Above-the-fold subtitle (one sentence under title): “Compare how much different Lightning Service Providers (LSPs) charge to open you an inbound channel of the selected size.”
-- Small tooltips (one sentence each): LSP, Channel size, Fee, Live vs Cached.
-- Fee caption under Fee header: “Shown fee = provider’s quoted channel-open cost. May exclude future routing fees.”
-- Currency clarity line near selector: “Converted using Alby Lightning Tools at HH:MM UTC.” Update on refresh and currency change.
-- Timestamps: standardize “Last:” labels to ISO date + time + “UTC”; add a “Last global update” line above the table.
-- Retry UX: disable Retry while fetching and show a small spinner in the button. Keep Force button’s spinner.
-- Provider link: make provider name link to website when available (open in new tab). Keep logo/initial fallback.
-- Persist user choices: save last selected channel size and currency to localStorage and restore on load.
-- Empty state: show friendly message with two buttons (“Refresh all providers”, “Technical details”) and a short reason if known.
-- Accessibility: add aria-labels for interactive controls and ensure status chip contrast meets WCAG AA.
-- Numbers: show USD in parentheses beside sats when conversion is available (e.g., “12.5K sats ($3.21)”).
-
-### Technical Improvements
-- **API Documentation**: OpenAPI/Swagger documentation for public endpoints
-- **Performance Monitoring**: Detailed metrics and logging for production monitoring
-- **Automated Testing**: Integration tests with mock LSP endpoints
-- **Error Alerting**: Notifications when LSPs go offline or return errors consistently
-
-### Optional Polish
-- **Cron Frequency**: Consider increasing from daily to 15-30 minutes if needed
-- **Debug Route Security**: Optionally restrict debug endpoints in production
-- **Mobile UI**: Optimize responsive design for mobile devices
- - **Sorting and Defaults**: Default sort by lowest fee; clickable sort on Fee/Provider/Last Update; remember sort in localStorage
- - **Data Source Popover**: Clicking Live/Cached chip shows “Fetched N mins ago”
- - **Per-row Details Drawer**: Fee breakdown (if available), size range, provider link, and raw API snippet (collapsed)
- - **Sticky Helpers**: Keep Channel Size and Currency controls sticky on desktop; on mobile, collapse filters into a top sheet
- - **API Section Accordion**: Collapse “Public API Access” by default with copy-buttons for examples
-
-## 📋 Current Status
-
-**Project Status**: ✅ **Production Ready v0.1**
-- All major code quality improvements completed
-- Comprehensive testing in place  
-- Health monitoring active
-- Documentation up to date
-- No critical issues or technical debt
-
-**Next Steps**: The project is stable and production-ready. Future work should focus on new features rather than technical improvements.
+**Next Steps**: The project is stable and user-friendly. Future work should focus on the enhancements listed above based on user feedback and business requirements.
 
 ---
 
-*Last Updated: September 19, 2025*
-*All major TODO items from previous versions have been completed.*
+*Last Updated: September 19, 2025*  
+*Version 0.1 - Production Ready with UI Clarity Improvements*
