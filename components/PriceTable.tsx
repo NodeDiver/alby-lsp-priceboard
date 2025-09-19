@@ -418,6 +418,11 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
                       <div className="space-y-1">
                         <div className="font-semibold text-gray-900">
                           {formatSats(msatToSat(price.price))} sats
+                          {conversion && selectedCurrency === 'usd' && (
+                            <span className="text-sm text-gray-500 ml-1">
+                              (${conversion.amount})
+                            </span>
+                          )}
                         </div>
                         <div className="text-xs text-gray-500">
                           {conversionLoading ? (
