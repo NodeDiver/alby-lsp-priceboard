@@ -528,6 +528,18 @@ export default function Home() {
             </p>
           </div>
         </div>
+
+        {/* Footer */}
+        <footer className="mt-12 py-6 border-t border-gray-200 bg-white">
+          <div className="text-center">
+            <p className="text-sm text-gray-500">
+              Alby LSP Price Board v0.1 • Open Source Lightning Service Provider Comparison Tool
+            </p>
+            <p className="text-xs text-gray-400 mt-1">
+              Built with Next.js • Data from LSPS1 Protocol • Updated September 2025
+            </p>
+          </div>
+        </footer>
       </main>
     </div>
   );
