@@ -207,8 +207,8 @@ export default function Home() {
               <h1 className="text-3xl font-bold text-gray-900">
                 Alby LSP Price Board
               </h1>
-              <p className="mt-2 text-gray-600">
-                Lightning Service Provider price comparison
+              <p className="mt-2 text-lg text-gray-600">
+                Compare how much different Lightning Service Providers charge to open an inbound Lightning channel
               </p>
             </div>
           </div>
