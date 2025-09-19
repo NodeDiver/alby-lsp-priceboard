@@ -328,8 +328,12 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
     );
   }
 
-  // Get unique LSPs
-  const lsps = [...new Set(prices.map(p => p.lsp_id))];
+  // Get unique LSPs and sort by lowest price first
+  const lsps = [...new Set(prices.map(p => p.lsp_id))].sort((a, b) => {
+    const priceA = prices.find(p => p.lsp_id === a && !p.error)?.price || Infinity;
+    const priceB = prices.find(p => p.lsp_id === b && !p.error)?.price || Infinity;
+    return priceA - priceB;
+  });
 
   return (
     <div className="overflow-x-auto bg-white rounded-lg shadow">
