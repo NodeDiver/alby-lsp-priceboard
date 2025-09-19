@@ -2,7 +2,7 @@
 
 A human-readable list of tasks and improvements for the Alby LSP Price Board project.
 
-## ✅ Recently Completed (September 2025)
+## ✅ Recently Completed - Version 0.1 (September 2025)
 
 ### Major Improvements
 - **✅ Database Cleanup**: Removed duplicate `lib/db-improved.ts` and consolidated everything into `lib/db.ts`
@@ -14,6 +14,7 @@ A human-readable list of tasks and improvements for the Alby LSP Price Board pro
 - **✅ Health Monitoring**: New `/api/health` endpoint for system status and uptime monitoring
 - **✅ Unit Testing**: Jest framework with comprehensive tests for LSPS1 error mapping and database serialization
 - **✅ Documentation**: Updated README, AGENTS.md, and PROJECT_SUMMARY.md to reflect all improvements
+- **✅ UI Clarity v0.1**: Added clear purpose subtitle, helpful tooltips, improved empty states, better button labels, collapsed API section, and version footer
 
 ### Technical Fixes
 - **✅ Rate Limiting**: Fixed LSP ID mismatch (`lnserver-wave` → `lnserver`)
@@ -58,7 +59,7 @@ A human-readable list of tasks and improvements for the Alby LSP Price Board pro
 
 ## 📋 Current Status
 
-**Project Status**: ✅ **Production Ready**
+**Project Status**: ✅ **Production Ready v0.1**
 - All major code quality improvements completed
 - Comprehensive testing in place  
 - Health monitoring active

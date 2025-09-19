@@ -1,8 +1,8 @@
-# Alby LSP Price Board
+# Alby LSP Price Board v0.1
 
 A real-time Lightning Service Provider (LSP) price comparison tool that helps users make informed decisions when opening Lightning channels.
 
-✅ **PRODUCTION READY**: Successfully implemented LSPS1 protocol with live pricing data from multiple LSPs. Smart caching system ensures data persistence and optimal user experience.
+✅ **PRODUCTION READY v0.1**: Successfully implemented LSPS1 protocol with live pricing data from multiple LSPs. Smart caching system ensures data persistence and optimal user experience with improved UI clarity.
 
 🌐 **Live Demo**: [https://alby-lsp-priceboard.vercel.app/](https://alby-lsp-priceboard.vercel.app/)
 
@@ -12,7 +12,7 @@ A real-time Lightning Service Provider (LSP) price comparison tool that helps us
 
 *Production LSP price comparison showing live pricing data across multiple channel sizes with dedicated public keys, historical data preservation, and robust error handling.*
 
-## 🚀 **Latest Updates (September 2025)**
+## 🚀 **Latest Updates - Version 0.1 (September 2025)**
 - **✅ Historical Data Preservation**: Old data archived before new fetches, never lost
 - **✅ Error Protection**: Failed fetches never overwrite good cached data  
 - **✅ Dedicated LSP Public Keys**: Separate node IDs for Flashsats and Megalith
@@ -24,6 +24,7 @@ A real-time Lightning Service Provider (LSP) price comparison tool that helps us
 - **✅ Code Quality**: Unified architecture, LSPS1 compliance, consistent error handling
 - **✅ Unit Tests**: Jest testing framework with LSPS1 error mapping and DB serialization tests
 - **✅ Health Monitoring**: `/api/health` endpoint for system status and uptime monitoring
+- **✅ UI Clarity v0.1**: Clear explanations, helpful tooltips, improved empty states, and user-friendly labels
 - **✅ Smart Caching System**: Shows cached data immediately, fetches live data in background
 - **✅ Enhanced Error Handling**: Specific error messages with intelligent fallback to cached data
 
