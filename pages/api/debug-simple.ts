@@ -14,8 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const priceService = PriceService.getInstance();
     
     // Get in-memory cache
-    const inMemoryCache = (priceService as { inMemoryCache: Map<number, LSPPrice[]> }).inMemoryCache;
-    const cacheEntries = Array.from(inMemoryCache.entries());
+    const cacheEntries = priceService.getInMemoryCacheSnapshot().map(({channelSize, prices}) => [channelSize, prices]);
     
     // Get Redis cache
     const { getLatestPrices } = await import('../../lib/db');

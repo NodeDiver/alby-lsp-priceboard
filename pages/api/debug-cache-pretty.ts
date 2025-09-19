@@ -15,10 +15,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const priceService = PriceService.getInstance();
     
     // Get in-memory cache (local development)
-    const inMemoryCache = (priceService as { inMemoryCache: Map<number, LSPPrice[]> }).inMemoryCache;
-    const cacheEntries = Array.from(inMemoryCache.entries()).map(([channelSize, prices]) => ({
+    const cacheEntries = priceService.getInMemoryCacheSnapshot().map(({channelSize, count, prices}) => ({
       channelSize,
-      count: prices.length,
+      count,
       prices: prices.map(p => ({
         lsp_id: p.lsp_id,
         lsp_name: p.lsp_name,

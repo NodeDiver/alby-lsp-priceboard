@@ -518,6 +518,15 @@ export class PriceService {
   public setFetchInterval(minutes: number): void {
     this.fetchIntervalMs = Math.max(1, minutes) * 60 * 1000;
   }
+
+  // Get in-memory cache for debug purposes (read-only)
+  public getInMemoryCacheSnapshot(): Array<{channelSize: number, prices: LSPPrice[], count: number}> {
+    return Array.from(this.inMemoryCache.entries()).map(([channelSize, prices]) => ({
+      channelSize,
+      prices: [...prices], // Return copy to prevent mutation
+      count: prices.length
+    }));
+  }
 }
 
 // Export singleton instance
