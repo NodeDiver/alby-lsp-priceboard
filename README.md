@@ -22,6 +22,8 @@ A real-time Lightning Service Provider (LSP) price comparison tool that helps us
 - **✅ Multi-Channel Cron**: Daily automated fetching for 1M/2M/5M/10M channel sizes
 - **✅ Persistent Database**: Vercel KV Redis with no TTL expiration
 - **✅ Code Quality**: Unified architecture, LSPS1 compliance, consistent error handling
+- **✅ Unit Tests**: Jest testing framework with LSPS1 error mapping and DB serialization tests
+- **✅ Health Monitoring**: `/api/health` endpoint for system status and uptime monitoring
 - **✅ Smart Caching System**: Shows cached data immediately, fetches live data in background
 - **✅ Enhanced Error Handling**: Specific error messages with intelligent fallback to cached data
 
@@ -76,6 +78,11 @@ This project addresses [Alby Hub Issue #1001](https://github.com/getAlby/hub/iss
 GET /api/prices?channelSize=1000000
 ```
 
+### Health Check
+```bash
+GET /api/health
+```
+
 ### Response Format
 ```json
 {
@@ -123,6 +130,9 @@ npm install
 
 # Start development server
 npm run dev
+
+# Run tests
+npm test
 ```
 
 ### Docker Deployment

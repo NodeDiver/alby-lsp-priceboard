@@ -21,7 +21,7 @@
 - **Code Quality**: Production-ready, fully tested
 - **LSPs**: 4 working LSPs - 3 with LIVE data (Olympus, LNServer Wave, Flashsats), 1 with smart fallback (Megalith)
 - **Breakthrough**: Successfully implemented LSPS1 protocol with persistent data storage
-- **Latest Features**: Per-LSP force fetch, 1-hour fresh cache rule, multi-channel cron jobs, LSP-specific public keys, unified Redis config, LSPS1 path consistency
+- **Latest Features**: Per-LSP force fetch, 1-hour fresh cache rule, multi-channel cron jobs, LSP-specific public keys, unified Redis config, LSPS1 path consistency, unit tests, health monitoring
 
 ## Technology Stack
 - **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
@@ -44,6 +44,7 @@
 - `GET /api/prices` - Public pricing data (read-only, cached data only)
 - `GET /api/prices-ui` - UI-specific pricing data (smart caching with live fetching)
 - `GET /api/lsp-metadata` - LSP metadata and icons
+- `GET /api/health` - System health monitoring and uptime status
 - `GET /api/debug` - System status and health checks
 - `POST /api/cron/fetch-prices` - Automated price fetching for 1M/2M/5M/10M channels (Vercel Cron)
 
