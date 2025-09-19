@@ -1,6 +1,6 @@
 # Alby LSP Price Board — Project Summary and Roadmap
 
-Last reviewed: 2025-09 (updated) • Repository snapshot analyzed locally
+Last reviewed: 2025-09 (revised) • Repository snapshot analyzed locally
 
 ## What This Project Is
 A real-time Lightning Service Provider (LSP) price comparison tool that fetches per-LSP channel-open pricing via LSPS1-compatible endpoints, stores snapshots in Vercel KV (Upstash Redis-compatible), and exposes:
@@ -72,11 +72,13 @@ Note: Live data depends on LSP constraints (peering, whitelist, rate limits). Sm
 Provider notes:
 - Megalith: uses a dedicated client pubkey and may require whitelisting; LSPS1 fields are handled as strings where applicable.
 
-## Remaining Minor Items
-- Migration script type imports:
-  - `pages/api/migrate-db.ts` uses `LSPPrice` without importing the type (low priority - rarely used).
-- API "estimated" data source:
-  - Mentioned in UI copy but not implemented in backend response logic (removed from UI, low priority cleanup).
+## What’s Missing (simple fixes)
+- LSPS1 path consistency: `lib/lsps.ts` uses `/info` while `lib/lsp-api.ts` uses `/get_info`. Prefer `/get_info`; add a tiny per-provider path map only if needed.
+- Env detection consistency: unify on a tiny helper around `Redis.fromEnv()` used by `lib/db.ts` and `middleware.ts` so both agree on configuration.
+- Hide Force/Retry when live: only show these buttons when the row isn’t live or has an error.
+- API handler pattern: normalize handlers to `Promise<void>` and avoid returning `res.json(...)` values (Next validator).
+- Debug endpoints: avoid accessing private `inMemoryCache` directly; add a read-only getter in `PriceService` if needed.
+- Migration script types: import `LSPPrice` in `pages/api/migrate-db.ts` and cast parsed JSON safely.
 
 
 ## Roadmap (Past and Future)
@@ -90,49 +92,27 @@ Provider notes:
 6. Add rate limiting (edge middleware) and cron fetcher.
 7. Add debug and inspector endpoints; background refresh and per-LSP force fetch.
 
-### Proposed Future Milestones
-1. Stabilization and Consistency ✅ **COMPLETED (September 2025)**
-   - ✅ Removed duplicate `lib/db-improved.ts` and standardized single DB interface
-   - ✅ Updated `/api/clear-cache` to clear new keyspace with wildcard deletion
-   - ✅ Standardized LSPS1 paths - all modules use `/get_info`
-   - ✅ Fixed LSP id mismatch in per-LSP cooldown map (`lnserver-wave` → `lnserver`)
-   - ✅ Unified env detection with shared helper (`lib/redis-config.ts`)
-   - 📝 TypeScript build setting documented (kept disabled for Next.js 15 compatibility)
+### Proposed Future Milestones (keep it simple)
+1. Stabilize and simplify (near-term)
+   - Remove `lib/db-improved.ts`; keep a single DB surface in `lib/db.ts`.
+   - Standardize LSPS1 paths (`get_info` vs `info`); add a tiny per-provider map if needed.
+   - Flip TypeScript build flag to `false` and resolve minor types.
+   - Hide “Force/Retry” buttons when data is live and error-free.
 
-2. Scheduling and Operations
-   - Consider increasing cron frequency (e.g., every 15–30 minutes) if LSP rate limits allow; add jitter per size to distribute load.
-   - Add observability: structured logs, basic metrics, and a health check for LSP reachability.
+2. Ops tweaks (optional)
+   - If needed, bump cron to every 15–30 minutes (respect LSP limits) and add small jitter.
+   - Add a minimal `/api/health` returning `last_update` and counts per channel size.
 
-3. API and Data Quality
-   - Define a stable API schema in `/api/prices` and publish a versioned contract.
-   - Add integrity fields per entry (e.g., `observed_at`, provider endpoint used, raw blueprint of response for debugging).
-   - Include currency conversion server-side option to reduce client network calls.
-
-4. Testing and Reliability
-   - Add unit tests for: LSPS1 response parsing, error mapping, DB serialization, and API handlers.
-   - Add integration tests using mock LSP endpoints.
-   - Add smoke checks for cron runs.
-
-5. UX/DevEx
-   - App Router migration (optional) or keep Pages Router and refine page-level data fetching.
-   - Light admin view for recent history and LSP status.
-   - Document provider-specific constraints (peering/whitelisting) in UI tooltips with links.
+3. Light tests (optional)
+   - One unit test for LSPS1 response mapping and one for DB serialization to catch regressions.
 
 ## Key Files and Endpoints (Quick Reference)
 - Pricing engine: `lib/lsp-api.ts`, `lib/price-service.ts`
-- Data access: `lib/db.ts` (standardize here; remove `lib/db-improved.ts`)
+- Data access: `lib/db.ts` (primary DB module)
 - Public API: `pages/api/prices.ts` (cached-only), `pages/api/prices-ui.ts` (smart)
 - LSP metadata: `pages/api/lsp-metadata.ts`
 - Cron: `pages/api/cron/fetch-prices.ts` + `vercel.json`
 - UI: `pages/index.tsx`, `components/PriceTable.tsx`
 
-## Recently Fixed Issues (September 2025)
-- ✅ **Fixed**: Clear cache now handles new keyspace structure (`alby:lsp:channel:*`, `alby:lsp:metadata`, `alby:lsp:history:*`)
-- ✅ **Fixed**: LSP cooldown key mismatch corrected (`lnserver-wave` → `lnserver`)
-- ✅ **Fixed**: LSPS1 path consistency - all modules now use `/get_info`
-- ✅ **Fixed**: Unified Redis env detection with shared helper (`lib/redis-config.ts`)
-- ✅ **Fixed**: Removed duplicate database module (`lib/db-improved.ts`)
-- ✅ **Documented**: TypeScript build setting kept disabled due to Next.js 15 API route compatibility
-
 ---
-**Status**: Core stabilization and consistency improvements completed September 2025. System is production-ready with robust error handling, timeout protection, and unified architecture.
+Status: Production-ready with robust error handling and timeouts. The above near-term items will further simplify ops and reduce footguns.

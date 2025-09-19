@@ -1,4 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import { LSPPrice } from '../../lib/lsp-api';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   res.setHeader('Content-Type', 'text/plain');
@@ -26,7 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(200).send('❌ No current data to migrate');
     }
 
-    const prices = Array.isArray(currentPrices) ? currentPrices : JSON.parse(currentPrices as string);
+    const prices: LSPPrice[] = Array.isArray(currentPrices) ? currentPrices : JSON.parse(currentPrices as string);
     
     output += `📊 Current Data:\n`;
     output += `  Prices: ${prices.length} entries\n`;
