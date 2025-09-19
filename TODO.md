@@ -5,7 +5,6 @@ A human-readable list of tasks and improvements for the Alby LSP Price Board pro
 ## 🎯 Future Enhancements
 
 ### UI and UX Improvements
-- **Fix duplicate pricing display**: Resolve any duplicate price entries showing in the table
 - **Timestamp consistency**: Ensure "Last" timestamp matches the fee column timestamp display
 - **Dark mode**: Add dark/light theme toggle for better user experience
 - **Smart force button system**: Hide force buttons behind a single unlock button (left of Technical Details, right of Refresh Prices)
@@ -53,11 +52,12 @@ A human-readable list of tasks and improvements for the Alby LSP Price Board pro
 ### UI Clarity Improvements
 - **✅ Clear Purpose Statement**: Added explanatory subtitle about Lightning Service Providers and channel opening
 - **✅ Essential Tooltips**: Hover explanations for LSP, Channel Size, and Fee terms
+- **✅ Duplicate Pricing Fix**: Removed duplicate USD pricing display, kept only clean USD below sats
 - **✅ Collapsed API Section**: Developer-focused content hidden by default with accordion
 - **✅ Friendly Button Labels**: "Refresh Prices" and "Technical Details" instead of technical terms
 - **✅ Improved Empty States**: Helpful messages with clear actions instead of technical errors
 - **✅ Smart Price Sorting**: Default sort by lowest price for best user experience
-- **✅ Currency Clarity**: USD amounts shown in parentheses next to sats
+- **✅ Currency Clarity**: USD amounts shown cleanly below sats without duplicates
 - **✅ Persistent Preferences**: User choices saved in localStorage and restored on page load
 - **✅ Version Information**: Footer shows v0.1 with project details
 
