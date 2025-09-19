@@ -17,6 +17,7 @@ export default function Home() {
   const [abortController, setAbortController] = useState<AbortController | null>(null);
   const [forceFetching, setForceFetching] = useState<Record<string, boolean>>({});
   const [showNotification, setShowNotification] = useState(false);
+  const [showApiSection, setShowApiSection] = useState(false);
 
   // Retry function for individual LSPs (non-blocking)
   const handleRetryLSP = async () => {
@@ -351,9 +352,24 @@ export default function Home() {
           </div>
         </div>
 
-        {/* API Info */}
-        <div className="mt-8 bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Public API Access</h3>
+        {/* API Info - Collapsible */}
+        <div className="mt-8 bg-white rounded-lg shadow">
+          <button 
+            onClick={() => setShowApiSection(!showApiSection)}
+            className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 rounded-t-lg"
+          >
+            <h3 className="text-lg font-semibold text-gray-900">For Developers - Public API Access</h3>
+            <svg 
+              className={`w-5 h-5 transition-transform ${showApiSection ? 'rotate-180' : ''}`}
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {showApiSection && (
+          <div className="px-6 pb-6 border-t border-gray-200">
           <p className="text-sm text-gray-500 mb-4 italic">
             {dataSource === 'live' 
               ? `Note: Using live data from LSPs (${dataSourceDescription})`
@@ -461,6 +477,8 @@ export default function Home() {
               <div>• Use Technical Details button to check detailed system status</div>
             </div>
           </div>
+          </div>
+          )}
         </div>
 
         {/* GitHub Repository Link */}
