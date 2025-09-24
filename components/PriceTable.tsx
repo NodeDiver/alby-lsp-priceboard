@@ -133,7 +133,7 @@ function StatusBadge({ source, staleSeconds, errorCode, error, timestamp }: {
         case 'BAD_STATUS': return 'bg-gray-300 text-gray-600';
         case 'INVALID_JSON': return 'bg-gray-200 text-gray-700';
         case 'SCHEMA_MISMATCH': return 'bg-gray-200 text-gray-700';
-        case 'CHANNEL_SIZE_TOO_SMALL': return 'bg-gray-200 text-gray-700';
+        case 'CHANNEL_SIZE_TOO_SMALL': return 'bg-orange-100 text-orange-800';
         case 'CHANNEL_SIZE_TOO_LARGE': return 'bg-gray-200 text-gray-700';
         case 'CACHE_UNAVAILABLE': return 'bg-gray-200 text-gray-800';
         case 'LIVE_DATA_UNAVAILABLE': return 'bg-gray-300 text-gray-900';

@@ -11,7 +11,6 @@ A human-readable list of tasks and improvements for the Alby LSP Price Board pro
 - **Intelligent refresh logic**: Hide refresh button when all LSPs show live/green data, and only refresh non-live LSPs
 - **Relocate Technical Details**: Move Technical Details button to a better location, keep only the "power" button for force features
 - **LNServer channel size messaging**: Show "Choose larger channel size" instead of error for 1M channels (LNServer doesn't support 1M)
-- **Fix LNServer 1M bug**: Show "Channel size too small" instead of "Cache unavailable" for 1M channels
 
 ### Historical Data and Analytics
 - **Historical data toggle**: Add switch similar to Alby Hub app connection switch to toggle between live comparison and historical view
@@ -29,6 +28,8 @@ A human-readable list of tasks and improvements for the Alby LSP Price Board pro
 - **Randomized node IDs**: System for using random node IDs that peer with LSPs first
 - **IP randomization**: Investigate methods for randomizing IP addresses and optimal frequency
 - **Advanced peering**: Automated peering system before price requests
+- **Immortan solution** (optional): For LSPs denying price requests - randomized node ID system
+  - References: [standardsats/immortan](https://github.com/standardsats/immortan), [nbd-wtf/immortan](https://github.com/nbd-wtf/immortan)
 
 ## ✅ Recently Completed - Version 0.1 (September 2025)
 
@@ -60,8 +61,17 @@ A human-readable list of tasks and improvements for the Alby LSP Price Board pro
 - **✅ Currency Clarity**: USD amounts shown cleanly below sats without duplicates
 - **✅ Persistent Preferences**: User choices saved in localStorage and restored on page load
 - **✅ Version Information**: Footer shows v0.1 with project details
+- **✅ LNServer 1M Fix**: Shows "Channel size too small" instead of "Cache unavailable" for LNServer 1M channels
 
 **Next Steps**: The project is stable and user-friendly. Future work should focus on the enhancements listed above based on user feedback and business requirements.
+
+## 💰 Monetization Ideas (Learning)
+
+### Alby LSP Price Board Revenue Streams
+- **Premium Live Data**: Pay sats for latest prices (free tier shows cached data)
+- **Historical Access**: Pay sats to access data older than 24 hours
+- **Large Channels**: Pay sats to view prices for 3M-10M channels (free tier: 1M-2M only)
+- **API Access**: 1 free request/day, pay sats for additional API calls
 
 ---
 

@@ -724,6 +724,16 @@ export async function fetchAllLSPPrices(channelSizeSat: number = 1000000, bypass
   // Use Promise.allSettled with individual timeouts to prevent hanging
   const pricePromises = activeLSPs.map(async (lsp) => {
     try {
+      // Special handling for LNServer 1M channels - they don't support this size
+      if (lsp.id === 'lnserver' && channelSizeSat === 1000000) {
+        console.log(`LNServer doesn't support 1M channels, returning channel size too small error`);
+        return createErrorPrice(lsp, channelSizeSat, 'Channel size too small', LspErrorCode.CHANNEL_SIZE_TOO_SMALL, {
+          reason: 'LNServer does not support 1M channel size',
+          timestamp: new Date().toISOString(),
+          lspName: lsp.name
+        });
+      }
+      
       // Add a timeout wrapper for each LSP to prevent hanging
       const timeoutPromise = new Promise<LSPPrice>((_, reject) => {
         setTimeout(() => reject(new Error(`LSP ${lsp.name} timeout after 12 seconds`)), 12000);
