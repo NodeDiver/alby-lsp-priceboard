@@ -389,9 +389,7 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
           <tr className="bg-gray-50 border-b border-gray-200">
             <th className="text-left p-4 text-lg font-semibold text-gray-700" scope="col">Provider</th>
             <th className="text-center p-4 text-lg font-semibold text-gray-700" scope="col">
-              <Tooltip text="One-time cost to open the Lightning channel">
-                Fee
-              </Tooltip>
+              Fee
             </th>
           </tr>
         </thead>
