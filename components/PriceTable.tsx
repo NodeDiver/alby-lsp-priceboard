@@ -164,7 +164,7 @@ function StatusBadge({ source, staleSeconds, errorCode, error, timestamp, live_f
         </span>
         {timestamp && (
           <span className="text-xs text-gray-500">
-            Last: {new Date(timestamp).toLocaleString()}
+            Last: {new Date(timestamp).toLocaleDateString()} <span title={new Date(timestamp).toLocaleTimeString()} className="cursor-pointer">🕒</span>
           </span>
         )}
       </div>
@@ -180,7 +180,7 @@ function StatusBadge({ source, staleSeconds, errorCode, error, timestamp, live_f
           </span>
           {timestamp && (
             <span className="text-xs text-gray-500">
-              Last: {new Date(timestamp).toLocaleString()}
+              Last: {new Date(timestamp).toLocaleDateString()} <span title={new Date(timestamp).toLocaleTimeString()} className="cursor-pointer">🕒</span>
             </span>
           )}
         </div>
@@ -202,12 +202,12 @@ function StatusBadge({ source, staleSeconds, errorCode, error, timestamp, live_f
             </div>
             {cached_timestamp && (
               <span className="text-xs text-gray-500">
-                Cached: {new Date(cached_timestamp).toLocaleString()}
+                Cached: {new Date(cached_timestamp).toLocaleDateString()} <span title={new Date(cached_timestamp).toLocaleTimeString()} className="cursor-pointer">🕒</span>
               </span>
             )}
             {live_fetch_timestamp && (
               <span className="text-xs text-gray-500">
-                Failed: {new Date(live_fetch_timestamp).toLocaleString()}
+                Failed: {new Date(live_fetch_timestamp).toLocaleDateString()} <span title={new Date(live_fetch_timestamp).toLocaleTimeString()} className="cursor-pointer">🕒</span>
               </span>
             )}
           </div>
@@ -222,7 +222,7 @@ function StatusBadge({ source, staleSeconds, errorCode, error, timestamp, live_f
           </span>
           {timestamp && (
             <span className="text-xs text-gray-500">
-              Last: {new Date(timestamp).toLocaleString()}
+              Last: {new Date(timestamp).toLocaleDateString()} <span title={new Date(timestamp).toLocaleTimeString()} className="cursor-pointer">🕒</span>
             </span>
           )}
         </div>
@@ -235,7 +235,7 @@ function StatusBadge({ source, staleSeconds, errorCode, error, timestamp, live_f
           </span>
           {timestamp && (
             <span className="text-xs text-gray-500">
-              Last: {new Date(timestamp).toLocaleString()}
+              Last: {new Date(timestamp).toLocaleDateString()} <span title={new Date(timestamp).toLocaleTimeString()} className="cursor-pointer">🕒</span>
             </span>
           )}
         </div>
@@ -248,7 +248,7 @@ function StatusBadge({ source, staleSeconds, errorCode, error, timestamp, live_f
           </span>
           {timestamp && (
             <span className="text-xs text-gray-500">
-              Last: {new Date(timestamp).toLocaleString()}
+              Last: {new Date(timestamp).toLocaleDateString()} <span title={new Date(timestamp).toLocaleTimeString()} className="cursor-pointer">🕒</span>
             </span>
           )}
         </div>

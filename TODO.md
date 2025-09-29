@@ -5,7 +5,7 @@ A human-readable list of tasks and improvements for the Alby LSP Price Board pro
 ## 🎯 Future Enhancements
 
 ### UI and UX Improvements
-- **Timestamp consistency**: Ensure "Last" timestamp matches the fee column timestamp display
+- **✅ Timestamp consistency**: Ensure "Last" timestamp matches the fee column timestamp display
 - **Dark mode**: Add dark/light theme toggle for better user experience
 - **Routing fees display**: Add routing fees for each LSP to provide complete cost comparison
 - **Smart force button system**: Hide force buttons behind a single unlock button (left of Technical Details, right of Refresh Prices)
