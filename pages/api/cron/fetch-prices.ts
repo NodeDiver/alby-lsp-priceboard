@@ -21,7 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     for (const channelSize of channelSizes) {
       console.log(`Fetching prices for ${channelSize} sats...`);
       // Use the PriceService with fallback logic instead of direct fetchAndSavePrices
-      const { PriceService } = await import('../../lib/price-service');
+      const { PriceService } = await import('../../../lib/price-service');
       const priceService = PriceService.getInstance();
       const prices = await priceService.forceFetchPricesNew(channelSize, true);
       allPrices.push(...prices);
