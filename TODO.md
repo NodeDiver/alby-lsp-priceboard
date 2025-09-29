@@ -1,4 +1,4 @@
-# TODO - Project Task List v0.1
+# TODO - Project Task List v0.3
 
 A human-readable list of tasks and improvements for the Alby LSP Price Board project.
 
