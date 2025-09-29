@@ -361,10 +361,9 @@ export default function Home() {
             <div className="flex items-center space-x-2">
               <span>Data sources:</span>
               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800" title="Real-time data from LSP APIs"><span className="w-2 h-2 rounded-full bg-green-500 mr-1"></span>Live</span>
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700" title="Previously fetched data"><span className="w-2 h-2 rounded-full bg-yellow-500 mr-1"></span>Cached</span>
-            </div>
-            <div className="text-xs text-gray-500">
-              <span className="font-medium">Live:</span> Real-time pricing from LSPs • <span className="font-medium">Cached:</span> Previously fetched data
+              <span className="text-xs text-gray-500">Real-time pricing from LSPs</span>
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-sm font-medium bg-gray-300 text-gray-700" title="Previously fetched data"><span className="w-2 h-2 rounded-full bg-green-700 mr-1"></span>Cached</span>
+              <span className="text-xs text-gray-500">Previously fetched data</span>
             </div>
           </div>
           
