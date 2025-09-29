@@ -245,11 +245,37 @@ export class PriceService {
           return { ...convertedPrice, source: 'live' as const };
         } else {
           // Live fetch failed - try good cached data for this LSP
-          const cachedPrice = cachedPrices.find(price => 
+          let cachedPrice = cachedPrices.find(price => 
             price.lsp_id === lsp.id && 
             !price.error && 
             price.total_fee_msat > 0
           );
+          
+          // If no good cached data in current cache, try historical data
+          if (!cachedPrice) {
+            console.log(`No good cached data for ${lsp.name}, checking historical data...`);
+            try {
+              const { getPriceHistory } = await import('./db');
+              const historyData = await getPriceHistory(channelSizeSat);
+              
+              // Find the most recent good historical data for this LSP
+              const historicalPrice = historyData
+                .filter(entry => entry.prices)
+                .flatMap(entry => entry.prices)
+                .find(price => 
+                  price.lsp_id === lsp.id && 
+                  !price.error && 
+                  price.total_fee_msat > 0
+                );
+              
+              if (historicalPrice) {
+                console.log(`Found historical data for ${lsp.name}: ${historicalPrice.total_fee_msat} msat from ${historicalPrice.timestamp}`);
+                cachedPrice = historicalPrice;
+              }
+            } catch (error) {
+              console.error(`Error fetching historical data for ${lsp.name}:`, error);
+            }
+          }
           
           if (cachedPrice) {
             console.log(`Using cached data for ${lsp.name} (live fetch failed)`);
