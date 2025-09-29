@@ -24,6 +24,11 @@ export interface DisplayPrice {
   source?: 'live' | 'cached' | 'unavailable' | 'unknown';
   stale_seconds?: number | null;
   error_code?: string | null;
+  // New fields for cached data with live fetch errors
+  live_fetch_error?: string;
+  live_fetch_error_code?: string;
+  live_fetch_timestamp?: string;
+  cached_timestamp?: string;
 }
 
 interface LSPMetadata {
@@ -91,12 +96,16 @@ function ForceFetchButton({
 }
 
 // Status Badge Component
-function StatusBadge({ source, staleSeconds, errorCode, error, timestamp }: { 
+function StatusBadge({ source, staleSeconds, errorCode, error, timestamp, live_fetch_error, live_fetch_error_code, live_fetch_timestamp, cached_timestamp }: { 
   source?: string; 
   staleSeconds?: number | null; 
   errorCode?: string | null;
   error?: string | null;
   timestamp?: string;
+  live_fetch_error?: string;
+  live_fetch_error_code?: string;
+  live_fetch_timestamp?: string;
+  cached_timestamp?: string;
 }) {
   if (errorCode) {
     const getErrorIcon = (code: string) => {
@@ -177,6 +186,34 @@ function StatusBadge({ source, staleSeconds, errorCode, error, timestamp }: {
       );
     case 'cached':
       const minutes = staleSeconds ? Math.floor(staleSeconds / 60) : 0;
+      
+      // Check if this is cached data with a live fetch error
+      if (live_fetch_error && live_fetch_error_code) {
+        return (
+          <div className="flex flex-col space-y-1">
+            <div className="flex flex-col space-y-1">
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700" title={`Cached ${minutes}m ago`} aria-label={`Cached data, ${minutes} minutes old`}>
+                <span className="w-2 h-2 rounded-full bg-yellow-500 mr-1"></span>Cached
+              </span>
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-300 text-gray-600" title={`Live fetch failed: ${live_fetch_error}`} aria-label={`Live fetch failed: ${live_fetch_error}`}>
+                <span className="w-2 h-2 rounded-full bg-gray-600 mr-1"></span>⚠️ bad status
+              </span>
+            </div>
+            {cached_timestamp && (
+              <span className="text-xs text-gray-500">
+                Cached: {new Date(cached_timestamp).toLocaleString()}
+              </span>
+            )}
+            {live_fetch_timestamp && (
+              <span className="text-xs text-gray-500">
+                Failed: {new Date(live_fetch_timestamp).toLocaleString()}
+              </span>
+            )}
+          </div>
+        );
+      }
+      
+      // Regular cached data without live fetch error
       return (
         <div className="flex flex-col space-y-1">
           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700" title={`Cached ${minutes}m ago`} aria-label={`Cached data, ${minutes} minutes old`}>
@@ -394,6 +431,10 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
                         errorCode={lspPrices[0]?.error_code}
                         error={lspPrices[0]?.error}
                         timestamp={lspPrices[0]?.timestamp}
+                        live_fetch_error={lspPrices[0]?.live_fetch_error}
+                        live_fetch_error_code={lspPrices[0]?.live_fetch_error_code}
+                        live_fetch_timestamp={lspPrices[0]?.live_fetch_timestamp}
+                        cached_timestamp={lspPrices[0]?.cached_timestamp}
                       />
                     </div>
                   </div>
@@ -410,6 +451,49 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
                     );
                   }
 
+                  // Show cached data if we have live fetch error but cached data is available
+                  if (price.live_fetch_error && price.live_fetch_error_code && price.price > 0) {
+                    // Show cached data with live fetch error info
+                    const conversionKey = `${price.lsp_id}_${price.channel_size}`;
+                    const conversion = currencyConversions[conversionKey];
+                    
+                    return (
+                      <td className="text-center p-4">
+                        <div className="space-y-1">
+                          <div className="font-semibold text-gray-900">
+                            {formatSats(msatToSat(price.price))} sats
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {conversionLoading ? (
+                              <span className="text-gray-400">Converting...</span>
+                            ) : conversion ? (
+                              <div>
+                                <div>{conversion.formatted}</div>
+                                {conversion.error && (
+                                  <div className="text-gray-600 text-xs mt-1">
+                                    {conversion.error}
+                                  </div>
+                                )}
+                                {conversion.lastUpdated && (
+                                  <div className="text-gray-400 text-xs mt-1">
+                                    {new Date(conversion.lastUpdated).toLocaleTimeString()}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-gray-400">N/A</span>
+                            )}
+                          </div>
+                          {price.cached_timestamp && (
+                            <div className="text-xs text-gray-400">
+                              {new Date(price.cached_timestamp).toLocaleTimeString()}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    );
+                  }
+                  
                   // Only show error if there's no price data at all
                   if (price.error && price.price === 0) {
                     return (

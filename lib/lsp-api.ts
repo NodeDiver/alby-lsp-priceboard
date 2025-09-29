@@ -241,6 +241,11 @@ export interface LSPPrice {
   stale_seconds?: number; // only when cached
   error_code?: LspErrorCode;
   raw_lsp_error?: unknown; // Store exact LSP error response for debugging
+  // New fields for cached data with live fetch errors
+  live_fetch_error?: string; // Error from failed live fetch
+  live_fetch_error_code?: LspErrorCode; // Error code from failed live fetch
+  live_fetch_timestamp?: string; // Timestamp of failed live fetch
+  cached_timestamp?: string; // Timestamp of cached data being shown
 }
 
 

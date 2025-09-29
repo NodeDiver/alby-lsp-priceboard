@@ -250,9 +250,27 @@ export class PriceService {
             !price.error && 
             price.total_fee_msat > 0
           );
+          
           if (cachedPrice) {
             console.log(`Using cached data for ${lsp.name} (live fetch failed)`);
-            return { ...cachedPrice, source: this.isFreshCachedData(cachedPrice.timestamp) ? 'live' as const : 'cached' as const };
+            
+            // Check if this is a "channel size too small" error - don't show cached data for this
+            if (livePrice && livePrice.error_code === LspErrorCode.CHANNEL_SIZE_TOO_SMALL) {
+              console.log(`Channel size too small for ${lsp.name} - not showing cached data`);
+              return { ...livePrice, source: 'unavailable' as const };
+            }
+            
+            // Return cached data with live fetch error information
+            return {
+              ...cachedPrice,
+              source: 'cached' as const,
+              // Preserve the live fetch error information
+              live_fetch_error: livePrice?.error || 'Live fetch failed',
+              live_fetch_error_code: livePrice?.error_code || LspErrorCode.BAD_STATUS,
+              live_fetch_timestamp: new Date().toISOString(),
+              // Keep the cached data timestamp
+              cached_timestamp: cachedPrice.timestamp
+            };
           } else {
             // No good cached data either - return the live fetch error
             if (livePrice && livePrice.error) {
