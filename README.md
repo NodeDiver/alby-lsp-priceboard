@@ -37,39 +37,53 @@ Menu: [v0.2](#v02) • [v0.1](#v01) • [v0.05](#v005)
 
 </details>
 
-## 🚀 **Latest Updates - Version 0.2.1 (September 2025)**
+## 🚀 **Previous Updates**
 
-### Bug Fixes & Stability Improvements
-- **✅ Fixed Hydration Error**: Resolved React hydration mismatch in Pro Mode toggle system
-- **✅ Fixed Column Layout**: Implemented fixed table layout to prevent Fee column position shifting
-- **✅ Improved State Management**: Added proper hydration handling for localStorage-dependent features
+Menu: [v0.2.1](#v021) • [v0.2](#v02-updates) • [v0.1](#v01-updates)
 
-## 🚀 **Previous Updates - Version 0.2 (September 2025)**
+<details open>
+  <summary id="v021">v0.2.1 (September 2025)</summary>
 
-### Major UX & Readability Improvements
-- **✅ Pro Mode Toggle System**: Added Pro Mode 💪 toggle with conditional button visibility for advanced features
-- **✅ Comprehensive Typography Overhaul**: Upgraded all text sizes and hierarchy for better readability and professional appearance
-- **✅ Enhanced Price Display**: Made sats prices `text-2xl font-bold` and fiat prices `text-lg font-semibold` for better visual hierarchy
-- **✅ Timestamp Display Improvements**: Shows full date with hoverable clock tooltips for better time information
-- **✅ UI Polish & Consistency**: Fixed button sizing, improved legend styling, enhanced color consistency
-- **✅ Animation Enhancements**: Added professional fade-in animations for Pro Mode buttons
-- **✅ UI Component Cleanup**: Removed unwanted tooltips and hover effects
+  ### Bug Fixes & Stability Improvements
+  - **✅ Fixed Hydration Error**: Resolved React hydration mismatch in Pro Mode toggle system
+  - **✅ Fixed Column Layout**: Implemented fixed table layout to prevent Fee column position shifting
+  - **✅ Improved State Management**: Added proper hydration handling for localStorage-dependent features
 
-## 🚀 **Previous Updates - Version 0.1 (September 2025)**
-- **✅ Historical Data Preservation**: Old data archived before new fetches, never lost
-- **✅ Error Protection**: Failed fetches never overwrite good cached data  
-- **✅ Dedicated LSP Public Keys**: Separate node IDs for Flashsats and Megalith
-- **✅ Grayscale UI Theme**: Professional monochrome design with 💪 force buttons
-- **✅ Per-LSP Force Fetch**: Individual force fetch buttons for each LSP
-- **✅ Fresh Cache Rule**: Data < 1 hour old shows as "live", > 1 hour shows as "cached"
-- **✅ Multi-Channel Cron**: Daily automated fetching for 1M/2M/5M/10M channel sizes
-- **✅ Persistent Database**: Vercel KV Redis with no TTL expiration
-- **✅ Code Quality**: Unified architecture, LSPS1 compliance, consistent error handling
-- **✅ Unit Tests**: Jest testing framework with LSPS1 error mapping and DB serialization tests
-- **✅ Health Monitoring**: `/api/health` endpoint for system status and uptime monitoring
-- **✅ UI Clarity v0.1**: Clear explanations, helpful tooltips, improved empty states, and user-friendly labels
-- **✅ Smart Caching System**: Shows cached data immediately, fetches live data in background
-- **✅ Enhanced Error Handling**: Specific error messages with intelligent fallback to cached data
+</details>
+
+<details>
+  <summary id="v02-updates">v0.2 (September 2025)</summary>
+
+  ### Major UX & Readability Improvements
+  - **✅ Pro Mode Toggle System**: Added Pro Mode 💪 toggle with conditional button visibility for advanced features
+  - **✅ Comprehensive Typography Overhaul**: Upgraded all text sizes and hierarchy for better readability and professional appearance
+  - **✅ Enhanced Price Display**: Made sats prices `text-2xl font-bold` and fiat prices `text-lg font-semibold` for better visual hierarchy
+  - **✅ Timestamp Display Improvements**: Shows full date with hoverable clock tooltips for better time information
+  - **✅ UI Polish & Consistency**: Fixed button sizing, improved legend styling, enhanced color consistency
+  - **✅ Animation Enhancements**: Added professional fade-in animations for Pro Mode buttons
+  - **✅ UI Component Cleanup**: Removed unwanted tooltips and hover effects
+
+</details>
+
+<details>
+  <summary id="v01-updates">v0.1 (September 2025)</summary>
+
+  - **✅ Historical Data Preservation**: Old data archived before new fetches, never lost
+  - **✅ Error Protection**: Failed fetches never overwrite good cached data  
+  - **✅ Dedicated LSP Public Keys**: Separate node IDs for Flashsats and Megalith
+  - **✅ Grayscale UI Theme**: Professional monochrome design with 💪 force buttons
+  - **✅ Per-LSP Force Fetch**: Individual force fetch buttons for each LSP
+  - **✅ Fresh Cache Rule**: Data < 1 hour old shows as "live", > 1 hour shows as "cached"
+  - **✅ Multi-Channel Cron**: Daily automated fetching for 1M/2M/5M/10M channel sizes
+  - **✅ Persistent Database**: Vercel KV Redis with no TTL expiration
+  - **✅ Code Quality**: Unified architecture, LSPS1 compliance, consistent error handling
+  - **✅ Unit Tests**: Jest testing framework with LSPS1 error mapping and DB serialization tests
+  - **✅ Health Monitoring**: `/api/health` endpoint for system status and uptime monitoring
+  - **✅ UI Clarity v0.1**: Clear explanations, helpful tooltips, improved empty states, and user-friendly labels
+  - **✅ Smart Caching System**: Shows cached data immediately, fetches live data in background
+  - **✅ Enhanced Error Handling**: Specific error messages with intelligent fallback to cached data
+
+</details>
 
 ## Problem Solved
 
@@ -77,16 +91,15 @@ This project addresses [Alby Hub Issue #1001](https://github.com/getAlby/hub/iss
 
 ## Features
 
-- **🟢 LIVE DATA** from 3 working LSPs (Olympus, LNServer Wave, Flashsats) using LSPS1 protocol
-- **🟡 SMART CACHING** with 1-hour fresh rule - recent data shows as "live", older as "cached"
-- **⚡ PER-LSP FORCE FETCH** - Individual buttons to refresh data for specific LSPs
-- **Real-time price comparison** across 4 LSPs with intelligent fallback handling
-- **Multi-currency support** with live conversion using Alby's Lightning Tools
-- **Channel size filtering** (1M-10M sats) - all sizes supported with persistent data
-- **Public REST API** for integration with other applications
-- **Automatic price updates** daily via Vercel Cron Jobs for all channel sizes
-- **Clean, responsive UI** with professional design and individual LSP timestamps
-- **Robust error handling** with detailed status indicators and retry mechanisms 
+- **🟢 Live Data**: Real-time pricing from 3 LSPs using LSPS1 protocol
+- **🟡 Smart Caching**: 1-hour fresh rule with intelligent fallback to cached data
+- **⚡ Force Fetch**: Individual refresh buttons for each LSP
+- **💰 Multi-Currency**: Live conversion with 20+ supported currencies
+- **📊 Channel Sizes**: Support for 1M-10M sat channels with persistent storage
+- **🔌 Public API**: REST endpoints for external integrations
+- **⏰ Auto-Updates**: Daily cron jobs for all channel sizes
+- **🎨 Pro Mode**: Advanced features toggle with conditional UI
+- **🛡️ Error Handling**: Robust fallback with detailed status indicators 
 
 ## Technology Stack
 

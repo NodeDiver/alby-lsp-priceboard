@@ -3,6 +3,8 @@ import { PriceTable, DisplayPrice } from '../components/PriceTable';
 import { LSP } from '../lib/lsps';
 import { COMMON_CURRENCIES } from '../lib/currency';
 import { Tooltip } from '../components/Tooltip';
+import { PaymentModal } from '../components/PaymentModal';
+import { ProModeManager } from '../lib/pro-mode';
 
 
 export default function Home() {
@@ -34,13 +36,22 @@ export default function Home() {
   const [showApiSection, setShowApiSection] = useState(false);
   const [proMode, setProMode] = useState<boolean>(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   // Handle hydration and localStorage initialization
   useEffect(() => {
     setIsHydrated(true);
-    const saved = localStorage.getItem('alby-lsp-pro-mode');
-    if (saved === 'true') {
+    
+    // Check if user has paid Pro Mode access
+    const hasProAccess = ProModeManager.hasProModeAccess();
+    if (hasProAccess) {
       setProMode(true);
+    } else {
+      // Check old localStorage for backward compatibility
+      const saved = localStorage.getItem('alby-lsp-pro-mode');
+      if (saved === 'true') {
+        setProMode(true);
+      }
     }
   }, []);
 
@@ -226,9 +237,28 @@ export default function Home() {
   };
 
   const handleProModeToggle = () => {
+    // Check if user has paid Pro Mode access
+    const hasProAccess = ProModeManager.hasProModeAccess();
+    
+    if (!hasProAccess && !proMode) {
+      // User doesn't have paid access and is trying to enable Pro Mode
+      setShowPaymentModal(true);
+      return;
+    }
+    
+    // User has paid access or is disabling Pro Mode
     const newProMode = !proMode;
     setProMode(newProMode);
+    
+    // Update localStorage for backward compatibility
     localStorage.setItem('alby-lsp-pro-mode', String(newProMode));
+  };
+
+  const handlePaymentSuccess = () => {
+    // Grant Pro Mode access
+    ProModeManager.grantProModeAccess();
+    setProMode(true);
+    localStorage.setItem('alby-lsp-pro-mode', 'true');
   };
 
   return (
@@ -400,7 +430,14 @@ export default function Home() {
             
             {/* Pro Mode Toggle */}
             <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium text-gray-700">Pro Mode 💪</span>
+              <div className="flex items-center space-x-1">
+                <span className="text-sm font-medium text-gray-700">Pro Mode 💪</span>
+                {isHydrated && ProModeManager.hasProModeAccess() && (
+                  <span className="text-xs text-green-600 font-medium">
+                    ({ProModeManager.getRemainingDays()}d left)
+                  </span>
+                )}
+              </div>
               <button
                 onClick={isHydrated ? handleProModeToggle : undefined}
                 disabled={!isHydrated}
@@ -590,6 +627,13 @@ export default function Home() {
             </p>
           </div>
         </div>
+
+        {/* Payment Modal */}
+        <PaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          onPaymentSuccess={handlePaymentSuccess}
+        />
 
         {/* Footer */}
         <footer className="mt-12 py-6 border-t border-gray-200 bg-white">

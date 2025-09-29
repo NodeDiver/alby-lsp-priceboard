@@ -1,0 +1,117 @@
+import React from 'react';
+
+interface PaymentModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onPaymentSuccess: () => void;
+}
+
+export const PaymentModal: React.FC<PaymentModalProps> = ({
+  isOpen,
+  onClose,
+  onPaymentSuccess
+}) => {
+  if (!isOpen) return null;
+
+  const handlePayment = () => {
+    // TODO: Integrate with Alby tools for actual payment
+    // For now, simulate successful payment
+    console.log('Payment initiated - 500 sats');
+    
+    // Simulate payment success after 2 seconds
+    setTimeout(() => {
+      onPaymentSuccess();
+      onClose();
+    }, 2000);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      {/* Backdrop */}
+      <div 
+        className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      
+      {/* Modal */}
+      <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all duration-300 scale-100">
+        <div className="p-6">
+          {/* Header */}
+          <div className="text-center mb-6">
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
+              <span className="text-2xl">💪</span>
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              Unlock Pro Mode
+            </h3>
+            <p className="text-gray-600">
+              Get access to advanced features for 30 days
+            </p>
+          </div>
+
+          {/* Pricing */}
+          <div className="bg-gray-50 rounded-lg p-4 mb-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-2xl font-bold text-gray-900">500 sats</div>
+                <div className="text-sm text-gray-500">~$0.15 USD</div>
+              </div>
+              <div className="text-right">
+                <div className="text-sm text-gray-600">Valid for</div>
+                <div className="font-semibold text-gray-900">30 days</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Features */}
+          <div className="mb-6">
+            <h4 className="font-medium text-gray-900 mb-3">Pro Mode includes:</h4>
+            <ul className="space-y-2 text-sm text-gray-600">
+              <li className="flex items-center">
+                <span className="text-green-500 mr-2">✓</span>
+                Historical data beyond 7 days (coming soon)
+              </li>
+              <li className="flex items-center">
+                <span className="text-green-500 mr-2">✓</span>
+                Advanced filtering and export (coming soon)
+              </li>
+              <li className="flex items-center">
+                <span className="text-green-500 mr-2">✓</span>
+                Large channel sizes (3M-10M sats)
+              </li>
+              <li className="flex items-center">
+                <span className="text-green-500 mr-2">✓</span>
+                Force fetch latest prices for any channel size
+              </li>
+              <li className="flex items-center">
+                <span className="text-green-500 mr-2">✓</span>
+                Direct admin support notifications (coming soon)
+              </li>
+              <li className="flex items-center">
+                <span className="text-green-500 mr-2">✓</span>
+                Unlimited API access
+              </li>
+            </ul>
+          </div>
+
+          {/* Payment Button */}
+          <button
+            onClick={handlePayment}
+            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center"
+          >
+            <span className="mr-2">⚡</span>
+            Pay 500 sats with Lightning
+          </button>
+
+          {/* Cancel Button */}
+          <button
+            onClick={onClose}
+            className="w-full mt-3 text-gray-500 hover:text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
