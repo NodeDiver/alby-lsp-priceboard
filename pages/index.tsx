@@ -234,10 +234,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="py-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-4xl font-bold text-gray-900">
                 Alby LSP Price Board
               </h1>
-              <p className="mt-2 text-lg text-gray-600">
+              <p className="mt-2 text-xl text-gray-600">
                 Compare how much different Lightning Service Providers charge to open an inbound Lightning channel
               </p>
             </div>
@@ -258,8 +258,8 @@ export default function Home() {
                 </svg>
               </div>
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">Error loading prices</h3>
-                <div className="mt-2 text-sm text-red-700">{error}</div>
+                <h3 className="text-base font-medium text-red-800">Error loading prices</h3>
+                <div className="mt-2 text-base text-red-700">{error}</div>
               </div>
             </div>
           </div>
@@ -435,7 +435,7 @@ export default function Home() {
           </button>
           {showApiSection && (
           <div className="px-6 pb-6 border-t border-gray-200">
-          <p className="text-sm text-gray-500 mb-4 italic">
+          <p className="text-base text-gray-500 mb-4 italic">
             {dataSource === 'live' 
               ? `Note: Using live data from LSPs (${dataSourceDescription})`
               : dataSource === 'cached'
@@ -447,14 +447,14 @@ export default function Home() {
               : 'Note: Data source unknown - check debug info for details'
             }
           </p>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-base text-gray-600 mb-4">
             Other applications can access this pricing data via our public REST API:
           </p>
           
           <div className="space-y-4">
             <div>
-              <h4 className="text-sm font-medium text-gray-900 mb-2">Endpoint</h4>
-              <div className="bg-gray-50 rounded p-3 font-mono text-sm">
+              <h4 className="text-base font-medium text-gray-900 mb-2">Endpoint</h4>
+              <div className="bg-gray-50 rounded p-3 font-mono text-base">
                 <div>GET /api/prices</div>
                 <div className="text-gray-500 mt-1">Optional: ?channelSize=1000000 (1M-10M sats)</div>
                 <div className="text-gray-500 mt-1">Optional: ?fresh=1 (force live fetch)</div>
@@ -462,8 +462,8 @@ export default function Home() {
             </div>
             
             <div>
-              <h4 className="text-sm font-medium text-gray-900 mb-2">Response Format</h4>
-              <div className="bg-gray-50 rounded p-3 font-mono text-xs overflow-x-auto">
+              <h4 className="text-base font-medium text-gray-900 mb-2">Response Format</h4>
+              <div className="bg-gray-50 rounded p-3 font-mono text-sm overflow-x-auto">
                 <pre>{`{
   "success": true,
   "last_update": "2025-09-05T16:24:06.744Z",
@@ -487,8 +487,8 @@ export default function Home() {
             </div>
             
             <div>
-              <h4 className="text-sm font-medium text-gray-900 mb-2">How to Use</h4>
-              <div className="text-sm text-gray-600 space-y-2">
+              <h4 className="text-base font-medium text-gray-900 mb-2">How to Use</h4>
+              <div className="text-base text-gray-600 space-y-2">
                 <div>• <strong>No authentication required</strong> - completely open API</div>
                 <div>• <strong>CORS enabled</strong> - works from any website</div>
                 <div>• <strong>Channel size filtering</strong> - add ?channelSize=2000000 for 2M sats</div>
@@ -499,8 +499,8 @@ export default function Home() {
             </div>
             
             <div>
-              <h4 className="text-sm font-medium text-gray-900 mb-2">Limitations</h4>
-              <div className="text-sm text-gray-600 space-y-1">
+              <h4 className="text-base font-medium text-gray-900 mb-2">Limitations</h4>
+              <div className="text-base text-gray-600 space-y-1">
                 <div>• Rate limit: ~100 requests/minute (Vercel free tier)</div>
                 <div>• Data retention: Public API exposes latest snapshot only (backend stores history)</div>
                 <div>• Channel sizes: 1M-10M sats supported</div>
@@ -511,8 +511,8 @@ export default function Home() {
           </div>
           
           <div className="mt-4 pt-4 border-t border-gray-200">
-            <h4 className="text-sm font-medium text-gray-900 mb-2">Current Status</h4>
-            <div className="text-xs text-gray-600 space-y-1">
+            <h4 className="text-base font-medium text-gray-900 mb-2">Current Status</h4>
+            <div className="text-sm text-gray-600 space-y-1">
               <div>• ✅ API endpoint active and responding</div>
               {dataSource === 'live' ? (
                 <>
@@ -550,7 +550,7 @@ export default function Home() {
         <div className="mt-8 bg-white rounded-lg shadow p-6">
           <div className="text-center">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Open Source Project</h3>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="text-base text-gray-600 mb-4">
               This project is open source and community-driven. Help us improve it!
             </p>
             <div className="flex justify-center space-x-4">
@@ -577,7 +577,7 @@ export default function Home() {
                 Report Issue
               </a>
             </div>
-            <p className="text-xs text-gray-500 mt-4">
+            <p className="text-sm text-gray-500 mt-4">
               Found a bug? Want to request a feature? Need a new LSP added? 
               <br />
               <a href="https://github.com/NodeDiver/alby-lsp-priceboard/issues" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">
@@ -590,10 +590,10 @@ export default function Home() {
         {/* Footer */}
         <footer className="mt-12 py-6 border-t border-gray-200 bg-white">
           <div className="text-center">
-            <p className="text-sm text-gray-500">
+            <p className="text-base text-gray-500">
               Alby LSP Price Board v0.1 • Open Source Lightning Service Provider Comparison Tool
             </p>
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-sm text-gray-400 mt-1">
               Built with Next.js • Data from LSPS1 Protocol • Updated September 2025
             </p>
           </div>

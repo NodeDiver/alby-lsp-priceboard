@@ -156,7 +156,7 @@ function StatusBadge({ source, staleSeconds, errorCode, error, timestamp, live_f
     return (
       <div className="flex flex-col space-y-1">
         <span 
-          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getErrorColor(errorCode)}`}
+          className={`inline-flex items-center px-2 py-1 rounded-full text-sm font-medium ${getErrorColor(errorCode)}`}
           title={error || `Error: ${errorCode}`}
           aria-label={`Error: ${errorCode.replace(/_/g, ' ').toLowerCase()}`}
         >
@@ -175,7 +175,7 @@ function StatusBadge({ source, staleSeconds, errorCode, error, timestamp, live_f
     case 'live':
       return (
         <div className="flex flex-col space-y-1">
-          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800" aria-label="Live data - fresh from LSP">
+          <span className="inline-flex items-center px-2 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800" aria-label="Live data - fresh from LSP">
             <span className="w-2 h-2 rounded-full bg-green-500 mr-1"></span>Live
           </span>
           {timestamp && (
@@ -193,10 +193,10 @@ function StatusBadge({ source, staleSeconds, errorCode, error, timestamp, live_f
         return (
           <div className="flex flex-col space-y-1">
             <div className="flex flex-col space-y-1">
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-300 text-gray-700" title={`Cached ${minutes}m ago`} aria-label={`Cached data, ${minutes} minutes old`}>
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-sm font-medium bg-gray-300 text-gray-700" title={`Cached ${minutes}m ago`} aria-label={`Cached data, ${minutes} minutes old`}>
                 <span className="w-2 h-2 rounded-full bg-green-700 mr-1"></span>Cached
               </span>
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-300 text-gray-600" title={`Live fetch failed: ${live_fetch_error}`} aria-label={`Live fetch failed: ${live_fetch_error}`}>
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-sm font-medium bg-gray-300 text-gray-600" title={`Live fetch failed: ${live_fetch_error}`} aria-label={`Live fetch failed: ${live_fetch_error}`}>
                 <span className="w-2 h-2 rounded-full bg-gray-600 mr-1"></span>⚠️ bad status
               </span>
             </div>
@@ -217,7 +217,7 @@ function StatusBadge({ source, staleSeconds, errorCode, error, timestamp, live_f
       // Regular cached data without live fetch error
       return (
         <div className="flex flex-col space-y-1">
-          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-300 text-gray-700" title={`Cached ${minutes}m ago`} aria-label={`Cached data, ${minutes} minutes old`}>
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-sm font-medium bg-gray-300 text-gray-700" title={`Cached ${minutes}m ago`} aria-label={`Cached data, ${minutes} minutes old`}>
             <span className="w-2 h-2 rounded-full bg-green-700 mr-1"></span>Cached
           </span>
           {timestamp && (
@@ -230,7 +230,7 @@ function StatusBadge({ source, staleSeconds, errorCode, error, timestamp, live_f
     case 'unavailable':
       return (
         <div className="flex flex-col space-y-1">
-          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-400 text-white" title="LSP unavailable" aria-label="LSP unavailable">
+          <span className="inline-flex items-center px-2 py-1 rounded-full text-sm font-medium bg-gray-400 text-white" title="LSP unavailable" aria-label="LSP unavailable">
             <span className="w-2 h-2 rounded-full bg-gray-600 mr-1"></span>Unavailable
           </span>
           {timestamp && (
@@ -243,7 +243,7 @@ function StatusBadge({ source, staleSeconds, errorCode, error, timestamp, live_f
     default:
       return (
         <div className="flex flex-col space-y-1">
-          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800" aria-label="Unknown data source">
+          <span className="inline-flex items-center px-2 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800" aria-label="Unknown data source">
             <span className="w-2 h-2 rounded-full bg-gray-500 mr-1"></span>Unknown
           </span>
           {timestamp && (
@@ -387,8 +387,8 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
       <table className="w-full border-collapse" role="table" aria-label="LSP Price Comparison">
         <thead>
           <tr className="bg-gray-50 border-b border-gray-200">
-            <th className="text-left p-4 font-medium text-gray-700" scope="col">Provider</th>
-            <th className="text-center p-4 font-medium text-gray-700" scope="col">
+            <th className="text-left p-4 text-lg font-semibold text-gray-700" scope="col">Provider</th>
+            <th className="text-center p-4 text-lg font-semibold text-gray-700" scope="col">
               <Tooltip text="One-time cost to open the Lightning channel">
                 Fee
               </Tooltip>
@@ -404,7 +404,7 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
             
             return (
               <tr key={lspId} className="border-b border-gray-100 hover:bg-gray-50">
-                <td className="p-4 font-medium text-gray-900">
+                <td className="p-4 text-lg font-semibold text-gray-900">
                   <div className="flex items-center space-x-3">
                     <LSPIcon 
                       lspName={lspName} 
@@ -460,11 +460,11 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
                     
                     return (
                       <td className="text-center p-4">
-                        <div className="space-y-1">
-                          <div className="font-semibold text-gray-900">
+                        <div className="space-y-2">
+                          <div className="text-2xl font-bold text-gray-900">
                             {formatSats(msatToSat(price.price))} sats
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-lg font-semibold text-gray-700">
                             {conversionLoading ? (
                               <span className="text-gray-400">Converting...</span>
                             ) : conversion ? (
@@ -504,11 +504,11 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
 
                   return (
                     <td className="text-center p-4">
-                      <div className="space-y-1">
-                        <div className="font-semibold text-gray-900">
+                      <div className="space-y-2">
+                        <div className="text-2xl font-bold text-gray-900">
                           {formatSats(msatToSat(price.price))} sats
                         </div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-lg font-semibold text-gray-700">
                           {conversionLoading ? (
                             <span className="text-gray-400">Converting...</span>
                           ) : conversion ? (
