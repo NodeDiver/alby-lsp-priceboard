@@ -650,6 +650,7 @@ export default function Home() {
           isOpen={showPaymentModal}
           onClose={() => setShowPaymentModal(false)}
           onPaymentSuccess={handlePaymentSuccess}
+          selectedCurrency={selectedCurrency}
         />
 
         {/* Footer */}

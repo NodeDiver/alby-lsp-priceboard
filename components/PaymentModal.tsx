@@ -1,16 +1,41 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { convertSatsToCurrency, CurrencyConversion } from '../lib/currency';
 
 interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onPaymentSuccess: () => void;
+  selectedCurrency: string;
 }
 
 export const PaymentModal: React.FC<PaymentModalProps> = ({
   isOpen,
   onClose,
-  onPaymentSuccess
+  onPaymentSuccess,
+  selectedCurrency
 }) => {
+  const [conversion, setConversion] = useState<CurrencyConversion | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  // Convert 500 sats to selected currency
+  useEffect(() => {
+    if (isOpen && selectedCurrency) {
+      setLoading(true);
+      convertSatsToCurrency(500, selectedCurrency)
+        .then(setConversion)
+        .catch(error => {
+          console.error('Currency conversion error:', error);
+          setConversion({
+            amount: 0,
+            formatted: 'N/A',
+            currency: selectedCurrency,
+            symbol: '$',
+            error: 'Conversion failed'
+          });
+        })
+        .finally(() => setLoading(false));
+    }
+  }, [isOpen, selectedCurrency]);
   if (!isOpen) return null;
 
   const handlePayment = () => {
@@ -54,7 +79,19 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-2xl font-bold text-gray-900">500 sats</div>
-                <div className="text-sm text-gray-500">~$0.15 USD</div>
+                <div className="text-sm text-gray-500">
+                  {loading ? (
+                    <span className="animate-pulse">Loading...</span>
+                  ) : conversion ? (
+                    conversion.error ? (
+                      <span className="text-red-500">Conversion failed</span>
+                    ) : (
+                      `~${conversion.formatted}`
+                    )
+                  ) : (
+                    '~$0.15 USD'
+                  )}
+                </div>
               </div>
               <div className="text-right">
                 <div className="text-sm text-gray-600">Valid for</div>
