@@ -459,10 +459,36 @@ export class PriceService {
     }
     
     // For each active LSP, return cached data or unavailable message
-    const results = activeLSPs.map(lsp => {
-      const cachedPrice = availablePrices.find(price => price.lsp_id === lsp.id);
+    const results = await Promise.all(activeLSPs.map(async lsp => {
+      let cachedPrice = availablePrices.find(price => price.lsp_id === lsp.id);
       
-      if (cachedPrice) {
+      // If no good cached data in current cache, try historical data
+      if (!cachedPrice || (cachedPrice.error && cachedPrice.total_fee_msat === 0)) {
+        console.log(`No good cached data for ${lsp.name}, checking historical data...`);
+        try {
+          const { getPriceHistory } = await import('./db');
+          const historyData = await getPriceHistory(channelSizeSat);
+          
+          // Find the most recent good historical data for this LSP
+          const historicalPrice = historyData
+            .filter(entry => entry.prices)
+            .flatMap(entry => entry.prices)
+            .find(price => 
+              price.lsp_id === lsp.id && 
+              !price.error && 
+              price.total_fee_msat > 0
+            );
+          
+          if (historicalPrice) {
+            console.log(`Found historical data for ${lsp.name}: ${historicalPrice.total_fee_msat} msat from ${historicalPrice.timestamp}`);
+            cachedPrice = historicalPrice;
+          }
+        } catch (error) {
+          console.error(`Error fetching historical data for ${lsp.name}:`, error);
+        }
+      }
+      
+      if (cachedPrice && !cachedPrice.error && cachedPrice.total_fee_msat > 0) {
         console.log(`Returning cached data for ${lsp.name}`);
         return {
           ...cachedPrice,
@@ -486,7 +512,7 @@ export class PriceService {
           source: 'unavailable' as const
         };
       }
-    });
+    }));
     
     return results;
   }
