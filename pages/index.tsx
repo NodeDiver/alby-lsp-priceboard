@@ -32,6 +32,13 @@ export default function Home() {
   const [forceFetching, setForceFetching] = useState<Record<string, boolean>>({});
   const [showNotification, setShowNotification] = useState(false);
   const [showApiSection, setShowApiSection] = useState(false);
+  const [proMode, setProMode] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('alby-lsp-pro-mode');
+      return saved === 'true';
+    }
+    return false;
+  });
 
   // Retry function for individual LSPs (non-blocking)
   const handleRetryLSP = async () => {
@@ -214,6 +221,12 @@ export default function Home() {
     localStorage.setItem('alby-lsp-currency', newCurrency);
   };
 
+  const handleProModeToggle = () => {
+    const newProMode = !proMode;
+    setProMode(newProMode);
+    localStorage.setItem('alby-lsp-pro-mode', String(newProMode));
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -364,6 +377,26 @@ export default function Home() {
               {loading ? 'Refreshing Prices...' : 'Refresh Prices'}
             </button>
             
+            
+            {/* Pro Mode Toggle */}
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-medium text-gray-700">Pro Mode 💪</span>
+              <button
+                onClick={handleProModeToggle}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                  proMode ? 'bg-indigo-600' : 'bg-gray-200'
+                }`}
+                role="switch"
+                aria-checked={proMode}
+                aria-label="Toggle Pro Mode"
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    proMode ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
             
             <button
               onClick={() => window.open('/api/debug', '_blank')}
