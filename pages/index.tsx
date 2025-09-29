@@ -350,6 +350,7 @@ export default function Home() {
             onRetry={handleRetryLSP}
             onForceFetch={handleForceFetchLSP}
             forceFetching={forceFetching}
+            proMode={proMode}
           />
         </div>
 
@@ -368,42 +369,51 @@ export default function Home() {
           </div>
           
           <div className="flex items-center space-x-4">
-            <button
-              onClick={handleRefresh}
-              disabled={loading}
-              className="px-4 py-2 bg-slate-500 text-white rounded-md hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Fetch live data from LSPs (respects rate limits)"
-            >
-              {loading ? 'Refreshing Prices...' : 'Refresh Prices'}
-            </button>
+            {proMode && (
+              <button
+                onClick={handleRefresh}
+                disabled={loading}
+                className="px-2.5 py-1 text-sm bg-slate-500 text-white rounded-md hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed animate-in fade-in duration-300 ease-out"
+                title="Fetch live data from LSPs (respects rate limits)"
+                style={{
+                  animation: 'fadeInScale 300ms ease-out forwards'
+                }}
+              >
+                {loading ? 'Refreshing Prices...' : 'Refresh Prices'}
+              </button>
+            )}
             
+            {proMode && (
+              <button
+                onClick={() => window.open('/api/debug', '_blank')}
+                className="px-2.5 py-1 text-sm bg-gray-600 text-white rounded-md hover:bg-gray-700 animate-in fade-in duration-300 ease-out"
+                style={{
+                  animation: 'fadeInScale 300ms ease-out forwards'
+                }}
+              >
+                Technical Details
+              </button>
+            )}
             
             {/* Pro Mode Toggle */}
             <div className="flex items-center space-x-2">
               <span className="text-sm font-medium text-gray-700">Pro Mode 💪</span>
               <button
                 onClick={handleProModeToggle}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                  proMode ? 'bg-indigo-600' : 'bg-gray-200'
+                className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 ${
+                  proMode ? 'bg-gray-700' : 'bg-gray-200'
                 }`}
                 role="switch"
                 aria-checked={proMode}
                 aria-label="Toggle Pro Mode"
               >
                 <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
                     proMode ? 'translate-x-6' : 'translate-x-1'
                   }`}
                 />
               </button>
             </div>
-            
-            <button
-              onClick={() => window.open('/api/debug', '_blank')}
-              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
-            >
-              Technical Details
-            </button>
           </div>
         </div>
 
@@ -559,7 +569,7 @@ export default function Home() {
                 href="https://github.com/NodeDiver/alby-lsp-priceboard/issues"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center px-4 py-2 bg-slate-700 text-white rounded-md hover:bg-slate-800 transition-colors"
               >
                 <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />

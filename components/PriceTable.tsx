@@ -52,6 +52,7 @@ interface PriceTableProps {
   onRetry?: (lspId: string) => void;
   onForceFetch?: (lspId: string) => void;
   forceFetching?: Record<string, boolean>;
+  proMode?: boolean;
 }
 
 // Retry Button Component
@@ -285,7 +286,7 @@ function LSPIcon({ lspName, lspData }: { lspName: string; lspData?: LSPMetadata 
 }
 
 
-export function PriceTable({ prices, loading = false, lspMetadata = [], selectedChannelSize = 1000000, selectedCurrency = 'usd', onRetry, onForceFetch, forceFetching = {} }: PriceTableProps) {
+export function PriceTable({ prices, loading = false, lspMetadata = [], selectedChannelSize = 1000000, selectedCurrency = 'usd', onRetry, onForceFetch, forceFetching = {}, proMode = false }: PriceTableProps) {
   const [currencyConversions, setCurrencyConversions] = useState<{ [key: string]: CurrencyConversion }>({});
   const [conversionLoading, setConversionLoading] = useState(false);
 
@@ -413,10 +414,10 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
                       <div className="flex items-center">
                         <span>{lspName}</span>
                         <div className="flex items-center space-x-1">
-                          {lspPrices[0]?.error_code && (
+                          {proMode && lspPrices[0]?.error_code && (
                             <RetryButton lspId={lspId} onRetry={onRetry} />
                           )}
-                          {(lspPrices[0]?.error_code || lspPrices[0]?.source === 'cached') && (
+                          {proMode && (lspPrices[0]?.error_code || lspPrices[0]?.source === 'cached') && (
                             <ForceFetchButton 
                               lspId={lspId} 
                               onForceFetch={onForceFetch}
