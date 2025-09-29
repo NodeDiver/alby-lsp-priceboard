@@ -328,11 +328,20 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
     );
   }
 
-  // Get unique LSPs and sort by lowest price first
+  // Get unique LSPs and sort by lowest price first, then by LSP name for consistency
   const lsps = [...new Set(prices.map(p => p.lsp_id))].sort((a, b) => {
     const priceA = prices.find(p => p.lsp_id === a && !p.error)?.price || Infinity;
     const priceB = prices.find(p => p.lsp_id === b && !p.error)?.price || Infinity;
-    return priceA - priceB;
+    
+    // Primary sort: by price (lowest first)
+    if (priceA !== priceB) {
+      return priceA - priceB;
+    }
+    
+    // Secondary sort: by LSP name for consistency when prices are equal
+    const nameA = prices.find(p => p.lsp_id === a)?.lsp_name || a;
+    const nameB = prices.find(p => p.lsp_id === b)?.lsp_name || b;
+    return nameA.localeCompare(nameB);
   });
 
   return (
