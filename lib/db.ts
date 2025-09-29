@@ -4,6 +4,7 @@ import { isRedisConfigured, getRedisInstance } from './redis-config';
 
 // Initialize Redis client
 const redis = getRedisInstance() as Redis;
+console.log('Redis instance:', redis ? 'defined' : 'null');
 
 // IMPROVED DATABASE STRUCTURE - No redundancy
 const METADATA_KEY = 'alby:lsp:metadata';
@@ -153,18 +154,27 @@ export async function getLastUpdateTime(): Promise<string | null> {
 
 // Get price history from timestamp-based keys
 export async function getPriceHistory(limit: number = 50): Promise<Array<{timestamp: string, channelSize: number, prices: LSPPrice[]}>> {
+  console.log('getPriceHistory called with limit:', limit);
   try {
+    console.log('isRedisConfigured():', isRedisConfigured());
     if (!isRedisConfigured()) {
+      console.log('Redis not configured for getPriceHistory');
       return [];
     }
+    
+    console.log('Redis is configured, getting keys...');
 
     // Get all history keys and sort by timestamp (most recent first)
     const allKeys = await redis.keys('alby:lsp:history:*');
+    console.log('All history keys:', allKeys);
+    
     const historyKeys = allKeys.filter(key => 
       key.startsWith('alby:lsp:history:') && 
       key !== 'alby:lsp:history' &&
       key.split(':').length > 4 // Ensure it has timestamp
     );
+    
+    console.log('Filtered history keys:', historyKeys);
     
     // Sort by timestamp (extract from key)
     historyKeys.sort((a, b) => {
@@ -178,7 +188,22 @@ export async function getPriceHistory(limit: number = 50): Promise<Array<{timest
     const historyData = await Promise.all(
       limitedKeys.map(async (key) => {
         const data = await redis.get(key);
-        return data ? JSON.parse(data as string) : null;
+        if (!data) return null;
+        
+        // Handle both string and object data
+        if (typeof data === 'string') {
+          try {
+            return JSON.parse(data);
+          } catch (error) {
+            console.error(`Error parsing JSON for key ${key}:`, error);
+            return null;
+          }
+        } else if (typeof data === 'object') {
+          return data;
+        } else {
+          console.error(`Unexpected data type for key ${key}:`, typeof data);
+          return null;
+        }
       })
     );
     
