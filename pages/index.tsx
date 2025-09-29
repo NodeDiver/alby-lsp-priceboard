@@ -4,6 +4,7 @@ import { LSP } from '../lib/lsps';
 import { COMMON_CURRENCIES } from '../lib/currency';
 import { Tooltip } from '../components/Tooltip';
 import { PaymentModal } from '../components/PaymentModal';
+import { ProModeUnlockOverlay } from '../components/ProModeUnlockOverlay';
 import { ProModeManager } from '../lib/pro-mode';
 
 
@@ -261,6 +262,15 @@ export default function Home() {
     localStorage.setItem('alby-lsp-pro-mode', 'true');
   };
 
+  // Check if current channel size requires Pro Mode
+  const requiresProMode = (channelSize: number) => {
+    return channelSize >= 3000000; // 3M sats and above
+  };
+
+  const shouldShowProModeOverlay = () => {
+    return !proMode && requiresProMode(selectedChannelSize);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -372,20 +382,27 @@ export default function Home() {
             </div>
           )}
           
-          <PriceTable 
-            prices={prices} 
-            loading={false} 
-            lspMetadata={lspMetadata} 
-            selectedChannelSize={selectedChannelSize}
-            selectedCurrency={selectedCurrency}
-            lastUpdate={lastUpdate || undefined}
-            dataSource={dataSource}
-            dataSourceDescription={dataSourceDescription}
-            onRetry={handleRetryLSP}
-            onForceFetch={handleForceFetchLSP}
-            forceFetching={forceFetching}
-            proMode={proMode}
-          />
+          {shouldShowProModeOverlay() ? (
+            <ProModeUnlockOverlay
+              onProModeToggle={handleProModeToggle}
+              channelSize={selectedChannelSize}
+            />
+          ) : (
+            <PriceTable 
+              prices={prices} 
+              loading={false} 
+              lspMetadata={lspMetadata} 
+              selectedChannelSize={selectedChannelSize}
+              selectedCurrency={selectedCurrency}
+              lastUpdate={lastUpdate || undefined}
+              dataSource={dataSource}
+              dataSourceDescription={dataSourceDescription}
+              onRetry={handleRetryLSP}
+              onForceFetch={handleForceFetchLSP}
+              forceFetching={forceFetching}
+              proMode={proMode}
+            />
+          )}
         </div>
 
         {/* Action Buttons */}
