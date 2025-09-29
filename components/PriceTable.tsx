@@ -484,11 +484,6 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
                               <span className="text-gray-400">N/A</span>
                             )}
                           </div>
-                          {price.cached_timestamp && (
-                            <div className="text-xs text-gray-400">
-                              {new Date(price.cached_timestamp).toLocaleTimeString()}
-                            </div>
-                          )}
                         </div>
                       </td>
                     );
@@ -521,11 +516,6 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
                               {conversion.error && (
                                 <div className="text-gray-600 text-xs mt-1">
                                   {conversion.error}
-                                </div>
-                              )}
-                              {conversion.lastUpdated && (
-                                <div className="text-gray-400 text-xs mt-1">
-                                  {new Date(conversion.lastUpdated).toLocaleTimeString()}
                                 </div>
                               )}
                             </div>
