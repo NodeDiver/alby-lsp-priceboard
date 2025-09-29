@@ -192,8 +192,8 @@ function StatusBadge({ source, staleSeconds, errorCode, error, timestamp, live_f
         return (
           <div className="flex flex-col space-y-1">
             <div className="flex flex-col space-y-1">
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700" title={`Cached ${minutes}m ago`} aria-label={`Cached data, ${minutes} minutes old`}>
-                <span className="w-2 h-2 rounded-full bg-green-600 mr-1"></span>Cached
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-300 text-gray-700" title={`Cached ${minutes}m ago`} aria-label={`Cached data, ${minutes} minutes old`}>
+                <span className="w-2 h-2 rounded-full bg-green-700 mr-1"></span>Cached
               </span>
               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-300 text-gray-600" title={`Live fetch failed: ${live_fetch_error}`} aria-label={`Live fetch failed: ${live_fetch_error}`}>
                 <span className="w-2 h-2 rounded-full bg-gray-600 mr-1"></span>⚠️ bad status
@@ -216,8 +216,8 @@ function StatusBadge({ source, staleSeconds, errorCode, error, timestamp, live_f
       // Regular cached data without live fetch error
       return (
         <div className="flex flex-col space-y-1">
-          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-700" title={`Cached ${minutes}m ago`} aria-label={`Cached data, ${minutes} minutes old`}>
-            <span className="w-2 h-2 rounded-full bg-green-600 mr-1"></span>Cached
+          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-300 text-gray-700" title={`Cached ${minutes}m ago`} aria-label={`Cached data, ${minutes} minutes old`}>
+            <span className="w-2 h-2 rounded-full bg-green-700 mr-1"></span>Cached
           </span>
           {timestamp && (
             <span className="text-xs text-gray-500">
