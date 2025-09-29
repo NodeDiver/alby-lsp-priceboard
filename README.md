@@ -6,11 +6,36 @@ A real-time Lightning Service Provider (LSP) price comparison tool that helps us
 
 🌐 **Live Demo**: [https://alby-lsp-priceboard.vercel.app/](https://alby-lsp-priceboard.vercel.app/)
 
-## 📸 **Screenshot**
+## 📸 **Screenshots**
 
-![LSP Price Board Comparison](public/images/lsp-price-board-comparison.jpg)
+Menu: [v0.2](#v02) • [v0.1](#v01) • [v0.05](#v005)
 
-*Production LSP price comparison showing live pricing data across multiple channel sizes with dedicated public keys, historical data preservation, and robust error handling.*
+<details open>
+  <summary id="v02">v0.2</summary>
+
+  ![LSP Price Board v0.2](public/images/v0.2.png)
+
+  *Latest version with Pro Mode toggle, enhanced typography, improved UX, fixed hydration errors, and stable table layout.*
+
+</details>
+
+<details>
+  <summary id="v01">v0.1</summary>
+
+  ![LSP Price Board v0.1](public/images/v0.1.jpg)
+
+  *Production LSP price comparison showing live pricing data across multiple channel sizes with dedicated public keys, historical data preservation, and robust error handling.*
+
+</details>
+
+<details>
+  <summary id="v005">v0.05</summary>
+
+  ![LSP Price Board v0.05](public/images/v0.05.png)
+
+  *Early development version showing the initial working prototype.*
+
+</details>
 
 ## 🚀 **Latest Updates - Version 0.2.1 (September 2025)**
 
