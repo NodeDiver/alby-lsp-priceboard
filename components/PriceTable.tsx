@@ -384,11 +384,11 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
 
   return (
     <div className="overflow-x-auto bg-white rounded-lg shadow">
-      <table className="w-full border-collapse" role="table" aria-label="LSP Price Comparison">
+      <table className="w-full border-collapse table-fixed" role="table" aria-label="LSP Price Comparison">
         <thead>
           <tr className="bg-gray-50 border-b border-gray-200">
-            <th className="text-left p-4 text-lg font-semibold text-gray-700" scope="col">Provider</th>
-            <th className="text-center p-4 text-lg font-semibold text-gray-700" scope="col">
+            <th className="text-left p-4 text-lg font-semibold text-gray-700 w-2/3" scope="col">Provider</th>
+            <th className="text-center p-4 text-lg font-semibold text-gray-700 w-1/3" scope="col">
               Fee
             </th>
           </tr>

@@ -107,4 +107,4 @@ A human-readable list of tasks and improvements for the Alby LSP Price Board pro
 ---
 
 *Last Updated: September 19, 2025*  
-*Version 0.2 - Production Ready with Major UX & Readability Improvements*
+*Version 0.2.1 - Production Ready with Major UX & Readability Improvements*

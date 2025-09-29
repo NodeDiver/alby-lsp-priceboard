@@ -32,13 +32,17 @@ export default function Home() {
   const [forceFetching, setForceFetching] = useState<Record<string, boolean>>({});
   const [showNotification, setShowNotification] = useState(false);
   const [showApiSection, setShowApiSection] = useState(false);
-  const [proMode, setProMode] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('alby-lsp-pro-mode');
-      return saved === 'true';
+  const [proMode, setProMode] = useState<boolean>(false);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Handle hydration and localStorage initialization
+  useEffect(() => {
+    setIsHydrated(true);
+    const saved = localStorage.getItem('alby-lsp-pro-mode');
+    if (saved === 'true') {
+      setProMode(true);
     }
-    return false;
-  });
+  }, []);
 
   // Retry function for individual LSPs (non-blocking)
   const handleRetryLSP = async () => {
@@ -368,7 +372,7 @@ export default function Home() {
           </div>
           
           <div className="flex items-center space-x-4">
-            {proMode && (
+            {isHydrated && proMode && (
               <button
                 onClick={handleRefresh}
                 disabled={loading}
@@ -382,7 +386,7 @@ export default function Home() {
               </button>
             )}
             
-            {proMode && (
+            {isHydrated && proMode && (
               <button
                 onClick={() => window.open('/api/debug', '_blank')}
                 className="px-2.5 py-1 text-sm bg-gray-600 text-white rounded-md hover:bg-gray-700 animate-in fade-in duration-300 ease-out"
@@ -398,17 +402,18 @@ export default function Home() {
             <div className="flex items-center space-x-2">
               <span className="text-sm font-medium text-gray-700">Pro Mode 💪</span>
               <button
-                onClick={handleProModeToggle}
+                onClick={isHydrated ? handleProModeToggle : undefined}
+                disabled={!isHydrated}
                 className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 ${
-                  proMode ? 'bg-gray-700' : 'bg-gray-200'
-                }`}
+                  isHydrated && proMode ? 'bg-gray-700' : 'bg-gray-200'
+                } ${!isHydrated ? 'opacity-50 cursor-not-allowed' : ''}`}
                 role="switch"
-                aria-checked={proMode}
+                aria-checked={isHydrated ? proMode : false}
                 aria-label="Toggle Pro Mode"
               >
                 <span
                   className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                    proMode ? 'translate-x-6' : 'translate-x-1'
+                    isHydrated && proMode ? 'translate-x-6' : 'translate-x-1'
                   }`}
                 />
               </button>
@@ -590,7 +595,7 @@ export default function Home() {
         <footer className="mt-12 py-6 border-t border-gray-200 bg-white">
           <div className="text-center">
             <p className="text-base text-gray-500">
-              Alby LSP Price Board v0.2 • Open Source Lightning Service Provider Comparison Tool
+              Alby LSP Price Board v0.2.1 • Open Source Lightning Service Provider Comparison Tool
             </p>
             <p className="text-sm text-gray-400 mt-1">
               Built with Next.js • Data from LSPS1 Protocol • Updated September 2025
