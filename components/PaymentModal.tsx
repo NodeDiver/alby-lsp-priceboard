@@ -106,14 +106,6 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             <ul className="space-y-2 text-sm text-gray-600">
               <li className="flex items-center">
                 <span className="text-green-500 mr-2">✓</span>
-                Historical data beyond 7 days (coming soon)
-              </li>
-              <li className="flex items-center">
-                <span className="text-green-500 mr-2">✓</span>
-                Advanced filtering and export (coming soon)
-              </li>
-              <li className="flex items-center">
-                <span className="text-green-500 mr-2">✓</span>
                 Large channel sizes (3M-10M sats)
               </li>
               <li className="flex items-center">
@@ -122,11 +114,19 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               </li>
               <li className="flex items-center">
                 <span className="text-green-500 mr-2">✓</span>
+                Historical data beyond 7 days (coming soon)
+              </li>
+              <li className="flex items-center">
+                <span className="text-green-500 mr-2">✓</span>
+                Advanced filtering and export (coming soon)
+              </li>
+              <li className="flex items-center">
+                <span className="text-green-500 mr-2">✓</span>
                 Direct admin support notifications (coming soon)
               </li>
               <li className="flex items-center">
                 <span className="text-green-500 mr-2">✓</span>
-                Unlimited API access
+                Unlimited API access (coming soon)
               </li>
             </ul>
           </div>

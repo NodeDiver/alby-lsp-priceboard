@@ -268,7 +268,7 @@ export default function Home() {
   };
 
   const shouldShowProModeOverlay = () => {
-    return !proMode && requiresProMode(selectedChannelSize);
+    return isHydrated && !proMode && requiresProMode(selectedChannelSize);
   };
 
   return (
@@ -382,7 +382,22 @@ export default function Home() {
             </div>
           )}
           
-          {shouldShowProModeOverlay() ? (
+          {!isHydrated ? (
+            <PriceTable 
+              prices={prices} 
+              loading={false} 
+              lspMetadata={lspMetadata} 
+              selectedChannelSize={selectedChannelSize}
+              selectedCurrency={selectedCurrency}
+              lastUpdate={lastUpdate || undefined}
+              dataSource={dataSource}
+              dataSourceDescription={dataSourceDescription}
+              onRetry={handleRetryLSP}
+              onForceFetch={handleForceFetchLSP}
+              forceFetching={forceFetching}
+              proMode={proMode}
+            />
+          ) : shouldShowProModeOverlay() ? (
             <ProModeUnlockOverlay
               onProModeToggle={handleProModeToggle}
               channelSize={selectedChannelSize}
