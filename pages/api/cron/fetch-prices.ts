@@ -12,7 +12,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     // Fetch prices for multiple channel sizes
-    const channelSizes = [1000000, 2000000, 5000000, 10000000]; // 1M, 2M, 5M, 10M
+    const channelSizes = [
+      1000000, 2000000, 3000000, 4000000, 5000000, 
+      6000000, 7000000, 8000000, 9000000, 10000000
+    ]; // 1M, 2M, 3M, 4M, 5M, 6M, 7M, 8M, 9M, 10M
     const allPrices = [];
     
     for (const channelSize of channelSizes) {
@@ -24,7 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Return success response
     res.status(200).json({
       success: true,
-      message: 'Prices fetched and saved successfully for multiple channel sizes',
+      message: 'Prices fetched and saved successfully for all channel sizes (1M-10M)',
       count: allPrices.length,
       channelSizes,
       timestamp: new Date().toISOString(),
