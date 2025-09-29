@@ -1,8 +1,8 @@
-# Alby LSP Price Board v0.1
+# Alby LSP Price Board v0.2
 
 A real-time Lightning Service Provider (LSP) price comparison tool that helps users make informed decisions when opening Lightning channels.
 
-✅ **PRODUCTION READY v0.1**: Successfully implemented LSPS1 protocol with live pricing data from multiple LSPs. Smart caching system ensures data persistence and optimal user experience with improved UI clarity.
+✅ **PRODUCTION READY v0.2**: Successfully implemented LSPS1 protocol with live pricing data from multiple LSPs. Smart caching system ensures data persistence and optimal user experience with major UX and readability improvements.
 
 🌐 **Live Demo**: [https://alby-lsp-priceboard.vercel.app/](https://alby-lsp-priceboard.vercel.app/)
 
@@ -12,7 +12,18 @@ A real-time Lightning Service Provider (LSP) price comparison tool that helps us
 
 *Production LSP price comparison showing live pricing data across multiple channel sizes with dedicated public keys, historical data preservation, and robust error handling.*
 
-## 🚀 **Latest Updates - Version 0.1 (September 2025)**
+## 🚀 **Latest Updates - Version 0.2 (September 2025)**
+
+### Major UX & Readability Improvements
+- **✅ Pro Mode Toggle System**: Added Pro Mode 💪 toggle with conditional button visibility for advanced features
+- **✅ Comprehensive Typography Overhaul**: Upgraded all text sizes and hierarchy for better readability and professional appearance
+- **✅ Enhanced Price Display**: Made sats prices `text-2xl font-bold` and fiat prices `text-lg font-semibold` for better visual hierarchy
+- **✅ Timestamp Display Improvements**: Shows full date with hoverable clock tooltips for better time information
+- **✅ UI Polish & Consistency**: Fixed button sizing, improved legend styling, enhanced color consistency
+- **✅ Animation Enhancements**: Added professional fade-in animations for Pro Mode buttons
+- **✅ UI Component Cleanup**: Removed unwanted tooltips and hover effects
+
+## 🚀 **Previous Updates - Version 0.1 (September 2025)**
 - **✅ Historical Data Preservation**: Old data archived before new fetches, never lost
 - **✅ Error Protection**: Failed fetches never overwrite good cached data  
 - **✅ Dedicated LSP Public Keys**: Separate node IDs for Flashsats and Megalith

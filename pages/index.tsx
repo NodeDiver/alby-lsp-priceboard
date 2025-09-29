@@ -590,7 +590,7 @@ export default function Home() {
         <footer className="mt-12 py-6 border-t border-gray-200 bg-white">
           <div className="text-center">
             <p className="text-base text-gray-500">
-              Alby LSP Price Board v0.1 • Open Source Lightning Service Provider Comparison Tool
+              Alby LSP Price Board v0.2 • Open Source Lightning Service Provider Comparison Tool
             </p>
             <p className="text-sm text-gray-400 mt-1">
               Built with Next.js • Data from LSPS1 Protocol • Updated September 2025

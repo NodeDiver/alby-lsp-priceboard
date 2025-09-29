@@ -5,7 +5,6 @@ A human-readable list of tasks and improvements for the Alby LSP Price Board pro
 ## 🎯 Future Enhancements
 
 ### UI and UX Improvements
-- **✅ Timestamp consistency**: Ensure "Last" timestamp matches the fee column timestamp display
 - **Dark mode**: Add dark/light theme toggle for better user experience
 - **Routing fees display**: Add routing fees for each LSP to provide complete cost comparison
 - **Smart force button system**: Hide force buttons behind a single unlock button (left of Technical Details, right of Refresh Prices)
@@ -32,7 +31,38 @@ A human-readable list of tasks and improvements for the Alby LSP Price Board pro
 - **Immortan solution** (optional): For LSPs denying price requests - randomized node ID system
   - References: [standardsats/immortan](https://github.com/standardsats/immortan), [nbd-wtf/immortan](https://github.com/nbd-wtf/immortan)
 
-## ✅ Recently Completed - Version 0.1 (September 2025)
+## ✅ Recently Completed - Version 0.2 (September 2025)
+
+### Major UX & Readability Improvements
+- **✅ Pro Mode Toggle System**: Added Pro Mode 💪 toggle with conditional button visibility (Refresh Prices, Technical Details, Retry, Force buttons only show when Pro Mode is ON)
+- **✅ Comprehensive Typography Overhaul**: Upgraded all text sizes and hierarchy for better readability and professional appearance
+  - Main title: `text-4xl font-bold` (more prominent)
+  - Subtitle: `text-xl` (better hierarchy)
+  - Table headers: `text-lg font-semibold` (matches large prices)
+  - LSP names: `text-lg font-semibold` (clear provider names)
+  - Status badges: `text-sm font-medium` (much more readable)
+  - Error messages: `text-base font-medium` (better visibility)
+  - API documentation: `text-base` (improved readability)
+  - Small details: `text-sm` (less cramped)
+- **✅ Enhanced Price Display**: Made sats prices `text-2xl font-bold` and fiat prices `text-lg font-semibold` for better visual hierarchy
+- **✅ Timestamp Display Improvements**: 
+  - Shows full date with neutral clock emoji (🕒)
+  - Hover over clock shows time in tooltip
+  - Consistent formatting across all timestamp displays
+- **✅ UI Polish & Consistency**:
+  - Fixed button sizing to prevent line movement when Pro Mode toggles
+  - Updated "Cached" legend styling to match table badges
+  - Improved legend layout with descriptions next to badges
+  - Enhanced "Report Issue" button color (`bg-slate-700`) for better theme consistency
+  - Removed unwanted tooltip hover behavior from "Fee" column header
+- **✅ Animation Enhancements**: Added professional fade-in animations for Pro Mode buttons
+- **✅ Color Theme Consistency**: Ensured all elements follow the gray/black/white color scheme
+
+### Technical Improvements
+- **✅ Timestamp Consistency**: Fixed timestamp display consistency between "Last" column and fee column
+- **✅ UI Component Cleanup**: Removed unnecessary tooltips and hover effects that disrupted user experience
+
+## ✅ Previously Completed - Version 0.1 (September 2025)
 
 ### Major Improvements
 - **✅ Database Cleanup**: Removed duplicate `lib/db-improved.ts` and consolidated everything into `lib/db.ts`
@@ -77,4 +107,4 @@ A human-readable list of tasks and improvements for the Alby LSP Price Board pro
 ---
 
 *Last Updated: September 19, 2025*  
-*Version 0.1 - Production Ready with UI Clarity Improvements*
+*Version 0.2 - Production Ready with Major UX & Readability Improvements*
