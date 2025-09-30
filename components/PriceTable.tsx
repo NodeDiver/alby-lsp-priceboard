@@ -490,6 +490,28 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
                   
                   // Only show error if there's no price data at all
                   if (price.error && price.price === 0) {
+                    // Special handling for CHANNEL_SIZE_TOO_SMALL
+                    if (price.error_code === 'CHANNEL_SIZE_TOO_SMALL') {
+                      return (
+                        <td className="text-center p-4 text-gray-600">
+                          <div className="text-sm">
+                            Channels from 2M+
+                          </div>
+                        </td>
+                      );
+                    }
+                    
+                    // Special handling for LNServer Wave 1M channels (they don't support this size)
+                    if (price.lsp_id === 'lnserver' && selectedChannelSize === 1000000) {
+                      return (
+                        <td className="text-center p-4 text-gray-600">
+                          <div className="text-sm">
+                            Channels from 2M+
+                          </div>
+                        </td>
+                      );
+                    }
+                    
                     return (
                       <td className="text-center p-4 text-gray-700">
                         Error
