@@ -10,6 +10,24 @@ const formatSats = (sats: number) =>
   sats >= 1_000_000 ? `${(sats / 1_000_000).toFixed(1)}M` :
   sats >= 1_000 ? `${(sats / 1_000).toFixed(1)}K` : `${sats}`;
 
+// Helper function to format time ago
+const formatTimeAgo = (timestamp: string): string => {
+  const now = new Date();
+  const then = new Date(timestamp);
+  const diffMs = now.getTime() - then.getTime();
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays > 0) {
+    return `Data fetched ${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  } else if (diffHours > 0) {
+    return `Data fetched ${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+  } else {
+    return `Data fetched ${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
+  }
+};
+
 export interface DisplayPrice {
   lsp_id: string;
   lsp_name: string;
@@ -175,9 +193,11 @@ function StatusBadge({ source, staleSeconds, errorCode, error, timestamp, live_f
     case 'live':
       return (
         <div className="flex flex-col space-y-1">
-          <span className="inline-flex items-center px-2 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800" aria-label="Live data - fresh from LSP">
-            <span className="w-2 h-2 rounded-full bg-green-500 mr-1"></span>Live
-          </span>
+          <Tooltip text={timestamp ? formatTimeAgo(timestamp) : "Fresh data from LSP"}>
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800 cursor-help" aria-label="Live data - fresh from LSP">
+              <span className="w-2 h-2 rounded-full bg-green-500 mr-1"></span>Live
+            </span>
+          </Tooltip>
           {timestamp && (
             <span className="text-xs text-gray-500">
               Last: {new Date(timestamp).toLocaleDateString()} <span title={new Date(timestamp).toLocaleTimeString()} className="cursor-pointer">🕒</span>
@@ -217,9 +237,11 @@ function StatusBadge({ source, staleSeconds, errorCode, error, timestamp, live_f
       // Regular cached data without live fetch error
       return (
         <div className="flex flex-col space-y-1">
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-sm font-medium bg-gray-300 text-gray-700" title={`Cached ${minutes}m ago`} aria-label={`Cached data, ${minutes} minutes old`}>
-            <span className="w-2 h-2 rounded-full bg-green-700 mr-1"></span>Cached
-          </span>
+          <Tooltip text={timestamp ? formatTimeAgo(timestamp) : "Previously fetched data"}>
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-sm font-medium bg-gray-300 text-gray-700 cursor-help" aria-label={`Cached data, ${minutes} minutes old`}>
+              <span className="w-2 h-2 rounded-full bg-green-700 mr-1"></span>Cached
+            </span>
+          </Tooltip>
           {timestamp && (
             <span className="text-xs text-gray-500">
               Last: {new Date(timestamp).toLocaleDateString()} <span title={new Date(timestamp).toLocaleTimeString()} className="cursor-pointer">🕒</span>
@@ -387,13 +409,18 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
       <table className="w-full border-collapse table-fixed" role="table" aria-label="LSP Price Comparison">
         <thead>
           <tr className="bg-gray-50 border-b border-gray-200">
-            <th className="text-left p-4 text-lg font-semibold text-gray-700 w-2/3" scope="col">Provider</th>
+            <th className="text-left p-4 text-lg font-semibold text-gray-700 w-2/3" scope="col">
+              <Tooltip text="Lightning Service Provider - A company that opens and manages Lightning Network channels for you">
+                Provider
+              </Tooltip>
+            </th>
             <th className="text-center p-4 text-lg font-semibold text-gray-700 w-1/3" scope="col">
-              Fee
+              <Tooltip text="Total cost to open a Lightning channel of this size, including all LSP fees and charges">
+                Fee
+              </Tooltip>
             </th>
           </tr>
-        </thead>
-        <tbody>
+        </thead>        <tbody>
           {lsps.map(lspId => {
             const lspPrices = prices.filter(p => p.lsp_id === lspId);
             const lspName = lspPrices[0]?.lsp_name || lspId;
@@ -494,9 +521,11 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
                     if (price.error_code === 'CHANNEL_SIZE_TOO_SMALL') {
                       return (
                         <td className="text-center p-4 text-gray-600">
-                          <div className="text-sm">
-                            Channels from 2M+
-                          </div>
+                          <Tooltip text="This LSP only accepts channel opening requests for channels that are at least 2 million satoshis in size">
+                            <div className="text-sm cursor-help">
+                              Channels from 2M+
+                            </div>
+                          </Tooltip>
                         </td>
                       );
                     }
@@ -505,9 +534,11 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
                     if (price.lsp_id === 'lnserver' && selectedChannelSize === 1000000) {
                       return (
                         <td className="text-center p-4 text-gray-600">
-                          <div className="text-sm">
-                            Channels from 2M+
-                          </div>
+                          <Tooltip text="This LSP only accepts channel opening requests for channels that are at least 2 million satoshis in size">
+                            <div className="text-sm cursor-help">
+                              Channels from 2M+
+                            </div>
+                          </Tooltip>
                         </td>
                       );
                     }
