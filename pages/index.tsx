@@ -282,7 +282,7 @@ export default function Home() {
                 Alby LSP Price Board
               </h1>
               <p className="mt-2 text-xl text-gray-600">
-                Compare how much different Lightning Service Providers charge to open an inbound Lightning channel
+                Compare how much different lightning Service Providers charge to open an inbound lightning channel
               </p>
             </div>
           </div>
@@ -315,12 +315,12 @@ export default function Home() {
             <div className="flex justify-between items-center">
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">
-                  <Tooltip text="Lightning Service Providers - companies that open Bitcoin Lightning channels for you">
+                  <Tooltip text="lightning Service Providers - companies that open Bitcoin lightning channels for you">
                     LSP
                   </Tooltip> Price Comparison
                 </h2>
                 <p className="mt-1 text-sm text-gray-600">
-                  Compare Lightning Service Provider fees for different channel sizes
+                  Compare lightning Service Provider fees for different channel sizes
                 </p>
               </div>
               
@@ -328,7 +328,7 @@ export default function Home() {
                                         <div className="flex items-center space-x-4">
                             <div className="flex items-center space-x-2">
                               <label htmlFor="channelSize" className="text-sm font-medium text-gray-700">
-                                <Tooltip text="How much Bitcoin capacity you want in your Lightning channel">
+                                <Tooltip text="How much Bitcoin capacity you want in your lightning channel">
                                   Channel Size:
                                 </Tooltip>
                               </label>
@@ -672,7 +672,7 @@ export default function Home() {
         <footer className="mt-12 py-6 border-t border-gray-200 bg-white">
           <div className="text-center">
             <p className="text-base text-gray-500">
-              Alby LSP Price Board v0.2.1 • Open Source Lightning Service Provider Comparison Tool
+              Alby LSP Price Board v0.2.1 • Open Source lightning Service Provider Comparison Tool
             </p>
             <p className="text-sm text-gray-400 mt-1">
               Built with Next.js • Data from LSPS1 Protocol • Updated September 2025

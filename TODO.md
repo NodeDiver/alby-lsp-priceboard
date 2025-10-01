@@ -82,7 +82,7 @@ A human-readable list of tasks and improvements for the Alby LSP Price Board pro
 - **✅ Build Configuration**: Documented TypeScript build setting (kept disabled for Next.js 15 compatibility)
 
 ### UI Clarity Improvements
-- **✅ Clear Purpose Statement**: Added explanatory subtitle about Lightning Service Providers and channel opening
+- **✅ Clear Purpose Statement**: Added explanatory subtitle about lightning Service Providers and channel opening
 - **✅ Essential Tooltips**: Hover explanations for LSP, Channel Size, and Fee terms
 - **✅ Duplicate Pricing Fix**: Removed duplicate USD pricing display, kept only clean USD below sats
 - **✅ Collapsed API Section**: Developer-focused content hidden by default with accordion

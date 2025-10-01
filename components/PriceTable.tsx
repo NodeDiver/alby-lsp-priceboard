@@ -368,7 +368,7 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
         </div>
         <h3 className="text-lg font-medium text-gray-900 mb-2">Getting prices from providers...</h3>
         <p className="text-sm text-gray-500 mb-6">
-          We&apos;re fetching the latest channel opening fees from Lightning Service Providers.
+          We&apos;re fetching the latest channel opening fees from lightning Service Providers.
         </p>
         <div className="flex justify-center space-x-4">
           <button 
@@ -410,12 +410,12 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
         <thead>
           <tr className="bg-gray-50 border-b border-gray-200">
             <th className="text-left p-4 text-lg font-semibold text-gray-700 w-2/3" scope="col">
-              <Tooltip text="Lightning Service Provider - A company that opens and manages Lightning Network channels for you">
+              <Tooltip text="lightning Service Provider - A company that opens lightning network channels for you">
                 Provider
               </Tooltip>
             </th>
             <th className="text-center p-4 text-lg font-semibold text-gray-700 w-1/3" scope="col">
-              <Tooltip text="Total cost to open a Lightning channel of this size, including all LSP fees and charges">
+              <Tooltip text="Total cost to open a lightning channel of this size, including all LSP fees and charges">
                 Fee
               </Tooltip>
             </th>

@@ -1,6 +1,6 @@
 # LSP Peering Information
 
-This document contains the raw peering information for Lightning Service Providers (LSPs) used in the Alby LSP Price Board.
+This document contains the raw peering information for lightning Service Providers (LSPs) used in the Alby LSP Price Board.
 
 ## Olympus by ZEUS
 ```

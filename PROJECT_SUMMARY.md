@@ -3,7 +3,7 @@
 Last reviewed: 2025-09 (revised) • Repository snapshot analyzed locally
 
 ## What This Project Is
-A real-time Lightning Service Provider (LSP) price comparison tool that fetches per-LSP channel-open pricing via LSPS1-compatible endpoints, stores snapshots in Vercel KV (Upstash Redis-compatible), and exposes:
+A real-time lightning Service Provider (LSP) price comparison tool that fetches per-LSP channel-open pricing via LSPS1-compatible endpoints, stores snapshots in Vercel KV (Upstash Redis-compatible), and exposes:
 - A public read-only API (`/api/prices`) for cached snapshots.
 - A UI-focused API (`/api/prices-ui`) with smart caching and optional background refresh/fetch-bypass.
 - A web UI (Next.js) to compare fees across supported LSPs and channel sizes.
@@ -28,7 +28,7 @@ Primary goals:
   - `GET /api/lsp-metadata` — fetches LSP metadata (including icons) with optional KV cache.
   - Debug/Inspector endpoints (`/api/debug*`, `/api/db-*`, `/api/rate-limits*`, cron job endpoint).
 - Frontend components:
-  - `PriceTable` with per-LSP status badges, retry and per-LSP force-fetch buttons, currency conversion using Alby Lightning Tools.
+  - `PriceTable` with per-LSP status badges, retry and per-LSP force-fetch buttons, currency conversion using Alby lightning Tools.
   - Channel size and currency selectors; non-blocking UI while refreshing.
 - Deployment support:
   - Vercel config with daily cron for multi-size price fetch and function timeout.

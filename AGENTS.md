@@ -1,7 +1,7 @@
 # Project Agents & Contributors
 
 ## Project Overview
-**Alby LSP Price Board** - A real-time Lightning Service Provider price comparison tool that helps users make informed decisions when opening Lightning channels.
+**Alby LSP Price Board** - A real-time lightning Service Provider price comparison tool that helps users make informed decisions when opening lightning channels.
 
 ## Primary Contributors
 
@@ -27,7 +27,7 @@
 - **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
 - **Backend**: Next.js API Routes, Vercel KV (Redis)
 - **Deployment**: Vercel (recommended), Docker support
-- **External APIs**: Alby Lightning Tools, LSPS1 Protocol
+- **External APIs**: Alby lightning Tools, LSPS1 Protocol
 - **LSPs**: 
   - 🟢 **LIVE DATA**: Olympus, LNServer Wave, Flashsats (LSPS1 protocol with dedicated public keys)
   - 🟡 **SMART FALLBACK**: Megalith (intelligent caching and error handling)

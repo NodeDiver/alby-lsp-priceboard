@@ -79,7 +79,7 @@ export async function convertSatsToCurrency(
       };
     }
 
-    // Fetch fresh rate from Alby Lightning Tools
+    // Fetch fresh rate from Alby lightning Tools
     const fiatValue = await fiat.getFiatValue({ 
       satoshi: sats, 
       currency: code 

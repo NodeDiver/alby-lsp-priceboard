@@ -1,6 +1,6 @@
 # Alby LSP Price Board v0.2.1
 
-A real-time Lightning Service Provider (LSP) price comparison tool that helps users make informed decisions when opening Lightning channels.
+A real-time lightning Service Provider (LSP) price comparison tool that helps users make informed decisions when opening lightning channels.
 
 ✅ **PRODUCTION READY v0.2.1**: Successfully implemented LSPS1 protocol with live pricing data from multiple LSPs. Smart caching system ensures data persistence and optimal user experience with major UX and readability improvements.
 
@@ -108,15 +108,15 @@ This project addresses [Alby Hub Issue #1001](https://github.com/getAlby/hub/iss
 - **Tailwind CSS** - Utility-first styling
 - **Vercel KV** - Redis-compatible database for price storage
 - **Vercel Cron Jobs** - Automated price fetching daily
-- **Alby Lightning Tools** - Real-time currency conversion
+- **Alby lightning Tools** - Real-time currency conversion
 - **LSPS1 Protocol** - Standard LSP communication protocol
 
 ## Supported LSPs
 
-- **Olympus** - Lightning infrastructure provider
-- **LNServer Wave** - Professional Lightning services
-- **Megalith** - Enterprise Lightning solutions
-- **Flashsats** - Lightning channel services
+- **Olympus** - lightning infrastructure provider
+- **LNServer Wave** - Professional lightning services
+- **Megalith** - Enterprise lightning solutions
+- **Flashsats** - lightning channel services
 
 *More LSPs can be easily added by extending the configuration.*
 
@@ -124,7 +124,7 @@ This project addresses [Alby Hub Issue #1001](https://github.com/getAlby/hub/iss
 
 1. **Automated Data Collection**: Vercel Cron Jobs fetch prices from all LSPs daily
 2. **Real-time Storage**: Latest prices are stored in Vercel KV (Redis-compatible database)
-3. **Live Conversion**: Prices are converted to multiple currencies using Alby's Lightning Tools
+3. **Live Conversion**: Prices are converted to multiple currencies using Alby's lightning Tools
 4. **Public API**: Other applications can access current prices via REST API
 5. **User Interface**: Clean, responsive table showing price comparisons with filtering options
 

@@ -137,7 +137,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center"
           >
             <span className="mr-2">⚡</span>
-            Pay 500 sats with Lightning
+            Pay 500 sats with lightning
           </button>
 
           {/* Cancel Button */}

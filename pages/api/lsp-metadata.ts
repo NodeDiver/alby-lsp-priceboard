@@ -86,7 +86,7 @@ async function fetchSingleLspMetaSafe(lsp: LSP): Promise<LspMetaResponse> {
     active: lsp.active,
     metadata: {
       name: lsp.name,
-      description: `${lsp.name} Lightning Service Provider`,
+      description: `${lsp.name} lightning Service Provider`,
       icon: null,
       logo: null,
       website: safeWebsiteFromBase(lsp.url),
@@ -133,7 +133,7 @@ async function fetchLspMetaLive(lsp: LSP): Promise<{ ok: true; payload: LspMetaR
       active: lsp.active,
       metadata: {
         name: data.name ?? lsp.name,
-        description: data.description ?? `${lsp.name} Lightning Service Provider`,
+        description: data.description ?? `${lsp.name} lightning Service Provider`,
         icon: data.icon ?? data.logo ?? null,
         logo: data.logo ?? data.icon ?? null,
         website: data.website ?? safeWebsiteFromBase(lsp.url),
