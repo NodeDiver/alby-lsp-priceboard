@@ -13,7 +13,7 @@ export const Tooltip: React.FC<TooltipProps> = ({ text, children, className = ''
   const handleMouseEnter = (e: React.MouseEvent) => {
     const rect = e.currentTarget.getBoundingClientRect();
     setPosition({
-      top: rect.top - 10, // 10px above the element
+      top: rect.top - 80, // More space above the element to avoid mouse interference
       left: rect.left + rect.width / 2 - 128 // 128px = half of w-64 (256px)
     });
     setIsVisible(true);
@@ -30,7 +30,7 @@ export const Tooltip: React.FC<TooltipProps> = ({ text, children, className = ''
       </div>
       {isVisible && (
         <div 
-          className="fixed px-4 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-[9999] w-64"
+          className="fixed px-4 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-[9999] w-64 pointer-events-none"
           style={{
             top: `${position.top}px`,
             left: `${Math.max(10, Math.min(position.left, window.innerWidth - 266))}px` // Keep within viewport
