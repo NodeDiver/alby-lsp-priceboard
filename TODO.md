@@ -25,6 +25,7 @@ A human-readable list of tasks and improvements for the Alby LSP Price Board pro
 - **Premium features**: Advanced filtering, alerts, and historical insights
 
 ### Technical Infrastructure
+- **Offline/Online status detection**: Implement network connectivity monitoring and user notification system
 - **Randomized node IDs**: System for using random node IDs that peer with LSPs first
 - **IP randomization**: Investigate methods for randomizing IP addresses and optimal frequency
 - **Advanced peering**: Automated peering system before price requests
