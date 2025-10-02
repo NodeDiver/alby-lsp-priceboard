@@ -6,6 +6,7 @@ import { Tooltip } from '../components/Tooltip';
 import { PaymentModal } from '../components/PaymentModal';
 import { ProModeUnlockOverlay } from '../components/ProModeUnlockOverlay';
 import { ProModeManager } from '../lib/pro-mode';
+import { SimpleHealthStatus } from '../lib/simple-health';
 
 
 export default function Home() {
@@ -38,6 +39,7 @@ export default function Home() {
   const [proMode, setProMode] = useState<boolean>(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [healthStatuses, setHealthStatuses] = useState<SimpleHealthStatus[]>([]);
 
   // Handle hydration and localStorage initialization
   useEffect(() => {
@@ -155,10 +157,26 @@ export default function Home() {
     }
   };
 
+  // Fetch LSP health statuses
+  const fetchHealthStatuses = async () => {
+    try {
+      const response = await fetch('/api/health/lsp-status');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          setHealthStatuses(data.data);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching health statuses:', err);
+    }
+  };
+
   // Fetch prices on component mount
   useEffect(() => {
     fetchPrices();
     fetchLSPData();
+    fetchHealthStatuses();
     
     // Cleanup function to abort any in-flight requests
     return () => {
@@ -396,6 +414,7 @@ export default function Home() {
               onForceFetch={handleForceFetchLSP}
               forceFetching={forceFetching}
               proMode={proMode}
+              healthStatuses={healthStatuses}
             />
           ) : shouldShowProModeOverlay() ? (
             <ProModeUnlockOverlay
@@ -416,6 +435,7 @@ export default function Home() {
               onForceFetch={handleForceFetchLSP}
               forceFetching={forceFetching}
               proMode={proMode}
+              healthStatuses={healthStatuses}
             />
           )}
         </div>

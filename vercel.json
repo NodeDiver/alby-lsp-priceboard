@@ -3,11 +3,18 @@
     {
       "path": "/api/cron/fetch-prices",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/health-check",
+      "schedule": "*/30 * * * *"
     }
   ],
   "functions": {
     "pages/api/cron/fetch-prices.ts": {
       "maxDuration": 120
+    },
+    "pages/api/cron/health-check.ts": {
+      "maxDuration": 60
     }
   },
   "buildCommand": "npm run build",

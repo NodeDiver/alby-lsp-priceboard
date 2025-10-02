@@ -53,6 +53,7 @@ export const ProModeUnlockOverlay: React.FC<ProModeUnlockOverlayProps> = ({
               className="relative inline-flex h-8 w-14 items-center rounded-full bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 hover:bg-gray-300"
               role="switch"
               aria-label="Toggle Pro Mode"
+              aria-checked="false"
             >
               <span className="inline-block h-6 w-6 transform rounded-full bg-white transition-transform translate-x-1" />
             </button>

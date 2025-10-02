@@ -3,6 +3,8 @@ import Image from 'next/image';
 import { getLSPById } from '../lib/lsps';
 import { convertSatsToCurrency, CurrencyConversion } from '../lib/currency';
 import { Tooltip } from './Tooltip';
+import { LSPHealthIndicator } from './LSPHealthIndicator';
+import { SimpleHealthStatus } from '../lib/simple-health';
 
 // Helper functions for unit conversion
 const msatToSat = (msat: number) => Math.round(msat / 1000);
@@ -71,6 +73,7 @@ interface PriceTableProps {
   onForceFetch?: (lspId: string) => void;
   forceFetching?: Record<string, boolean>;
   proMode?: boolean;
+  healthStatuses?: SimpleHealthStatus[];
 }
 
 // Retry Button Component
@@ -308,7 +311,7 @@ function LSPIcon({ lspName, lspData }: { lspName: string; lspData?: LSPMetadata 
 }
 
 
-export function PriceTable({ prices, loading = false, lspMetadata = [], selectedChannelSize = 1000000, selectedCurrency = 'usd', onRetry, onForceFetch, forceFetching = {}, proMode = false }: PriceTableProps) {
+export function PriceTable({ prices, loading = false, lspMetadata = [], selectedChannelSize = 1000000, selectedCurrency = 'usd', onRetry, onForceFetch, forceFetching = {}, proMode = false, healthStatuses = [] }: PriceTableProps) {
   const [currencyConversions, setCurrencyConversions] = useState<{ [key: string]: CurrencyConversion }>({});
   const [conversionLoading, setConversionLoading] = useState(false);
 
@@ -426,11 +429,14 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
             const lspName = lspPrices[0]?.lsp_name || lspId;
             // Use metadata if available, otherwise fall back to static data
             const lspData = lspMetadata.find(lsp => lsp.id === lspId) || getLSPById(lspId);
+            // Get health status for this LSP
+            const healthStatus = healthStatuses.find(h => h.lsp_id === lspId);
             
             return (
               <tr key={lspId} className="border-b border-gray-100 hover:bg-gray-50">
                 <td className="p-4 text-lg font-semibold text-gray-900">
                   <div className="flex items-center space-x-3">
+                    <LSPHealthIndicator healthStatus={healthStatus} />
                     <LSPIcon 
                       lspName={lspName} 
                       lspData={lspData}
@@ -517,21 +523,9 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
                   
                   // Only show error if there's no price data at all
                   if (price.error && price.price === 0) {
-                    // Special handling for CHANNEL_SIZE_TOO_SMALL
-                    if (price.error_code === 'CHANNEL_SIZE_TOO_SMALL') {
-                      return (
-                        <td className="text-center p-4 text-gray-600">
-                          <Tooltip text="This LSP only accepts channel opening requests for channels that are at least 2 million satoshis in size">
-                            <div className="text-sm cursor-help">
-                              Channels from 2M+
-                            </div>
-                          </Tooltip>
-                        </td>
-                      );
-                    }
-                    
-                    // Special handling for LNServer Wave 1M channels (they don't support this size)
-                    if (price.lsp_id === 'lnserver' && selectedChannelSize === 1000000) {
+                    // Special handling for CHANNEL_SIZE_TOO_SMALL or LNServer Wave 1M channels
+                    if (price.error_code === 'CHANNEL_SIZE_TOO_SMALL' || 
+                        (price.lsp_id === 'lnserver' && selectedChannelSize === 1000000)) {
                       return (
                         <td className="text-center p-4 text-gray-600">
                           <Tooltip text="This LSP only accepts channel opening requests for channels that are at least 2 million satoshis in size">

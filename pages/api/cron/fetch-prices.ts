@@ -1,5 +1,4 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { fetchAndSavePrices } from '../../../lib/price-service';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Only allow POST requests (Vercel Cron Jobs use POST)
