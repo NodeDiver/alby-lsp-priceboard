@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { PriceTable, DisplayPrice } from '../components/PriceTable';
 import { LSP } from '../lib/lsps';
 import { COMMON_CURRENCIES, convertCurrencyToSats } from '../lib/currency';
@@ -22,7 +22,7 @@ export default function Home() {
   const [selectedCurrency, setSelectedCurrency] = usePersistentState<string>('alby-lsp-currency', 'usd');
   const [dataSource, setDataSource] = useState<string>('unknown');
   const [dataSourceDescription, setDataSourceDescription] = useState<string>('');
-  const [abortController, setAbortController] = useState<AbortController | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const [forceFetching, setForceFetching] = useState<Record<string, boolean>>({});
   const [showNotification, setShowNotification] = useState(false);
   const [showApiSection, setShowApiSection] = useState(false);
@@ -76,12 +76,12 @@ export default function Home() {
   // Fetch prices from API (non-blocking)
   const fetchPrices = async (channelSize: number = selectedChannelSize, fresh: boolean = false) => {
     // Cancel any in-flight request
-    if (abortController) {
-      abortController.abort();
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
     }
     
     const controller = new AbortController();
-    setAbortController(controller);
+    abortControllerRef.current = controller;
     
     try {
       setError(null);
@@ -127,7 +127,7 @@ export default function Home() {
       }
     } finally {
       setLoading(false);
-      setAbortController(null);
+      abortControllerRef.current = null;
     }
   };
 
@@ -186,8 +186,8 @@ export default function Home() {
     
     // Cleanup function to abort any in-flight requests
     return () => {
-      if (abortController) {
-        abortController.abort();
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
       window.removeEventListener('error', handleWebLNError);
     };
