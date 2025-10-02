@@ -7,6 +7,7 @@ import { PaymentModal } from '../components/PaymentModal';
 import { ProModeUnlockOverlay } from '../components/ProModeUnlockOverlay';
 import { ProModeManager } from '../lib/pro-mode';
 import { SimpleHealthStatus } from '../lib/simple-health';
+import { HistoricalDataGraph } from '../components/HistoricalDataGraph';
 
 
 export default function Home() {
@@ -428,6 +429,11 @@ export default function Home() {
               forceFetching={forceFetching}
               proMode={proMode}
               healthStatuses={healthStatuses}
+            />
+          ) : historicalData ? (
+            <HistoricalDataGraph 
+              channelSize={selectedChannelSize}
+              proMode={proMode}
             />
           ) : shouldShowProModeOverlay() ? (
             <ProModeUnlockOverlay
