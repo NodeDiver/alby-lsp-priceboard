@@ -515,31 +515,30 @@ export default function Home() {
                 />
               </button>
             </div>
+            
+            {/* Historical Data Toggle */}
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-medium text-gray-700">Historical Data 📊</span>
+              <button
+                onClick={isHydrated ? handleHistoricalDataToggle : undefined}
+                disabled={!isHydrated}
+                className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 ${
+                  isHydrated && historicalData ? 'bg-gray-700' : 'bg-gray-200'
+                } ${!isHydrated ? 'opacity-50 cursor-not-allowed' : ''}`}
+                role="switch"
+                aria-checked={isHydrated ? historicalData : false}
+                aria-label="Toggle Historical Data"
+              >
+                <span
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                    isHydrated && historicalData ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Historical Data Toggle */}
-        <div className="mt-4 flex justify-center">
-          <div className="flex items-center space-x-2">
-            <span className="text-sm font-medium text-gray-700">Historical Data</span>
-            <button
-              onClick={isHydrated ? handleHistoricalDataToggle : undefined}
-              disabled={!isHydrated}
-              className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 ${
-                isHydrated && historicalData ? 'bg-gray-700' : 'bg-gray-200'
-              } ${!isHydrated ? 'opacity-50 cursor-not-allowed' : ''}`}
-              role="switch"
-              aria-checked={isHydrated ? historicalData : false}
-              aria-label="Toggle Historical Data"
-            >
-              <span
-                className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
-                  isHydrated && historicalData ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
-          </div>
-        </div>
 
         {/* API Info - Collapsible */}
         <div className="mt-8 bg-white rounded-lg shadow">
