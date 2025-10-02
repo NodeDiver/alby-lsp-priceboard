@@ -41,7 +41,7 @@ export const ProModeUnlockOverlay: React.FC<ProModeUnlockOverlayProps> = ({
 
           {/* Description */}
           <p className="text-gray-600 mb-6">
-            Access channel sizes {formatChannelSize(channelSize)} and larger with Pro Mode
+            Access channel sizes 4M sats and larger with Pro Mode
           </p>
 
 

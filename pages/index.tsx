@@ -282,7 +282,7 @@ export default function Home() {
 
   // Check if current channel size requires Pro Mode
   const requiresProMode = (channelSize: number) => {
-    return channelSize >= 3000000; // 3M sats and above
+    return channelSize >= 4000000; // 4M sats and above
   };
 
   const shouldShowProModeOverlay = () => {
