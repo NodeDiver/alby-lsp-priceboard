@@ -36,13 +36,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const entryDate = new Date(entry.timestamp);
         return entryDate >= startDate && entryDate <= endDate;
       })
-      .map(entry => ({
-        timestamp: entry.timestamp,
-        lsp_id: entry.prices[0]?.lsp_id || 'unknown',
-        lsp_name: entry.prices[0]?.lsp_name || 'Unknown LSP',
-        total_fee_msat: entry.prices[0]?.total_fee_msat || 0,
-        channel_size: entry.channelSize
-      }))
+      .flatMap(entry => 
+        entry.prices.map(price => ({
+          timestamp: entry.timestamp,
+          lsp_id: price.lsp_id,
+          lsp_name: price.lsp_name,
+          total_fee_msat: price.total_fee_msat || 0,
+          channel_size: entry.channelSize
+        }))
+      )
       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
     console.log(`Found ${filteredData.length} historical entries for ${channelSizeNum} sats`);
