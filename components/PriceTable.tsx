@@ -6,6 +6,45 @@ import { Tooltip } from './Tooltip';
 import { LSPHealthIndicator } from './LSPHealthIndicator';
 import { SimpleHealthStatus } from '../lib/simple-health';
 
+// Error lookup tables - moved outside component to avoid recreation on every render
+const ERROR_ICONS: Record<string, string> = {
+  'URL_NOT_FOUND': '🌐',
+  'DNS_ERROR': '🔍',
+  'CONNECTION_REFUSED': '🚫',
+  'NETWORK_ERROR': '📡',
+  'TIMEOUT': '⏱️',
+  'TLS_ERROR': '🔒',
+  'RATE_LIMITED': '🚫',
+  'BAD_STATUS': '⚠️',
+  'INVALID_JSON': '📄',
+  'SCHEMA_MISMATCH': '🔧',
+  'CHANNEL_SIZE_TOO_SMALL': '📏',
+  'CHANNEL_SIZE_TOO_LARGE': '📏',
+  'CACHE_UNAVAILABLE': '💾',
+  'LIVE_DATA_UNAVAILABLE': '📡',
+  'PEER_NOT_CONNECTED': '🔗',
+  'WHITELIST_REQUIRED': '🔐',
+};
+
+const ERROR_COLORS: Record<string, string> = {
+  'URL_NOT_FOUND': 'bg-gray-200 text-gray-700',
+  'DNS_ERROR': 'bg-gray-200 text-gray-700',
+  'CONNECTION_REFUSED': 'bg-gray-300 text-gray-600',
+  'NETWORK_ERROR': 'bg-gray-300 text-gray-600',
+  'TIMEOUT': 'bg-gray-200 text-gray-700',
+  'TLS_ERROR': 'bg-gray-300 text-gray-600',
+  'RATE_LIMITED': 'bg-gray-400 text-gray-500',
+  'BAD_STATUS': 'bg-gray-300 text-gray-600',
+  'INVALID_JSON': 'bg-gray-200 text-gray-700',
+  'SCHEMA_MISMATCH': 'bg-gray-200 text-gray-700',
+  'CHANNEL_SIZE_TOO_SMALL': 'bg-orange-100 text-orange-800',
+  'CHANNEL_SIZE_TOO_LARGE': 'bg-gray-200 text-gray-700',
+  'CACHE_UNAVAILABLE': 'bg-gray-200 text-gray-800',
+  'LIVE_DATA_UNAVAILABLE': 'bg-gray-300 text-gray-900',
+  'PEER_NOT_CONNECTED': 'bg-blue-100 text-blue-600',
+  'WHITELIST_REQUIRED': 'bg-purple-100 text-purple-600',
+};
+
 // Helper functions for unit conversion
 const msatToSat = (msat: number) => Math.round(msat / 1000);
 const formatSats = (sats: number) =>
@@ -130,49 +169,8 @@ function StatusBadge({ source, staleSeconds, errorCode, error, timestamp, live_f
   cached_timestamp?: string;
 }) {
   if (errorCode) {
-    const getErrorIcon = (code: string) => {
-      switch (code) {
-        case 'URL_NOT_FOUND': return '🌐';
-        case 'DNS_ERROR': return '🔍';
-        case 'CONNECTION_REFUSED': return '🚫';
-        case 'NETWORK_ERROR': return '📡';
-        case 'TIMEOUT': return '⏱️';
-        case 'TLS_ERROR': return '🔒';
-        case 'RATE_LIMITED': return '🚫';
-        case 'BAD_STATUS': return '⚠️';
-        case 'INVALID_JSON': return '📄';
-        case 'SCHEMA_MISMATCH': return '🔧';
-        case 'CHANNEL_SIZE_TOO_SMALL': return '📏';
-        case 'CHANNEL_SIZE_TOO_LARGE': return '📏';
-        case 'CACHE_UNAVAILABLE': return '💾';
-        case 'LIVE_DATA_UNAVAILABLE': return '📡';
-        case 'PEER_NOT_CONNECTED': return '🔗';
-        case 'WHITELIST_REQUIRED': return '🔐';
-        default: return '❌';
-      }
-    };
-
-    const getErrorColor = (code: string) => {
-      switch (code) {
-        case 'URL_NOT_FOUND': return 'bg-gray-200 text-gray-700';
-        case 'DNS_ERROR': return 'bg-gray-200 text-gray-700';
-        case 'CONNECTION_REFUSED': return 'bg-gray-300 text-gray-600';
-        case 'NETWORK_ERROR': return 'bg-gray-300 text-gray-600';
-        case 'TIMEOUT': return 'bg-gray-200 text-gray-700';
-        case 'TLS_ERROR': return 'bg-gray-300 text-gray-600';
-        case 'RATE_LIMITED': return 'bg-gray-400 text-gray-500';
-        case 'BAD_STATUS': return 'bg-gray-300 text-gray-600';
-        case 'INVALID_JSON': return 'bg-gray-200 text-gray-700';
-        case 'SCHEMA_MISMATCH': return 'bg-gray-200 text-gray-700';
-        case 'CHANNEL_SIZE_TOO_SMALL': return 'bg-orange-100 text-orange-800';
-        case 'CHANNEL_SIZE_TOO_LARGE': return 'bg-gray-200 text-gray-700';
-        case 'CACHE_UNAVAILABLE': return 'bg-gray-200 text-gray-800';
-        case 'LIVE_DATA_UNAVAILABLE': return 'bg-gray-300 text-gray-900';
-        case 'PEER_NOT_CONNECTED': return 'bg-blue-100 text-blue-600';
-        case 'WHITELIST_REQUIRED': return 'bg-purple-100 text-purple-600';
-        default: return 'bg-gray-300 text-gray-600';
-      }
-    };
+    const getErrorIcon = (code: string) => ERROR_ICONS[code] || '❌';
+    const getErrorColor = (code: string) => ERROR_COLORS[code] || 'bg-gray-300 text-gray-600';
 
     return (
       <div className="flex flex-col space-y-1">
