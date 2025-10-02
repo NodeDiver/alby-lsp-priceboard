@@ -490,8 +490,8 @@ export default function Home() {
             
             {/* Pro Mode Toggle */}
             <div className="flex items-center space-x-2">
-              <div className="flex items-center space-x-1">
-                <span className="text-sm font-medium text-gray-700">Pro Mode 💪</span>
+              <div className="flex items-baseline space-x-1">
+                <span className="text-sm font-medium text-gray-700">Pro Mode <span className="inline-block -translate-y-0.5">💪</span></span>
                 {isHydrated && ProModeManager.hasProModeAccess() && (
                   <span className="text-xs text-green-600 font-medium">
                     ({ProModeManager.getRemainingDays()}d left)
@@ -518,7 +518,7 @@ export default function Home() {
             
             {/* Historical Data Toggle */}
             <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium text-gray-700">Historical Data 📊</span>
+              <span className="text-sm font-medium text-gray-700">Historical Data <span className="inline-block -translate-y-0.5">📊</span></span>
               <button
                 onClick={isHydrated ? handleHistoricalDataToggle : undefined}
                 disabled={!isHydrated}
