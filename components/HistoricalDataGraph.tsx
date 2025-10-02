@@ -121,6 +121,19 @@ export function HistoricalDataGraph({ channelSize, proMode }: HistoricalDataGrap
       date.setDate(date.getDate() - i);
       allDates.push(date.toLocaleDateString());
     }
+    
+    // If we have very little data, show a wider range to include the data we have
+    const dataDates = Object.keys(groupedData);
+    if (dataDates.length < 3) {
+      // Find the oldest data date and show 15 days from there
+      const oldestDataDate = new Date(Math.min(...rawData.map(d => new Date(d.timestamp).getTime())));
+      allDates.length = 0; // Clear the array
+      for (let i = 14; i >= 0; i--) {
+        const date = new Date(oldestDataDate);
+        date.setDate(date.getDate() + i);
+        allDates.push(date.toLocaleDateString());
+      }
+    }
 
     // Create data points for all 15 days, filling missing data with null
     return allDates.map(date => {
@@ -204,6 +217,11 @@ export function HistoricalDataGraph({ channelSize, proMode }: HistoricalDataGrap
         <p className="text-sm text-gray-600 mt-1">
           Last 15 days of pricing data
         </p>
+        {historicalData.length > 0 && (
+          <p className="text-xs text-amber-600 mt-1">
+            ⚠️ Limited data available - we&apos;re working on collecting daily price data
+          </p>
+        )}
       </div>
       
       <div className="flex">
