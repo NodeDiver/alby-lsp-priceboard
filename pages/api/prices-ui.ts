@@ -1,36 +1,14 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { PriceService } from '../../lib/price-service';
+import { allowCORS, parseChannelSize, getDataSourceDescription } from '../../lib/api-helpers';
 
-// CORS headers
-function allowCORS(res: NextApiResponse) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-}
-
-// Parse channel size from query parameter
-function parseChannelSize(channelSize: string | string[] | undefined): number {
+// Parse channel size from query parameter with validation
+function parseChannelSizeFromQuery(channelSize: string | string[] | undefined): number {
   if (typeof channelSize === 'string') {
     const parsed = parseInt(channelSize, 10);
     return isNaN(parsed) ? 1000000 : Math.max(100000, Math.min(10000000, parsed));
   }
   return 1000000;
-}
-
-// Helper function to get data source description
-function getDataSourceDescription(source: string): string {
-  switch (source) {
-    case 'live':
-      return 'Live data from LSP APIs (includes fresh cached data < 1 hour old)';
-    case 'cached':
-      return 'Cached data from previous successful fetch (> 1 hour old)';
-    case 'unavailable':
-      return 'LSP unavailable';
-    case 'mixed':
-      return 'Mixed data (some live, some cached/unavailable)';
-    default:
-      return 'Unknown data source';
-  }
 }
 
 // Helper function to determine overall data source
@@ -74,7 +52,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const channelSize = parseChannelSize(req.query.channelSize);
+    const channelSize = parseChannelSizeFromQuery(req.query.channelSize);
     const force = req.query.fresh === '1';
     const bypassRateLimit = req.query.force === '1';
     const lspId = req.query.lspId as string | undefined;

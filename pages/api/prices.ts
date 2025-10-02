@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { priceService } from '../../lib/price-service';
+import { allowCORS, parseChannelSize, getDataSourceDescription } from '../../lib/api-helpers';
 
 // TypeScript types for API response
 type PriceApiResponse = {
@@ -25,36 +26,14 @@ type PriceApiResponse = {
   }>;
 };
 
-// Helper function to set CORS headers
-function allowCORS(res: NextApiResponse) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-}
-
 // Robust query parameter parsing
-function parseChannelSize(q: unknown): number {
+function parseChannelSizeFromQuery(q: unknown): number {
   const s = Array.isArray(q) ? q[0] : q;
   const n = Number(s);
   if (!Number.isFinite(n) || n <= 0) return 1_000_000; // 1M default
   return Math.floor(n);
 }
 
-// Helper function to get data source description
-function getDataSourceDescription(source: string): string {
-  switch (source) {
-    case 'live':
-      return 'Live data from LSP APIs (includes fresh cached data < 1 hour old)';
-    case 'cached':
-      return 'Cached data from previous successful fetch (> 1 hour old)';
-    case 'unavailable':
-      return 'LSP unavailable';
-    case 'mixed':
-      return 'Mixed data (some live, some cached/unavailable)';
-    default:
-      return 'Unknown data source';
-  }
-}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse<PriceApiResponse | { success: false; error: string; message: string; timestamp: string }>) {
   allowCORS(res);
@@ -75,7 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
   }
 
   try {
-    const channelSize = parseChannelSize(req.query.channelSize);
+    const channelSize = parseChannelSizeFromQuery(req.query.channelSize);
     const force = req.query.fresh === '1';
     const bypassRateLimit = req.query.force === '1';
 
