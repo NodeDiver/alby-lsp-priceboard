@@ -141,7 +141,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           </button>
           
           {/* Testing Notice */}
-          <p className="text-center text-xs text-gray-500 mt-2">
+          <p className="text-center text-sm font-medium text-gray-700 mt-2">
             (Currently free - testing mode, no payment required)
           </p>
 
