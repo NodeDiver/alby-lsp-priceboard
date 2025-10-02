@@ -39,6 +39,7 @@ export default function Home() {
   const [proMode, setProMode] = useState<boolean>(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [historicalData, setHistoricalData] = useState<boolean>(false);
   const [healthStatuses, setHealthStatuses] = useState<SimpleHealthStatus[]>([]);
 
   // Handle hydration and localStorage initialization
@@ -55,6 +56,12 @@ export default function Home() {
       if (saved === 'true') {
         setProMode(true);
       }
+    }
+
+    // Initialize historical data from localStorage
+    const savedHistoricalData = localStorage.getItem('alby-lsp-historical-data');
+    if (savedHistoricalData === 'true') {
+      setHistoricalData(true);
     }
   }, []);
 
@@ -278,6 +285,12 @@ export default function Home() {
     ProModeManager.grantProModeAccess();
     setProMode(true);
     localStorage.setItem('alby-lsp-pro-mode', 'true');
+  };
+
+  const handleHistoricalDataToggle = () => {
+    const newHistoricalData = !historicalData;
+    setHistoricalData(newHistoricalData);
+    localStorage.setItem('alby-lsp-historical-data', String(newHistoricalData));
   };
 
   // Check if current channel size requires Pro Mode
@@ -507,6 +520,29 @@ export default function Home() {
                 />
               </button>
             </div>
+          </div>
+        </div>
+
+        {/* Historical Data Toggle */}
+        <div className="mt-4 flex justify-center">
+          <div className="flex items-center space-x-2">
+            <span className="text-sm font-medium text-gray-700">Historical Data</span>
+            <button
+              onClick={isHydrated ? handleHistoricalDataToggle : undefined}
+              disabled={!isHydrated}
+              className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 ${
+                isHydrated && historicalData ? 'bg-gray-700' : 'bg-gray-200'
+              } ${!isHydrated ? 'opacity-50 cursor-not-allowed' : ''}`}
+              role="switch"
+              aria-checked={isHydrated ? historicalData : false}
+              aria-label="Toggle Historical Data"
+            >
+              <span
+                className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                  isHydrated && historicalData ? 'translate-x-6' : 'translate-x-1'
+                }`}
+              />
+            </button>
           </div>
         </div>
 
