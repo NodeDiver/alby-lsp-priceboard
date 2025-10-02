@@ -588,7 +588,7 @@ export default function Home() {
                 }}
                 className="px-5 py-2.5 text-sm bg-white border border-gray-400 text-gray-700 rounded-full hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center uppercase font-semibold"
               >
-                Support with 1€
+                Support my work with 1€
               </button>
             </div>
           </div>
