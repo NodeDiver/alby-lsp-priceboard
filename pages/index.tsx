@@ -580,8 +580,10 @@ export default function Home() {
                     }
                   } catch (error) {
                     console.error('Payment error:', error);
-                    // Fallback to Alby profile if payment fails
-                    window.open('https://getalby.com/p/nodii', '_blank');
+                    // Only redirect to Alby profile if it's not a user rejection
+                    if (error instanceof Error && !error.message.includes('User rejected')) {
+                      window.open('https://getalby.com/p/nodii', '_blank');
+                    }
                   }
                 }}
                 className="px-5 py-2.5 text-sm bg-white border border-gray-400 text-gray-700 rounded-full hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center uppercase font-semibold"
