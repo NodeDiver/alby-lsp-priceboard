@@ -139,6 +139,11 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             <span className="mr-2">⚡</span>
             Pay 500 sats with lightning
           </button>
+          
+          {/* Testing Notice */}
+          <p className="text-center text-xs text-gray-500 mt-2">
+            (Currently free - testing mode, no payment required)
+          </p>
 
           {/* Cancel Button */}
           <button
