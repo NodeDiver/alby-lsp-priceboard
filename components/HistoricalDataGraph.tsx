@@ -12,7 +12,7 @@ const ResponsiveContainer = dynamic(() => import('recharts').then(mod => mod.Res
 
 interface HistoricalDataPoint {
   date: string;
-  [key: string]: string | number; // Dynamic LSP prices
+  [key: string]: string | number | null; // Dynamic LSP prices (can be null for missing data)
 }
 
 interface HistoricalDataGraphProps {
@@ -110,13 +110,26 @@ export function HistoricalDataGraph({ channelSize, proMode }: HistoricalDataGrap
       groupedData[date][lspName] = price;
     });
 
-    // Convert to array format for Recharts
-    return Object.entries(groupedData)
-      .map(([date, prices]) => ({
-        date,
-        ...prices
-      }))
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    // Get all unique LSP names
+    const allLSPNames = Array.from(new Set(rawData.map(entry => entry.lsp_name || entry.lsp_id)));
+    
+    // Generate all 15 days
+    const allDates: string[] = [];
+    const today = new Date();
+    for (let i = 14; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      allDates.push(date.toLocaleDateString());
+    }
+
+    // Create data points for all 15 days, filling missing data with null
+    return allDates.map(date => {
+      const dataPoint: HistoricalDataPoint = { date };
+      allLSPNames.forEach(lspName => {
+        dataPoint[lspName] = groupedData[date]?.[lspName] ?? null;
+      });
+      return dataPoint;
+    });
   };
 
   const toggleLSPVisibility = (lspName: string) => {
@@ -232,6 +245,7 @@ export function HistoricalDataGraph({ channelSize, proMode }: HistoricalDataGrap
                       strokeWidth={2}
                       dot={{ r: 3 }}
                       activeDot={{ r: 5 }}
+                      connectNulls={false}
                     />
                   )
                 ))}
