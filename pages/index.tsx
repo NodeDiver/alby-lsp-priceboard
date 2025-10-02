@@ -41,7 +41,7 @@ export default function Home() {
     if (hasProAccess) {
       setProMode(true);
     }
-  }, []);
+  }, [setProMode]);
 
   // Retry function for individual LSPs (non-blocking)
   const handleRetryLSP = async () => {
@@ -331,7 +331,7 @@ export default function Home() {
             </svg>
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">Getting prices from providers...</h3>
-          <p className="text-sm text-gray-500 mb-6">We're fetching the latest channel opening fees from lightning Service Providers.</p>
+          <p className="text-sm text-gray-500 mb-6">We&apos;re fetching the latest channel opening fees from lightning Service Providers.</p>
           <div className="flex justify-center space-x-4">
             {isHydrated && proMode && (
               <button

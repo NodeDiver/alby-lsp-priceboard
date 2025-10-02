@@ -1,16 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 
-// Dynamically import Recharts bundle once and destructure components
-const RechartsComponents = dynamic(() => import('recharts').then(mod => ({
-  LineChart: mod.LineChart,
-  Line: mod.Line,
-  XAxis: mod.XAxis,
-  YAxis: mod.YAxis,
-  CartesianGrid: mod.CartesianGrid,
-  Tooltip: mod.Tooltip,
-  ResponsiveContainer: mod.ResponsiveContainer,
-})), { ssr: false });
+// Dynamically import Recharts components to avoid SSR issues
+const LineChart = dynamic(() => import('recharts').then(mod => mod.LineChart), { ssr: false });
+const Line = dynamic(() => import('recharts').then(mod => mod.Line), { ssr: false });
+const XAxis = dynamic(() => import('recharts').then(mod => mod.XAxis), { ssr: false });
+const YAxis = dynamic(() => import('recharts').then(mod => mod.YAxis), { ssr: false });
+const CartesianGrid = dynamic(() => import('recharts').then(mod => mod.CartesianGrid), { ssr: false });
+const Tooltip = dynamic(() => import('recharts').then(mod => mod.Tooltip), { ssr: false });
+const ResponsiveContainer = dynamic(() => import('recharts').then(mod => mod.ResponsiveContainer), { ssr: false });
 
 interface HistoricalDataPoint {
   date: string;
@@ -230,51 +228,47 @@ export function HistoricalDataGraph({ channelSize, proMode }: HistoricalDataGrap
         {/* Chart Area */}
         <div className="flex-1 p-6">
           <div className="h-96">
-            <RechartsComponents>
-              {({ LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer }) => (
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={historicalData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis 
-                      dataKey="date" 
-                      stroke="#6b7280"
-                      fontSize={12}
-                      tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={historicalData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis 
+                  dataKey="date" 
+                  stroke="#6b7280"
+                  fontSize={12}
+                  tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                />
+                <YAxis 
+                  stroke="#6b7280"
+                  fontSize={12}
+                  tickFormatter={formatPrice}
+                  label={{ value: 'Price (sats)', angle: -90, position: 'insideLeft' }}
+                />
+                <Tooltip 
+                  labelFormatter={(value) => new Date(value).toLocaleDateString()}
+                  formatter={(value: number) => [`${formatPrice(value)} sats`, '']}
+                  contentStyle={{
+                    backgroundColor: '#f9fafb',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '6px',
+                    fontSize: '12px'
+                  }}
+                />
+                {lspList.map((lspName, index) => (
+                  visibleLSPs[lspName] && (
+                    <Line
+                      key={lspName}
+                      type="monotone"
+                      dataKey={lspName}
+                      stroke={LSP_COLORS[index % LSP_COLORS.length]}
+                      strokeWidth={2}
+                      dot={{ r: 3 }}
+                      activeDot={{ r: 5 }}
+                      connectNulls={false}
                     />
-                    <YAxis 
-                      stroke="#6b7280"
-                      fontSize={12}
-                      tickFormatter={formatPrice}
-                      label={{ value: 'Price (sats)', angle: -90, position: 'insideLeft' }}
-                    />
-                    <Tooltip 
-                      labelFormatter={(value) => new Date(value).toLocaleDateString()}
-                      formatter={(value: number) => [`${formatPrice(value)} sats`, '']}
-                      contentStyle={{
-                        backgroundColor: '#f9fafb',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '6px',
-                        fontSize: '12px'
-                      }}
-                    />
-                    {lspList.map((lspName, index) => (
-                      visibleLSPs[lspName] && (
-                        <Line
-                          key={lspName}
-                          type="monotone"
-                          dataKey={lspName}
-                          stroke={LSP_COLORS[index % LSP_COLORS.length]}
-                          strokeWidth={2}
-                          dot={{ r: 3 }}
-                          activeDot={{ r: 5 }}
-                          connectNulls={false}
-                        />
-                      )
-                    ))}
-                  </LineChart>
-                </ResponsiveContainer>
-              )}
-            </RechartsComponents>
+                  )
+                ))}
+              </LineChart>
+            </ResponsiveContainer>
           </div>
         </div>
 

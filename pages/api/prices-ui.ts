@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { PriceService } from '../../lib/price-service';
-import { allowCORS, parseChannelSize, getDataSourceDescription } from '../../lib/api-helpers';
+import { allowCORS, getDataSourceDescription } from '../../lib/api-helpers';
 
 // Parse channel size from query parameter with validation
 function parseChannelSizeFromQuery(channelSize: string | string[] | undefined): number {

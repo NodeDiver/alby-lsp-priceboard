@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { priceService } from '../../lib/price-service';
-import { allowCORS, parseChannelSize, getDataSourceDescription } from '../../lib/api-helpers';
+import { allowCORS, getDataSourceDescription } from '../../lib/api-helpers';
 
 // TypeScript types for API response
 type PriceApiResponse = {
