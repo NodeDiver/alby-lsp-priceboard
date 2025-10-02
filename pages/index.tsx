@@ -480,7 +480,7 @@ export default function Home() {
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-6 flex justify-center items-center">
+        <div className="mt-6 flex justify-between items-center">
           <div className="flex items-center space-x-4">
             {isHydrated && proMode && !loading && (
               <button
@@ -556,11 +556,10 @@ export default function Home() {
                 />
               </button>
             </div>
-          </div>
-          
-          {/* Support Button - Centered */}
-          <div className="flex items-center">
-            <button
+            
+            {/* Support Button */}
+            <div className="flex items-center">
+              <button
                 onClick={async () => {
                   try {
                     // Check if WebLN is available
@@ -623,6 +622,7 @@ export default function Home() {
               >
                 Support my work with 1€
               </button>
+            </div>
           </div>
         </div>
 
