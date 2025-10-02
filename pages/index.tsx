@@ -129,11 +129,13 @@ export default function Home() {
       const data = await response.json();
       
       if (data.success && data.prices) {
+        console.log('Setting prices:', data.prices.length, 'items');
         setPrices(data.prices);
         setLastUpdate(data.last_update);
         setDataSource(data.data_source || 'unknown');
         setDataSourceDescription(data.data_source_description || '');
       } else {
+        console.error('API returned error:', data.message);
         throw new Error(data.message || 'Failed to fetch prices');
       }
     } catch (err) {
@@ -184,7 +186,12 @@ export default function Home() {
 
   // Fetch prices on component mount
   useEffect(() => {
-    fetchPrices();
+    console.log('Component mounted, fetching prices...');
+    fetchPrices().then(() => {
+      console.log('fetchPrices completed');
+    }).catch((error) => {
+      console.error('fetchPrices failed:', error);
+    });
     fetchLSPData();
     fetchHealthStatuses();
     
@@ -199,9 +206,7 @@ export default function Home() {
   // Refresh prices manually (force fresh fetch with live data)
   const handleRefresh = () => {
     setShowNotification(true);
-    setLoading(true);
     fetchPrices(selectedChannelSize, true).finally(() => {
-      setLoading(false);
       setShowNotification(false);
     });
   };
