@@ -584,6 +584,13 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
           <div className="text-sm text-gray-600">
             {prices.length} price entries
           </div>
+          <div className="flex items-center space-x-2">
+            <span>Data sources:</span>
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800" title="Real-time data from LSP APIs"><span className="w-2 h-2 rounded-full bg-green-500 mr-1"></span>Live</span>
+            <span className="text-xs text-gray-500">Real-time pricing from LSPs</span>
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-sm font-medium bg-gray-300 text-gray-700" title="Previously fetched data"><span className="w-2 h-2 rounded-full bg-green-700 mr-1"></span>Cached</span>
+            <span className="text-xs text-gray-500">Previously fetched data</span>
+          </div>
         </div>
       </div>
     </div>
