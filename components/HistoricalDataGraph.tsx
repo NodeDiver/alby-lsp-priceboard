@@ -41,15 +41,6 @@ export function HistoricalDataGraph({ channelSize, proMode }: HistoricalDataGrap
   // Check if channel size requires Pro Mode
   const requiresProMode = channelSize >= 4000000; // 4M sats and above
 
-  useEffect(() => {
-    if (requiresProMode && !proMode) {
-      setLoading(false);
-      return;
-    }
-
-    fetchHistoricalData();
-  }, [channelSize, proMode, requiresProMode, fetchHistoricalData]);
-
   const fetchHistoricalData = useCallback(async () => {
     try {
       setLoading(true);
@@ -88,6 +79,15 @@ export function HistoricalDataGraph({ channelSize, proMode }: HistoricalDataGrap
       setLoading(false);
     }
   }, [channelSize]);
+
+  useEffect(() => {
+    if (requiresProMode && !proMode) {
+      setLoading(false);
+      return;
+    }
+
+    fetchHistoricalData();
+  }, [channelSize, proMode, requiresProMode, fetchHistoricalData]);
 
   const processHistoricalData = (rawData: Array<{
     timestamp: string;
