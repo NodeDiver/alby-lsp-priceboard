@@ -300,6 +300,98 @@ export default function Home() {
     return isHydrated && !proMode && requiresProMode(selectedChannelSize);
   };
 
+  // Precompute the view to avoid duplicated JSX
+  const renderMainView = () => {
+    if (!isHydrated) {
+      return (
+        <PriceTable 
+          prices={prices} 
+          loading={false} 
+          lspMetadata={lspMetadata} 
+          selectedChannelSize={selectedChannelSize}
+          selectedCurrency={selectedCurrency}
+          lastUpdate={lastUpdate || undefined}
+          dataSource={dataSource}
+          dataSourceDescription={dataSourceDescription}
+          onRetry={handleRetryLSP}
+          onForceFetch={handleForceFetchLSP}
+          forceFetching={forceFetching}
+          proMode={proMode}
+          healthStatuses={healthStatuses}
+        />
+      );
+    }
+    
+    if (loading) {
+      return (
+        <div className="text-center py-12 text-gray-500">
+          <div className="mb-4">
+            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Getting prices from providers...</h3>
+          <p className="text-sm text-gray-500 mb-6">We're fetching the latest channel opening fees from lightning Service Providers.</p>
+          <div className="flex justify-center space-x-4">
+            {isHydrated && proMode && (
+              <button
+                onClick={handleRefresh}
+                disabled={loading}
+                className="px-4 py-2 bg-slate-500 text-white rounded-md hover:bg-slate-600 transition-colors"
+              >
+                Refresh Prices
+              </button>
+            )}
+            {isHydrated && proMode && (
+              <button
+                onClick={() => window.open('/api/debug', '_blank')}
+                className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+              >
+                Technical Details
+              </button>
+            )}
+          </div>
+        </div>
+      );
+    }
+    
+    if (historicalData) {
+      return (
+        <HistoricalDataGraph 
+          channelSize={selectedChannelSize}
+          proMode={proMode}
+        />
+      );
+    }
+    
+    if (shouldShowProModeOverlay()) {
+      return (
+        <ProModeUnlockOverlay
+          onProModeToggle={handleProModeToggle}
+          channelSize={selectedChannelSize}
+        />
+      );
+    }
+    
+    return (
+      <PriceTable 
+        prices={prices} 
+        loading={loading} 
+        lspMetadata={lspMetadata} 
+        selectedChannelSize={selectedChannelSize}
+        selectedCurrency={selectedCurrency}
+        lastUpdate={lastUpdate || undefined}
+        dataSource={dataSource}
+        dataSourceDescription={dataSourceDescription}
+        onRetry={handleRetryLSP}
+        onForceFetch={handleForceFetchLSP}
+        forceFetching={forceFetching}
+        proMode={proMode}
+        healthStatuses={healthStatuses}
+      />
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -411,49 +503,7 @@ export default function Home() {
             </div>
           )}
           
-          {!isHydrated ? (
-            <PriceTable 
-              prices={prices} 
-              loading={false} 
-              lspMetadata={lspMetadata} 
-              selectedChannelSize={selectedChannelSize}
-              selectedCurrency={selectedCurrency}
-              lastUpdate={lastUpdate || undefined}
-              dataSource={dataSource}
-              dataSourceDescription={dataSourceDescription}
-              onRetry={handleRetryLSP}
-              onForceFetch={handleForceFetchLSP}
-              forceFetching={forceFetching}
-              proMode={proMode}
-              healthStatuses={healthStatuses}
-            />
-          ) : isHydrated && historicalData ? (
-            <HistoricalDataGraph 
-              channelSize={selectedChannelSize}
-              proMode={proMode}
-            />
-          ) : shouldShowProModeOverlay() ? (
-            <ProModeUnlockOverlay
-              onProModeToggle={handleProModeToggle}
-              channelSize={selectedChannelSize}
-            />
-          ) : (
-            <PriceTable 
-              prices={prices} 
-              loading={false} 
-              lspMetadata={lspMetadata} 
-              selectedChannelSize={selectedChannelSize}
-              selectedCurrency={selectedCurrency}
-              lastUpdate={lastUpdate || undefined}
-              dataSource={dataSource}
-              dataSourceDescription={dataSourceDescription}
-              onRetry={handleRetryLSP}
-              onForceFetch={handleForceFetchLSP}
-              forceFetching={forceFetching}
-              proMode={proMode}
-              healthStatuses={healthStatuses}
-            />
-          )}
+          {renderMainView()}
         </div>
 
         {/* Action Buttons */}
