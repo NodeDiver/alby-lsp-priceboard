@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { PriceTable, DisplayPrice } from '../components/PriceTable';
 import { LSP } from '../lib/lsps';
 import { COMMON_CURRENCIES, convertCurrencyToSats } from '../lib/currency';
+import { usePersistentState } from '../lib/hooks/usePersistentState';
 import { Tooltip } from '../components/Tooltip';
 import { PaymentModal } from '../components/PaymentModal';
 import { ProModeUnlockOverlay } from '../components/ProModeUnlockOverlay';
@@ -17,33 +18,21 @@ export default function Home() {
   const [lastUpdate, setLastUpdate] = useState<string | null>(null);
   const [lspMetadata, setLspMetadata] = useState<LSP[]>([]);
   // Load preferences from localStorage or use defaults
-  const [selectedChannelSize, setSelectedChannelSize] = useState<number>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('alby-lsp-channel-size');
-      return saved ? Number(saved) : 1000000;
-    }
-    return 1000000;
-  });
-  const [selectedCurrency, setSelectedCurrency] = useState<string>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('alby-lsp-currency');
-      return saved || 'usd';
-    }
-    return 'usd';
-  });
+  const [selectedChannelSize, setSelectedChannelSize] = usePersistentState<number>('alby-lsp-channel-size', 1000000);
+  const [selectedCurrency, setSelectedCurrency] = usePersistentState<string>('alby-lsp-currency', 'usd');
   const [dataSource, setDataSource] = useState<string>('unknown');
   const [dataSourceDescription, setDataSourceDescription] = useState<string>('');
   const [abortController, setAbortController] = useState<AbortController | null>(null);
   const [forceFetching, setForceFetching] = useState<Record<string, boolean>>({});
   const [showNotification, setShowNotification] = useState(false);
   const [showApiSection, setShowApiSection] = useState(false);
-  const [proMode, setProMode] = useState<boolean>(false);
+  const [proMode, setProMode] = usePersistentState<boolean>('alby-lsp-pro-mode', false);
   const [isHydrated, setIsHydrated] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [historicalData, setHistoricalData] = useState<boolean>(false);
+  const [historicalData, setHistoricalData] = usePersistentState<boolean>('alby-lsp-historical-data', false);
   const [healthStatuses, setHealthStatuses] = useState<SimpleHealthStatus[]>([]);
 
-  // Handle hydration and localStorage initialization
+  // Handle hydration
   useEffect(() => {
     setIsHydrated(true);
     
@@ -51,18 +40,6 @@ export default function Home() {
     const hasProAccess = ProModeManager.hasProModeAccess();
     if (hasProAccess) {
       setProMode(true);
-    } else {
-      // Check old localStorage for backward compatibility
-      const saved = localStorage.getItem('alby-lsp-pro-mode');
-      if (saved === 'true') {
-        setProMode(true);
-      }
-    }
-
-    // Initialize historical data from localStorage
-    const savedHistoricalData = localStorage.getItem('alby-lsp-historical-data');
-    if (savedHistoricalData === 'true') {
-      setHistoricalData(true);
     }
   }, []);
 
