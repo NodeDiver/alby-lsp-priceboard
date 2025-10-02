@@ -1,9 +1,9 @@
-import { Redis } from '@upstash/redis';
+// Redis import handled by getRedisInstance()
 import { LSPPrice } from './lsp-api';
 import { isRedisConfigured, getRedisInstance } from './redis-config';
 
 // Initialize Redis client
-const redis = getRedisInstance() as Redis;
+const redis = getRedisInstance();
 console.log('Redis instance:', redis ? 'defined' : 'null');
 
 // IMPROVED DATABASE STRUCTURE - No redundancy
@@ -15,8 +15,8 @@ const getChannelPricesKey = (channelSize: number) => `alby:lsp:channel:${channel
 // Save latest prices to database with improved structure
 export async function savePricesToDB(prices: LSPPrice[]): Promise<boolean> {
   try {
-    if (!isRedisConfigured()) {
-      console.error('Upstash Redis not configured');
+    if (!redis || !isRedisConfigured()) {
+      console.error('Upstash Redis not configured or unavailable');
       return false;
     }
 
@@ -31,6 +31,11 @@ export async function savePricesToDB(prices: LSPPrice[]): Promise<boolean> {
       return acc;
     }, {} as Record<number, LSPPrice[]>);
 
+    if (!redis) {
+      console.error('Redis not available');
+      return false;
+    }
+    
     const pipeline = redis.pipeline();
     
     // FIRST: Save old data to history before overwriting
@@ -86,8 +91,8 @@ export async function savePricesToDB(prices: LSPPrice[]): Promise<boolean> {
 // Get latest prices from database for specific channel size
 export async function getLatestPrices(channelSize: number = 1000000): Promise<LSPPrice[]> {
   try {
-    if (!isRedisConfigured()) {
-      console.error('Upstash Redis not configured');
+    if (!redis || !isRedisConfigured()) {
+      console.error('Upstash Redis not configured or unavailable');
       return [];
     }
 
@@ -111,7 +116,7 @@ export async function getLatestPrices(channelSize: number = 1000000): Promise<LS
 // Get all available channel sizes
 export async function getAvailableChannelSizes(): Promise<number[]> {
   try {
-    if (!isRedisConfigured()) {
+    if (!redis || !isRedisConfigured()) {
       return [];
     }
 
@@ -129,7 +134,7 @@ export async function getAvailableChannelSizes(): Promise<number[]> {
 // Get metadata (includes last update timestamp)
 export async function getMetadata(): Promise<{lastUpdate: string, totalChannels: number, totalPrices: number, channelSizes: number[]} | null> {
   try {
-    if (!isRedisConfigured()) {
+    if (!redis || !isRedisConfigured()) {
       return null;
     }
 
@@ -157,7 +162,7 @@ export async function getPriceHistory(limit: number = 50): Promise<Array<{timest
   console.log('getPriceHistory called with limit:', limit);
   try {
     console.log('isRedisConfigured():', isRedisConfigured());
-    if (!isRedisConfigured()) {
+    if (!redis || !isRedisConfigured()) {
       console.log('Redis not configured for getPriceHistory');
       return [];
     }
@@ -265,6 +270,19 @@ export async function getDatabaseStatus(): Promise<{
     }
 
     // Test connection by getting all keys
+    if (!redis) {
+      return {
+        connected: false,
+        keysCount: 0,
+        configured: true,
+        hasData: false,
+        isStale: false,
+        priceCount: 0,
+        historyCount: 0,
+        error: 'Redis instance not available'
+      };
+    }
+    
     const keys = await redis.keys('alby:lsp:*');
     
     // Check if we have price data
@@ -303,8 +321,8 @@ export async function getDatabaseStatus(): Promise<{
 // Clear all relevant cache keys
 export async function clearCache(): Promise<string[]> {
   try {
-    if (!isRedisConfigured()) {
-      console.error('Upstash Redis not configured');
+    if (!redis || !isRedisConfigured()) {
+      console.error('Upstash Redis not configured or unavailable');
       return [];
     }
     
