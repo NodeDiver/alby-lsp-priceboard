@@ -430,7 +430,7 @@ export default function Home() {
               proMode={proMode}
               healthStatuses={healthStatuses}
             />
-          ) : historicalData ? (
+          ) : isHydrated && historicalData ? (
             <HistoricalDataGraph 
               channelSize={selectedChannelSize}
               proMode={proMode}
