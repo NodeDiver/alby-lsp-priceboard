@@ -4,7 +4,6 @@ import { isRedisConfigured, getRedisInstance } from './redis-config';
 
 // Initialize Redis client
 const redis = getRedisInstance();
-console.log('Redis instance:', redis ? 'defined' : 'null');
 
 // IMPROVED DATABASE STRUCTURE - No redundancy
 const METADATA_KEY = 'alby:lsp:metadata';
