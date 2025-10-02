@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/cron/health-check",
-      "schedule": "*/30 * * * *"
+      "schedule": "0 12 * * *"
     }
   ],
   "functions": {
