@@ -153,3 +153,50 @@ function getCurrencyInfo(code: string) {
 export function getCurrencyByCode(code: string) {
   return getCurrencyInfo(code);
 }
+
+export async function convertCurrencyToSats(
+  amount: number,
+  currency: string = 'usd'
+): Promise<number> {
+  try {
+    const code = currency.toLowerCase();
+    const now = new Date().toISOString();
+    
+    // Check if we have a recent cached rate
+    const cached = currencyCache[code];
+    
+    if (cached && (Date.now() - new Date(cached.lastUpdated).getTime()) < CACHE_DURATION) {
+      return Math.round(amount / cached.rate);
+    }
+
+    // Fetch fresh rate from Alby lightning Tools
+    const fiatValue = await fiat.getFiatValue({ 
+      satoshi: 100000, // Use 100k sats as reference
+      currency: code 
+    });
+
+    // Calculate rate (sats per fiat unit)
+    const rate = fiatValue / 100000;
+
+    // Update cache
+    currencyCache[code] = {
+      rate: rate,
+      lastUpdated: now
+    };
+    
+    return Math.round(amount / rate);
+
+  } catch (error) {
+    console.error('Currency to sats conversion error:', error);
+    
+    // Fallback with cached rate if available
+    const code = currency.toLowerCase();
+    const cached = currencyCache[code];
+    if (cached) {
+      return Math.round(amount / cached.rate);
+    }
+
+    // Complete fallback - rough estimate
+    return Math.round(amount * 40000); // Rough 1 EUR = 40k sats
+  }
+}

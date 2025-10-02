@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { PriceTable, DisplayPrice } from '../components/PriceTable';
 import { LSP } from '../lib/lsps';
-import { COMMON_CURRENCIES } from '../lib/currency';
+import { COMMON_CURRENCIES, convertCurrencyToSats } from '../lib/currency';
 import { Tooltip } from '../components/Tooltip';
 import { PaymentModal } from '../components/PaymentModal';
 import { ProModeUnlockOverlay } from '../components/ProModeUnlockOverlay';
@@ -108,6 +108,7 @@ export default function Home() {
     
     try {
       setError(null);
+      setLoading(true);
       
       const url = `/api/prices-ui?channelSize=${channelSize}${fresh ? '&fresh=1' : ''}`;
       
@@ -146,6 +147,7 @@ export default function Home() {
         }
       }
     } finally {
+      setLoading(false);
       setAbortController(null);
     }
   };
@@ -462,7 +464,7 @@ export default function Home() {
         {/* Action Buttons */}
         <div className="mt-6 flex justify-between items-center">
           <div className="flex items-center space-x-4">
-            {isHydrated && proMode && (
+            {isHydrated && proMode && !loading && (
               <button
                 onClick={handleRefresh}
                 disabled={loading}
@@ -472,11 +474,11 @@ export default function Home() {
                   animation: 'fadeInScale 300ms ease-out forwards'
                 }}
               >
-                {loading ? 'Refreshing Prices...' : 'Refresh Prices'}
+                Refresh Prices
               </button>
             )}
             
-            {isHydrated && proMode && (
+            {isHydrated && proMode && !loading && (
               <button
                 onClick={() => window.open('/api/debug', '_blank')}
                 className="px-2.5 py-1 text-sm bg-gray-600 text-white rounded-md hover:bg-gray-700 animate-in fade-in duration-300 ease-out"
@@ -534,6 +536,52 @@ export default function Home() {
                     isHydrated && historicalData ? 'translate-x-6' : 'translate-x-1'
                   }`}
                 />
+              </button>
+            </div>
+            
+            {/* Support Button */}
+            <div className="flex items-center">
+              <button
+                onClick={async () => {
+                  try {
+                    // Check if WebLN is available
+                    if (typeof window !== 'undefined' && window.webln) {
+                      // WebLN is available - use LNURL-pay for lightning address
+                      await window.webln.enable();
+                      
+                      // Convert 1 EUR to sats using real-time conversion
+                      const eurToSats = await convertCurrencyToSats(1, 'eur');
+                      
+                      // Use LNURL-pay for lightning address nodii@getalby.com
+                      const response = await fetch(`https://getalby.com/.well-known/lnurlp/nodii`);
+                      const lnurlData = await response.json();
+                      
+                      if (lnurlData.callback) {
+                        const invoiceResponse = await fetch(`${lnurlData.callback}?amount=${eurToSats * 1000}&memo=Support Alby LSP Price Board - 1€`);
+                        const invoiceData = await invoiceResponse.json();
+                        
+                        if (invoiceData.pr) {
+                          await window.webln.sendPayment(invoiceData.pr);
+                          alert('Thank you for your support! 💚');
+                        } else {
+                          throw new Error('Failed to get invoice from nodii@getalby.com');
+                        }
+                      } else {
+                        throw new Error('Invalid LNURL response from nodii@getalby.com');
+                      }
+                    } else {
+                      // No WebLN extension - redirect to Alby profile
+                      window.open('https://getalby.com/p/nodii', '_blank');
+                    }
+                  } catch (error) {
+                    console.error('Payment error:', error);
+                    // Fallback to Alby profile if payment fails
+                    window.open('https://getalby.com/p/nodii', '_blank');
+                  }
+                }}
+                className="px-5 py-2.5 text-sm bg-white border border-gray-400 text-gray-700 rounded-full hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center uppercase font-semibold"
+              >
+                Support with 1€
               </button>
             </div>
           </div>
