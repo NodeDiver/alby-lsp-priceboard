@@ -4,6 +4,13 @@ A human-readable list of tasks and improvements for the Alby LSP Price Board pro
 
 ## 🎯 Future Enhancements
 
+### Code Quality and Performance Improvements
+- **Consolidate localStorage handling**: Drop manual `localStorage.setItem` calls in channel-size, currency, Pro mode, and historical toggles and rely on `usePersistentState` to persist updates (prevents JSON vs plain string conflicts)
+- **Unify price loading logic**: Fold `handleRetryLSP`, `fetchPrices`, and `handleForceFetchLSP` into a single `loadPrices({ channelSize, fresh, force, lspId, endpoint })` helper for centralized error/timeout handling
+- **Extend data source descriptions**: Add support for `mixed`, `unavailable`, and `estimated` states in `getDataSourceDescription` helper to match UI strings
+- **Standardize channel size parsing**: Reshape `parseChannelSize` to accept raw query values and apply consistent clamp logic across all API handlers
+- **Optimize PriceTable rendering**: Extract `PriceCell` subcomponent and use `useMemo` for sorted LSP list to prevent expensive filter/find operations on every render
+
 ### UI and UX Improvements
 - **Dark mode**: Add dark/light theme toggle for better user experience
 - **Routing fees display**: Add routing fees for each LSP to provide complete cost comparison

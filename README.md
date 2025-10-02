@@ -48,9 +48,10 @@ Menu: [v0.2.1](#v021) • [v0.2](#v02-updates) • [v0.1](#v01-updates)
   - **✅ Fixed Hydration Error**: Resolved React hydration mismatch in Pro Mode toggle system
   - **✅ Fixed Column Layout**: Implemented fixed table layout to prevent Fee column position shifting
   - **✅ Improved State Management**: Added proper hydration handling for localStorage-dependent features
-  - **✅ Fixed Loading Loop**: Resolved infinite loading state issue that prevented price table from displaying
-  - **✅ Fixed WebLN Error Handling**: Added comprehensive error handling for WebLN user rejection scenarios
-  - **✅ Fixed Button Visibility**: Pro Mode buttons now properly hide during loading states
+  - **✅ Fixed Loading Loop**: Resolved recurring "getting prices from providers..." loading state issue
+  - **✅ Fixed WebLN Error Handling**: Enhanced support button error handling for user rejection scenarios
+  - **✅ Fixed Button Visibility**: Corrected Pro Mode buttons showing during loading state
+  - **✅ Code Refactoring**: Implemented 7/11 ChatGPT suggestions for improved code quality and performance
 
 </details>
 

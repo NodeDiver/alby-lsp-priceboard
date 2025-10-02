@@ -7,7 +7,7 @@ This guide covers deploying the Alby LSP Price Board to production. The applicat
 - **Docker**: Containerized deployment for any platform  
 - **Local Development**: Both npm and Docker options available
 
-**Current Status**: Live on Vercel with 4 working LSPs - 2 providing LIVE data via LSPS1 protocol, 2 with smart fallback handling. Latest features include individual LSP timestamps, smart caching, and non-blocking UI.
+**Current Status**: Live on Vercel with 4 working LSPs - 3 providing LIVE data via LSPS1 protocol, 1 with smart fallback handling. Latest features include Pro Mode toggle system, historical data visualization, health monitoring, WebLN support integration, and comprehensive code refactoring.
 
 ## 🚀 Vercel Deployment (Recommended)
 

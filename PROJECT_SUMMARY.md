@@ -1,6 +1,6 @@
 # Alby LSP Price Board — Project Summary and Roadmap
 
-Last reviewed: 2025-09 (revised) • Repository snapshot analyzed locally
+Last reviewed: 2025-10 (revised) • Repository snapshot analyzed locally
 
 ## What This Project Is
 A real-time lightning Service Provider (LSP) price comparison tool that fetches per-LSP channel-open pricing via LSPS1-compatible endpoints, stores snapshots in Vercel KV (Upstash Redis-compatible), and exposes:
