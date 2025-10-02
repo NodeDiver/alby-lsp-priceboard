@@ -195,11 +195,24 @@ export default function Home() {
     fetchLSPData();
     fetchHealthStatuses();
     
+    // Add global error handler for WebLN "User rejected" errors
+    const handleWebLNError = (event: ErrorEvent) => {
+      if (event.message && event.message.includes('User rejected')) {
+        console.log('WebLN payment cancelled by user');
+        event.preventDefault();
+        event.stopPropagation();
+        return false;
+      }
+    };
+    
+    window.addEventListener('error', handleWebLNError);
+    
     // Cleanup function to abort any in-flight requests
     return () => {
       if (abortController) {
         abortController.abort();
       }
+      window.removeEventListener('error', handleWebLNError);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -552,7 +565,15 @@ export default function Home() {
                     // Check if WebLN is available
                     if (typeof window !== 'undefined' && window.webln) {
                       // WebLN is available - use LNURL-pay for lightning address
-                      await window.webln.enable();
+                      try {
+                        await window.webln.enable();
+                      } catch (weblnError) {
+                        if (weblnError instanceof Error && weblnError.message.includes('User rejected')) {
+                          console.log('WebLN enable cancelled by user');
+                          return;
+                        }
+                        throw weblnError;
+                      }
                       
                       // Convert 1 EUR to sats using real-time conversion
                       const eurToSats = await convertCurrencyToSats(1, 'eur');
@@ -566,8 +587,16 @@ export default function Home() {
                         const invoiceData = await invoiceResponse.json();
                         
                         if (invoiceData.pr) {
-                          await window.webln.sendPayment(invoiceData.pr);
-                          alert('Thank you for your support! 💚');
+                          try {
+                            await window.webln.sendPayment(invoiceData.pr);
+                            alert('Thank you for your support! 💚');
+                          } catch (paymentError) {
+                            if (paymentError instanceof Error && paymentError.message.includes('User rejected')) {
+                              console.log('Payment cancelled by user');
+                              return;
+                            }
+                            throw paymentError;
+                          }
                         } else {
                           throw new Error('Failed to get invoice from nodii@getalby.com');
                         }
@@ -580,10 +609,13 @@ export default function Home() {
                     }
                   } catch (error) {
                     console.error('Payment error:', error);
-                    // Only redirect to Alby profile if it's not a user rejection
-                    if (error instanceof Error && !error.message.includes('User rejected')) {
-                      window.open('https://getalby.com/p/nodii', '_blank');
+                    // Handle user rejection gracefully - don't redirect or show error
+                    if (error instanceof Error && error.message.includes('User rejected')) {
+                      console.log('Payment cancelled by user');
+                      return; // Just return silently, don't redirect
                     }
+                    // For other errors, redirect to Alby profile
+                    window.open('https://getalby.com/p/nodii', '_blank');
                   }
                 }}
                 className="px-5 py-2.5 text-sm bg-white border border-gray-400 text-gray-700 rounded-full hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center uppercase font-semibold"
