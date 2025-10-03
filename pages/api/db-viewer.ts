@@ -47,7 +47,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 ttl: ttl > 0 ? ttl : 'No expiration',
                 size
               };
-            } catch (error) {
+            } catch {
               return {
                 key: k,
                 type: 'error',

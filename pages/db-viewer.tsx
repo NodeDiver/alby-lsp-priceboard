@@ -11,7 +11,7 @@ interface KeyInfo {
 interface KeyData {
   key: string;
   type: string;
-  data: any;
+  data: unknown;
 }
 
 export default function DatabaseViewer() {
@@ -69,7 +69,7 @@ export default function DatabaseViewer() {
     fetchKeys(pattern);
   };
 
-  const formatValue = (value: any): string => {
+  const formatValue = (value: unknown): string => {
     if (value === null || value === undefined) return 'null';
     if (typeof value === 'object') {
       return JSON.stringify(value, null, 2);
