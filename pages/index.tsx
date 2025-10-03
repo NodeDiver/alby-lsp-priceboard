@@ -350,6 +350,20 @@ export default function Home() {
                 Technical Details
               </button>
             )}
+            {isHydrated && (
+              <button
+                onClick={() => {
+                  const params = new URLSearchParams({
+                    format: 'json',
+                    metadata: 'true'
+                  });
+                  window.open(`/api/backup-data?${params}`, '_blank');
+                }}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+              >
+                📥 Download Historical Data
+              </button>
+            )}
           </div>
         </div>
       );
@@ -532,6 +546,25 @@ export default function Home() {
                 }}
               >
                 Technical Details
+              </button>
+            )}
+            
+            {isHydrated && !loading && (
+              <button
+                onClick={() => {
+                  const params = new URLSearchParams({
+                    format: 'json',
+                    metadata: 'true'
+                  });
+                  window.open(`/api/backup-data?${params}`, '_blank');
+                }}
+                className="px-2.5 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 animate-in fade-in duration-300 ease-out"
+                style={{
+                  animation: 'fadeInScale 300ms ease-out forwards'
+                }}
+                title="Download all historical data as JSON file"
+              >
+                📥 Historical Data
               </button>
             )}
             
