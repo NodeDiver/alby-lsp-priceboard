@@ -47,16 +47,39 @@ export async function savePricesToDB(prices: LSPPrice[]): Promise<boolean> {
         if (existingData && typeof existingData === 'string') {
           const existingPrices = JSON.parse(existingData) as LSPPrice[];
           if (existingPrices.length > 0) {
-            // Save old data to history with its original timestamp
+            // Save old data to history with date-based key
             const oldestTimestamp = existingPrices[0]?.timestamp || now;
-            const historyKey = `alby:lsp:history:${size}:${oldestTimestamp}`;
-            const historyEntry = {
+            const date = new Date(oldestTimestamp).toISOString().split('T')[0]; // YYYY-MM-DD
+            const historyKey = `alby:lsp:history:${date}`;
+            
+            // Get existing history for this date
+            const existingHistory = await redis.get(historyKey);
+            let historyData: any = {};
+            
+            if (existingHistory) {
+              try {
+                historyData = typeof existingHistory === 'string' 
+                  ? JSON.parse(existingHistory) 
+                  : existingHistory;
+              } catch (error) {
+                console.warn(`Could not parse existing history for ${date}:`, error);
+                historyData = {};
+              }
+            }
+            
+            // Add this channel size data to the daily history
+            historyData[`channel_${size}`] = {
               timestamp: oldestTimestamp,
               channelSize: Number(size),
               prices: existingPrices
             };
-            pipeline.set(historyKey, JSON.stringify(historyEntry));
-            console.log(`Saved old data to history: ${historyKey}`);
+            
+            // Update the last update timestamp
+            historyData.lastUpdate = oldestTimestamp;
+            historyData.date = date;
+            
+            pipeline.set(historyKey, JSON.stringify(historyData));
+            console.log(`Saved old data to history: ${historyKey} (channel ${size})`);
           }
         }
       } catch (error) {
@@ -168,23 +191,23 @@ export async function getPriceHistory(limit: number = 50): Promise<Array<{timest
     
     console.log('Redis is configured, getting keys...');
 
-    // Get all history keys and sort by timestamp (most recent first)
+    // Get all history keys (date-based format: alby:lsp:history:YYYY-MM-DD)
     const allKeys = await redis.keys('alby:lsp:history:*');
     console.log('All history keys:', allKeys);
     
     const historyKeys = allKeys.filter(key => 
       key.startsWith('alby:lsp:history:') && 
       key !== 'alby:lsp:history' &&
-      key.split(':').length > 4 // Ensure it has timestamp
+      key.match(/^alby:lsp:history:\d{4}-\d{2}-\d{2}$/) // Match YYYY-MM-DD format
     );
     
     console.log('Filtered history keys:', historyKeys);
     
-    // Sort by timestamp (extract from key)
+    // Sort by date (descending - newest first)
     historyKeys.sort((a, b) => {
-      const timestampA = a.split(':').slice(4).join(':'); // Get timestamp part
-      const timestampB = b.split(':').slice(4).join(':');
-      return timestampB.localeCompare(timestampA); // Descending (newest first)
+      const dateA = a.split(':')[3]; // Get date part
+      const dateB = b.split(':')[3];
+      return dateB.localeCompare(dateA); // Descending (newest first)
     });
     
     // Get the data for the most recent entries

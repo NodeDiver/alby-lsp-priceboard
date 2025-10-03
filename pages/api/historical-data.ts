@@ -19,54 +19,66 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const channelSizeNum = Number(channelSize);
     const daysNum = Number(days);
     
-    // Calculate the date range - go back more days to catch older data
+    // Calculate the date range
     const endDate = new Date();
     const startDate = new Date();
-    startDate.setDate(endDate.getDate() - (daysNum + 30)); // Look back 45 days to catch older data
+    startDate.setDate(endDate.getDate() - daysNum);
 
     console.log(`Fetching historical data for ${channelSizeNum} sats from ${startDate.toISOString()} to ${endDate.toISOString()}`);
 
-    // Get historical data from database
-    const historicalData = await getPriceHistory(1000); // Get more data than needed to filter by date
+    // Get historical data from database (new date-based structure)
+    const historicalData = await getPriceHistory(1000);
     
-    // Filter data for the specific channel size and date range
-    let filteredData = historicalData
-      .filter(entry => entry.channelSize === channelSizeNum)
-      .filter(entry => {
-        const entryDate = new Date(entry.timestamp);
-        return entryDate >= startDate && entryDate <= endDate;
-      })
-      .flatMap(entry => 
-        entry.prices.map(price => ({
-          timestamp: entry.timestamp,
-          lsp_id: price.lsp_id,
-          lsp_name: price.lsp_name,
-          total_fee_msat: price.total_fee_msat || 0,
-          channel_size: entry.channelSize
-        }))
-      )
-      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    // Process the new structure: each entry is a daily snapshot with all channel sizes
+    let filteredData: any[] = [];
+    
+    for (const dailyEntry of historicalData) {
+      // Check if this daily entry has data for our requested channel size
+      const channelKey = `channel_${channelSizeNum}`;
+      if (dailyEntry[channelKey] && dailyEntry[channelKey].prices) {
+        const channelData = dailyEntry[channelKey];
+        
+        // Add each LSP price from this day
+        channelData.prices.forEach((price: any) => {
+          filteredData.push({
+            timestamp: channelData.timestamp,
+            lsp_id: price.lsp_id,
+            lsp_name: price.lsp_name,
+            total_fee_msat: price.total_fee_msat || 0,
+            channel_size: channelData.channelSize,
+            source: price.source || 'unknown',
+            error: price.error || null
+          });
+        });
+      }
+    }
 
     // If no data for the requested channel size, try to get data for 1M sats as fallback
     if (filteredData.length === 0 && channelSizeNum !== 1000000) {
       console.log(`No data for ${channelSizeNum} sats, trying 1M sats as fallback`);
-      filteredData = historicalData
-        .filter(entry => entry.channelSize === 1000000)
-        .filter(entry => {
-          const entryDate = new Date(entry.timestamp);
-          return entryDate >= startDate && entryDate <= endDate;
-        })
-        .flatMap(entry => 
-          entry.prices.map(price => ({
-            timestamp: entry.timestamp,
-            lsp_id: price.lsp_id,
-            lsp_name: price.lsp_name,
-            total_fee_msat: price.total_fee_msat || 0,
-            channel_size: entry.channelSize
-          }))
-        )
-        .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+      
+      for (const dailyEntry of historicalData) {
+        const channelKey = 'channel_1000000';
+        if (dailyEntry[channelKey] && dailyEntry[channelKey].prices) {
+          const channelData = dailyEntry[channelKey];
+          
+          channelData.prices.forEach((price: any) => {
+            filteredData.push({
+              timestamp: channelData.timestamp,
+              lsp_id: price.lsp_id,
+              lsp_name: price.lsp_name,
+              total_fee_msat: price.total_fee_msat || 0,
+              channel_size: channelData.channelSize,
+              source: price.source || 'unknown',
+              error: price.error || null
+            });
+          });
+        }
+      }
     }
+
+    // Sort by timestamp (oldest first for chart display)
+    filteredData.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
     console.log(`Found ${filteredData.length} historical entries for ${channelSizeNum} sats`);
 
