@@ -841,6 +841,14 @@ export default function Home() {
             <p className="text-sm text-gray-400 mt-1">
               Built with Next.js • Data from LSPS1 Protocol • Updated September 2025
             </p>
+            <div className="mt-3">
+              <a 
+                href="/backup" 
+                className="text-sm text-blue-600 hover:text-blue-800 underline"
+              >
+                📦 Download Database Backup
+              </a>
+            </div>
           </div>
         </footer>
       </main>
