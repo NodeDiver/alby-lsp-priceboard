@@ -46,6 +46,14 @@ export function HistoricalDataGraph({ channelSize, proMode }: HistoricalDataGrap
       setLoading(true);
       setError(null);
 
+      // First, get LSP metadata to have a list of LSPs even if no historical data
+      const metadataResponse = await fetch('/api/lsp-metadata');
+      let lspMetadata: any[] = [];
+      if (metadataResponse.ok) {
+        const metadataData = await metadataResponse.json();
+        lspMetadata = metadataData.data || [];
+      }
+
       // Fetch 15 days of historical data
       const response = await fetch(`/api/historical-data?channelSize=${channelSize}&days=15`);
       
@@ -59,8 +67,15 @@ export function HistoricalDataGraph({ channelSize, proMode }: HistoricalDataGrap
         const processedData = processHistoricalData(data.data);
         setHistoricalData(processedData);
         
-        // Extract LSP list and initialize visibility
-        const lsps = Object.keys(processedData[0] || {}).filter(key => key !== 'date');
+        // Extract LSP list from historical data, or fall back to metadata
+        let lsps: string[] = [];
+        if (processedData.length > 0) {
+          lsps = Object.keys(processedData[0] || {}).filter(key => key !== 'date');
+        } else if (lspMetadata.length > 0) {
+          // Fall back to metadata LSPs if no historical data
+          lsps = lspMetadata.map((lsp: any) => lsp.name || lsp.id).filter(Boolean);
+        }
+        
         setLspList(lsps.sort());
         
         // Initialize all LSPs as visible
