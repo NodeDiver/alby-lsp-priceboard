@@ -9,6 +9,7 @@ const YAxis = dynamic(() => import('recharts').then(mod => mod.YAxis), { ssr: fa
 const CartesianGrid = dynamic(() => import('recharts').then(mod => mod.CartesianGrid), { ssr: false });
 const Tooltip = dynamic(() => import('recharts').then(mod => mod.Tooltip), { ssr: false });
 const ResponsiveContainer = dynamic(() => import('recharts').then(mod => mod.ResponsiveContainer), { ssr: false });
+const Dot = dynamic(() => import('recharts').then(mod => mod.Dot), { ssr: false });
 
 interface HistoricalDataPoint {
   date: string;
@@ -19,6 +20,14 @@ interface HistoricalDataGraphProps {
   channelSize: number;
   proMode: boolean;
 }
+
+// Custom dot component that only renders when value is not null
+const CustomDot = (props: any) => {
+  if (props.value == null) {
+    return null;
+  }
+  return <Dot {...props} r={3} />;
+};
 
 const LSP_COLORS = [
   '#6B7280', // Gray-500 - muted
@@ -54,8 +63,8 @@ export function HistoricalDataGraph({ channelSize, proMode }: HistoricalDataGrap
         lspMetadata = metadataData.data || [];
       }
 
-      // Fetch 15 days of historical data
-      const response = await fetch(`/api/historical-data?channelSize=${channelSize}&days=15`);
+      // Fetch 30 days of historical data
+      const response = await fetch(`/api/historical-data?channelSize=${channelSize}&days=30`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -115,7 +124,19 @@ export function HistoricalDataGraph({ channelSize, proMode }: HistoricalDataGrap
     const groupedData: Record<string, Record<string, number>> = {};
     
     rawData.forEach((entry) => {
-      const date = new Date(entry.timestamp).toLocaleDateString();
+      // Validate timestamp before processing
+      if (!entry.timestamp) {
+        console.warn('Entry missing timestamp:', entry);
+        return;
+      }
+      
+      const dateObj = new Date(entry.timestamp);
+      if (isNaN(dateObj.getTime())) {
+        console.warn('Invalid timestamp:', entry.timestamp, 'for entry:', entry);
+        return;
+      }
+      
+      const date = dateObj.toISOString().split('T')[0]; // Use YYYY-MM-DD format
       const lspName = entry.lsp_name || entry.lsp_id;
       const price = entry.total_fee_msat ? Math.round(entry.total_fee_msat / 1000) : 0; // Convert msat to sats
       
@@ -128,29 +149,29 @@ export function HistoricalDataGraph({ channelSize, proMode }: HistoricalDataGrap
     // Get all unique LSP names
     const allLSPNames = Array.from(new Set(rawData.map(entry => entry.lsp_name || entry.lsp_id)));
     
-    // Generate all 15 days
+    // Generate all 30 days
     const allDates: string[] = [];
     const today = new Date();
-    for (let i = 14; i >= 0; i--) {
+    for (let i = 29; i >= 0; i--) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
-      allDates.push(date.toLocaleDateString());
+      allDates.push(date.toISOString().split('T')[0]); // Use YYYY-MM-DD format
     }
     
     // If we have very little data, show a wider range to include the data we have
     const dataDates = Object.keys(groupedData);
     if (dataDates.length < 3) {
-      // Find the oldest data date and show 15 days from there
+      // Find the oldest data date and show 30 days from there
       const oldestDataDate = new Date(Math.min(...rawData.map(d => new Date(d.timestamp).getTime())));
       allDates.length = 0; // Clear the array
-      for (let i = 14; i >= 0; i--) {
+      for (let i = 29; i >= 0; i--) {
         const date = new Date(oldestDataDate);
         date.setDate(date.getDate() + i);
-        allDates.push(date.toLocaleDateString());
+        allDates.push(date.toISOString().split('T')[0]); // Use YYYY-MM-DD format
       }
     }
 
-    // Create data points for all 15 days, filling missing data with null
+    // Create data points for all 30 days, filling missing data with null
     return allDates.map(date => {
       const dataPoint: HistoricalDataPoint = { date };
       allLSPNames.forEach(lspName => {
@@ -230,13 +251,8 @@ export function HistoricalDataGraph({ channelSize, proMode }: HistoricalDataGrap
           Historical Price Data - {channelSize / 1000000}M sats
         </h3>
         <p className="text-sm text-gray-600 mt-1">
-          Last 15 days of pricing data
+          Last 30 days of pricing data
         </p>
-        {historicalData.length > 0 && (
-          <p className="text-xs text-amber-600 mt-1">
-            ⚠️ Limited data available - we&apos;re working on collecting daily price data
-          </p>
-        )}
       </div>
       
       <div className="flex">
@@ -250,7 +266,10 @@ export function HistoricalDataGraph({ channelSize, proMode }: HistoricalDataGrap
                   dataKey="date" 
                   stroke="#6b7280"
                   fontSize={12}
-                  tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  tickFormatter={(value) => {
+                    const date = new Date(value + 'T00:00:00'); // Add time to make it a valid date
+                    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                  }}
                 />
                 <YAxis 
                   stroke="#6b7280"
@@ -259,7 +278,10 @@ export function HistoricalDataGraph({ channelSize, proMode }: HistoricalDataGrap
                   label={{ value: 'Price (sats)', angle: -90, position: 'insideLeft' }}
                 />
                 <Tooltip 
-                  labelFormatter={(value) => new Date(value).toLocaleDateString()}
+                  labelFormatter={(value) => {
+                    const date = new Date(value + 'T00:00:00'); // Add time to make it a valid date
+                    return date.toLocaleDateString();
+                  }}
                   formatter={(value: number) => [`${formatPrice(value)} sats`, '']}
                   contentStyle={{
                     backgroundColor: '#f9fafb',
@@ -276,9 +298,9 @@ export function HistoricalDataGraph({ channelSize, proMode }: HistoricalDataGrap
                       dataKey={lspName}
                       stroke={LSP_COLORS[index % LSP_COLORS.length]}
                       strokeWidth={2}
-                      dot={{ r: 3 }}
+                      dot={<CustomDot />}
                       activeDot={{ r: 5 }}
-                      connectNulls={false}
+                      connectNulls={true}
                     />
                   )
                 ))}

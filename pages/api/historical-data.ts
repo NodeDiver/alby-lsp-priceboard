@@ -6,7 +6,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { channelSize, days = 15 } = req.query;
+  const { channelSize, days = 30 } = req.query;
 
   if (!channelSize || isNaN(Number(channelSize))) {
     return res.status(400).json({ 

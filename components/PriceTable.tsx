@@ -322,7 +322,7 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
 
       setConversionLoading(true);
       // Filter to only the rows we'll show (one per LSP for selected channel size)
-      const visible = prices.filter(p => p.channel_size === selectedChannelSize && p.price > 0);
+      const visible = prices.filter(p => p.channel_size === selectedChannelSize);
 
       // Run conversions in parallel
       const entries = await Promise.all(

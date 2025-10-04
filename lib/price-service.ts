@@ -256,17 +256,29 @@ export class PriceService {
             console.log(`No good cached data for ${lsp.name}, checking historical data...`);
             try {
               const { getPriceHistory } = await import('./db');
-              const historyData = await getPriceHistory(channelSizeSat);
+              const historyData = await getPriceHistory(100);
               
-              // Find the most recent good historical data for this LSP
-              const historicalPrice = historyData
-                .filter(entry => entry.prices)
-                .flatMap(entry => entry.prices)
-                .find(price => 
-                  price.lsp_id === lsp.id && 
-                  !price.error && 
-                  price.total_fee_msat > 0
-                );
+              // Find the most recent good historical data for this LSP and channel size
+              // The new format has daily snapshots with channel-specific data
+              let historicalPrice = null;
+              
+              for (const entry of historyData) {
+                if (entry && typeof entry === 'object') {
+                  // Look for channel-specific data in the entry
+                  const channelKey = `channel_${channelSizeSat}`;
+                  if (entry[channelKey] && entry[channelKey].prices) {
+                    const price = entry[channelKey].prices.find(p => 
+                      p.lsp_id === lsp.id && 
+                      !p.error && 
+                      p.total_fee_msat > 0
+                    );
+                    if (price) {
+                      historicalPrice = price;
+                      break; // Use the most recent (first) match
+                    }
+                  }
+                }
+              }
               
               if (historicalPrice) {
                 console.log(`Found historical data for ${lsp.name}: ${historicalPrice.total_fee_msat} msat from ${historicalPrice.timestamp}`);
