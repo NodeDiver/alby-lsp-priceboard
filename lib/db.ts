@@ -45,7 +45,7 @@ export async function savePricesToDB(prices: LSPPrice[]): Promise<boolean> {
       try {
         // Get existing history for this date
         const existingHistory = await redis.get(historyKey);
-        let historyData: any = {};
+        let historyData: Record<string, unknown> = {};
         
         if (existingHistory) {
           try {

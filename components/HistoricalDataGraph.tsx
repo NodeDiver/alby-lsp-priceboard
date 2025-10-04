@@ -22,7 +22,7 @@ interface HistoricalDataGraphProps {
 }
 
 // Custom dot component that only renders when value is not null
-const CustomDot = (props: any) => {
+const CustomDot = (props: { value: number | null; [key: string]: unknown }) => {
   if (props.value == null) {
     return null;
   }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { PriceTable, DisplayPrice } from '../components/PriceTable';
 import { LSP } from '../lib/lsps';
 import { COMMON_CURRENCIES, convertCurrencyToSats } from '../lib/currency';
@@ -848,12 +849,12 @@ export default function Home() {
               Built with Next.js • Data from LSPS1 Protocol • Updated September 2025
             </p>
             <div className="mt-3">
-              <a 
+              <Link 
                 href="/backup" 
                 className="text-sm text-blue-600 hover:text-blue-800 underline"
               >
                 📦 Download Database Backup
-              </a>
+              </Link>
             </div>
           </div>
         </footer>

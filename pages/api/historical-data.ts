@@ -30,7 +30,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const historicalData = await getPriceHistory(1000);
     
     // Process the new structure: each entry is a daily snapshot with arrays of timestamped entries
-    let filteredData: any[] = [];
+    let filteredData: Array<{
+      timestamp: string;
+      lsp_id: string;
+      lsp_name: string;
+      total_fee_msat: number;
+      channel_size: number;
+      source: string;
+      error: string | null;
+    }> = [];
     
     for (const dailyEntry of historicalData) {
       // Check if this daily entry has data for our requested channel size
@@ -42,8 +50,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         
         // New format: has entries array
         if (channelData.entries && Array.isArray(channelData.entries)) {
-          channelData.entries.forEach((entry: any) => {
-            entry.prices.forEach((price: any) => {
+          channelData.entries.forEach((entry: { timestamp: string; prices: Array<{ lsp_id: string; lsp_name: string; total_fee_msat: number; source: string; error: string | null }> }) => {
+            entry.prices.forEach((price: { lsp_id: string; lsp_name: string; total_fee_msat: number; source: string; error: string | null }) => {
               filteredData.push({
                 timestamp: entry.timestamp,
                 lsp_id: price.lsp_id,
@@ -58,7 +66,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
         // Old format: has prices array directly
         else if (channelData.prices && Array.isArray(channelData.prices)) {
-          channelData.prices.forEach((price: any) => {
+          channelData.prices.forEach((price: { lsp_id: string; lsp_name: string; total_fee_msat: number; source: string; error: string | null }) => {
             filteredData.push({
               timestamp: channelData.timestamp,
               lsp_id: price.lsp_id,
@@ -84,8 +92,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           
           // New format: has entries array
           if (channelData.entries && Array.isArray(channelData.entries)) {
-            channelData.entries.forEach((entry: any) => {
-              entry.prices.forEach((price: any) => {
+            channelData.entries.forEach((entry: { timestamp: string; prices: Array<{ lsp_id: string; lsp_name: string; total_fee_msat: number; source: string; error: string | null }> }) => {
+              entry.prices.forEach((price: { lsp_id: string; lsp_name: string; total_fee_msat: number; source: string; error: string | null }) => {
                 filteredData.push({
                   timestamp: entry.timestamp,
                   lsp_id: price.lsp_id,
@@ -100,7 +108,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }
           // Old format: has prices array directly
           else if (channelData.prices && Array.isArray(channelData.prices)) {
-            channelData.prices.forEach((price: any) => {
+            channelData.prices.forEach((price: { lsp_id: string; lsp_name: string; total_fee_msat: number; source: string; error: string | null }) => {
               filteredData.push({
                 timestamp: channelData.timestamp,
                 lsp_id: price.lsp_id,
@@ -117,8 +125,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // Apply daily averaging for multiple entries per day
-    const dailyAveragedData: any[] = [];
-    const groupedByDate: Record<string, Record<string, any[]>> = {};
+    const dailyAveragedData: Array<{
+      timestamp: string;
+      lsp_id: string;
+      lsp_name: string;
+      total_fee_msat: number;
+      channel_size: number;
+      source: string;
+      error: string | null;
+      daily_average: boolean;
+      entry_count: number;
+    }> = [];
+    const groupedByDate: Record<string, Record<string, Array<{
+      timestamp: string;
+      lsp_id: string;
+      lsp_name: string;
+      total_fee_msat: number;
+      channel_size: number;
+      source: string;
+      error: string | null;
+    }>>> = {};
     
     // Group data by date and LSP
     filteredData.forEach(entry => {
@@ -159,7 +185,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     // Calculate daily averages for each LSP
     Object.entries(groupedByDate).forEach(([date, lspGroups]) => {
-      Object.entries(lspGroups).forEach(([lspId, entries]) => {
+      Object.entries(lspGroups).forEach(([, entries]) => {
         if (entries.length === 0) return;
         
         // Calculate average price for this LSP on this day

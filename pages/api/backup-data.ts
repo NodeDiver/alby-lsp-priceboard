@@ -118,16 +118,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 }
 
-function convertToCSV(data: any): string {
+function convertToCSV(data: { channelData: Record<string, unknown>; historyData: Record<string, unknown> }): string {
   const rows = [];
   
   // Header
   rows.push('Type,Key,ChannelSize,Timestamp,LSP_ID,LSP_Name,Total_Fee_MSAT,Source');
   
   // Channel data
-  Object.entries(data.channelData).forEach(([channelSize, prices]: [string, any]) => {
+  Object.entries(data.channelData).forEach(([channelSize, prices]: [string, unknown]) => {
     if (Array.isArray(prices)) {
-      prices.forEach((price: any) => {
+      prices.forEach((price: { lsp_id: string; lsp_name: string; total_fee_msat: number; source: string; timestamp: string }) => {
         rows.push([
           'channel',
           `alby:lsp:channel:${channelSize}`,
@@ -143,9 +143,9 @@ function convertToCSV(data: any): string {
   });
   
   // Historical data
-  Object.entries(data.historicalData).forEach(([key, historyEntry]: [string, any]) => {
+  Object.entries(data.historicalData).forEach(([key, historyEntry]: [string, unknown]) => {
     if (historyEntry && historyEntry.prices && Array.isArray(historyEntry.prices)) {
-      historyEntry.prices.forEach((price: any) => {
+      historyEntry.prices.forEach((price: { lsp_id: string; lsp_name: string; total_fee_msat: number; source: string; timestamp: string }) => {
         rows.push([
           'history',
           key,
@@ -163,7 +163,7 @@ function convertToCSV(data: any): string {
   return rows.join('\n');
 }
 
-function convertToSQL(data: any): string {
+function convertToSQL(data: { channelData: Record<string, unknown>; historicalData: Record<string, unknown> }): string {
   const sql = [];
   
   sql.push('-- Alby LSP Price Board Database Backup');
@@ -196,18 +196,18 @@ function convertToSQL(data: any): string {
   sql.push('');
   
   // Insert channel data
-  Object.entries(data.channelData).forEach(([channelSize, prices]: [string, any]) => {
+  Object.entries(data.channelData).forEach(([channelSize, prices]: [string, unknown]) => {
     if (Array.isArray(prices)) {
-      prices.forEach((price: any) => {
+      prices.forEach((price: { lsp_id: string; lsp_name: string; total_fee_msat: number; source: string; timestamp: string }) => {
         sql.push(`INSERT INTO channel_prices (channel_size, lsp_id, lsp_name, total_fee_msat, source, timestamp) VALUES (${channelSize}, '${price.lsp_id || ''}', '${price.lsp_name || ''}', ${price.total_fee_msat || 0}, '${price.source || ''}', '${price.timestamp || ''}');`);
       });
     }
   });
   
   // Insert historical data
-  Object.entries(data.historicalData).forEach(([key, historyEntry]: [string, any]) => {
+  Object.entries(data.historicalData).forEach(([key, historyEntry]: [string, unknown]) => {
     if (historyEntry && historyEntry.prices && Array.isArray(historyEntry.prices)) {
-      historyEntry.prices.forEach((price: any) => {
+      historyEntry.prices.forEach((price: { lsp_id: string; lsp_name: string; total_fee_msat: number; source: string; timestamp: string }) => {
         sql.push(`INSERT INTO historical_prices (history_key, channel_size, lsp_id, lsp_name, total_fee_msat, source, timestamp) VALUES ('${key}', ${historyEntry.channelSize || 0}, '${price.lsp_id || ''}', '${price.lsp_name || ''}', ${price.total_fee_msat || 0}, '${price.source || ''}', '${price.timestamp || ''}');`);
       });
     }
@@ -216,7 +216,7 @@ function convertToSQL(data: any): string {
   return sql.join('\n');
 }
 
-function convertToTXT(data: any): string {
+function convertToTXT(data: { channelData: Record<string, unknown>; historicalData: Record<string, unknown> }): string {
   const lines = [];
   
   lines.push('ALBY LSP PRICE BOARD - DATABASE BACKUP');
@@ -231,11 +231,11 @@ function convertToTXT(data: any): string {
   // Channel data
   lines.push('CURRENT CHANNEL DATA');
   lines.push('====================');
-  Object.entries(data.channelData).forEach(([channelSize, prices]: [string, any]) => {
+  Object.entries(data.channelData).forEach(([channelSize, prices]: [string, unknown]) => {
     lines.push(`\nChannel Size: ${channelSize} sats`);
     lines.push('-'.repeat(30));
     if (Array.isArray(prices)) {
-      prices.forEach((price: any) => {
+      prices.forEach((price: { lsp_id: string; lsp_name: string; total_fee_msat: number; source: string; timestamp: string }) => {
         lines.push(`LSP: ${price.lsp_name || 'Unknown'} (${price.lsp_id || 'N/A'})`);
         lines.push(`  Fee: ${price.total_fee_msat || 0} msat`);
         lines.push(`  Source: ${price.source || 'Unknown'}`);
@@ -248,7 +248,7 @@ function convertToTXT(data: any): string {
   // Historical data
   lines.push('\nHISTORICAL DATA');
   lines.push('===============');
-  Object.entries(data.historicalData).forEach(([key, historyEntry]: [string, any]) => {
+  Object.entries(data.historicalData).forEach(([key, historyEntry]: [string, unknown]) => {
     lines.push(`\nHistory Key: ${key}`);
     lines.push('-'.repeat(40));
     if (historyEntry && historyEntry.prices && Array.isArray(historyEntry.prices)) {
@@ -256,7 +256,7 @@ function convertToTXT(data: any): string {
       lines.push(`Entry Timestamp: ${historyEntry.timestamp || 'Unknown'}`);
       lines.push(`Prices Count: ${historyEntry.prices.length}`);
       lines.push('');
-      historyEntry.prices.forEach((price: any, index: number) => {
+      historyEntry.prices.forEach((price: { lsp_id: string; lsp_name: string; total_fee_msat: number; source: string; timestamp: string }, index: number) => {
         lines.push(`  ${index + 1}. LSP: ${price.lsp_name || 'Unknown'} (${price.lsp_id || 'N/A'})`);
         lines.push(`     Fee: ${price.total_fee_msat || 0} msat`);
         lines.push(`     Source: ${price.source || 'Unknown'}`);
