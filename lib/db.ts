@@ -37,53 +37,52 @@ export async function savePricesToDB(prices: LSPPrice[]): Promise<boolean> {
     
     const pipeline = redis.pipeline();
     
-    // FIRST: Save old data to history before overwriting
-    for (const [size] of Object.entries(pricesByChannel)) {
-      const key = getChannelPricesKey(Number(size));
+    // FIRST: Save current data to history with precise timestamps
+    for (const [size, channelPrices] of Object.entries(pricesByChannel)) {
+      const date = now.split('T')[0]; // YYYY-MM-DD
+      const historyKey = `alby:lsp:history:${date}`;
       
       try {
-        // Get existing data before overwriting
-        const existingData = await redis.get(key);
-        if (existingData && typeof existingData === 'string') {
-          const existingPrices = JSON.parse(existingData) as LSPPrice[];
-          if (existingPrices.length > 0) {
-            // Save old data to history with date-based key
-            const oldestTimestamp = existingPrices[0]?.timestamp || now;
-            const date = new Date(oldestTimestamp).toISOString().split('T')[0]; // YYYY-MM-DD
-            const historyKey = `alby:lsp:history:${date}`;
-            
-            // Get existing history for this date
-            const existingHistory = await redis.get(historyKey);
-            let historyData: any = {};
-            
-            if (existingHistory) {
-              try {
-                historyData = typeof existingHistory === 'string' 
-                  ? JSON.parse(existingHistory) 
-                  : existingHistory;
-              } catch (error) {
-                console.warn(`Could not parse existing history for ${date}:`, error);
-                historyData = {};
-              }
-            }
-            
-            // Add this channel size data to the daily history
-            historyData[`channel_${size}`] = {
-              timestamp: oldestTimestamp,
-              channelSize: Number(size),
-              prices: existingPrices
-            };
-            
-            // Update the last update timestamp
-            historyData.lastUpdate = oldestTimestamp;
-            historyData.date = date;
-            
-            pipeline.set(historyKey, JSON.stringify(historyData));
-            console.log(`Saved old data to history: ${historyKey} (channel ${size})`);
+        // Get existing history for this date
+        const existingHistory = await redis.get(historyKey);
+        let historyData: any = {};
+        
+        if (existingHistory) {
+          try {
+            historyData = typeof existingHistory === 'string' 
+              ? JSON.parse(existingHistory) 
+              : existingHistory;
+          } catch (error) {
+            console.warn(`Could not parse existing history for ${date}:`, error);
+            historyData = {};
           }
         }
+        
+        // Initialize channel data if it doesn't exist
+        const channelKey = `channel_${size}`;
+        if (!historyData[channelKey]) {
+          historyData[channelKey] = {
+            channelSize: Number(size),
+            entries: []
+          };
+        }
+        
+        // Add new entry with precise timestamp
+        const newEntry = {
+          timestamp: now,
+          prices: channelPrices
+        };
+        
+        historyData[channelKey].entries.push(newEntry);
+        
+        // Update the last update timestamp
+        historyData.lastUpdate = now;
+        historyData.date = date;
+        
+        pipeline.set(historyKey, JSON.stringify(historyData));
+        console.log(`Saved new data to history: ${historyKey} (channel ${size}) at ${now}`);
       } catch (error) {
-        console.warn(`Could not preserve old data for ${key}:`, error);
+        console.warn(`Could not save data to history for ${historyKey}:`, error);
       }
     }
     

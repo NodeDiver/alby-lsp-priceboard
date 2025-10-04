@@ -29,39 +29,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Get historical data from database (new date-based structure)
     const historicalData = await getPriceHistory(1000);
     
-    // Process the new structure: each entry is a daily snapshot with all channel sizes
+    // Process the new structure: each entry is a daily snapshot with arrays of timestamped entries
     let filteredData: any[] = [];
     
     for (const dailyEntry of historicalData) {
       // Check if this daily entry has data for our requested channel size
       const channelKey = `channel_${channelSizeNum}`;
-      if (dailyEntry[channelKey] && dailyEntry[channelKey].prices) {
+      
+      // Handle both old and new data formats
+      if (dailyEntry[channelKey]) {
         const channelData = dailyEntry[channelKey];
         
-        // Add each LSP price from this day
-        channelData.prices.forEach((price: any) => {
-          filteredData.push({
-            timestamp: channelData.timestamp,
-            lsp_id: price.lsp_id,
-            lsp_name: price.lsp_name,
-            total_fee_msat: price.total_fee_msat || 0,
-            channel_size: channelData.channelSize,
-            source: price.source || 'unknown',
-            error: price.error || null
+        // New format: has entries array
+        if (channelData.entries && Array.isArray(channelData.entries)) {
+          channelData.entries.forEach((entry: any) => {
+            entry.prices.forEach((price: any) => {
+              filteredData.push({
+                timestamp: entry.timestamp,
+                lsp_id: price.lsp_id,
+                lsp_name: price.lsp_name,
+                total_fee_msat: price.total_fee_msat || 0,
+                channel_size: channelData.channelSize,
+                source: price.source || 'unknown',
+                error: price.error || null
+              });
+            });
           });
-        });
-      }
-    }
-
-    // If no data for the requested channel size, try to get data for 1M sats as fallback
-    if (filteredData.length === 0 && channelSizeNum !== 1000000) {
-      console.log(`No data for ${channelSizeNum} sats, trying 1M sats as fallback`);
-      
-      for (const dailyEntry of historicalData) {
-        const channelKey = 'channel_1000000';
-        if (dailyEntry[channelKey] && dailyEntry[channelKey].prices) {
-          const channelData = dailyEntry[channelKey];
-          
+        }
+        // Old format: has prices array directly
+        else if (channelData.prices && Array.isArray(channelData.prices)) {
           channelData.prices.forEach((price: any) => {
             filteredData.push({
               timestamp: channelData.timestamp,
@@ -77,8 +73,113 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
+    // If no data for the requested channel size, try to get data for 1M sats as fallback
+    if (filteredData.length === 0 && channelSizeNum !== 1000000) {
+      console.log(`No data for ${channelSizeNum} sats, trying 1M sats as fallback`);
+      
+      for (const dailyEntry of historicalData) {
+        const channelKey = 'channel_1000000';
+        if (dailyEntry[channelKey]) {
+          const channelData = dailyEntry[channelKey];
+          
+          // New format: has entries array
+          if (channelData.entries && Array.isArray(channelData.entries)) {
+            channelData.entries.forEach((entry: any) => {
+              entry.prices.forEach((price: any) => {
+                filteredData.push({
+                  timestamp: entry.timestamp,
+                  lsp_id: price.lsp_id,
+                  lsp_name: price.lsp_name,
+                  total_fee_msat: price.total_fee_msat || 0,
+                  channel_size: channelData.channelSize,
+                  source: price.source || 'unknown',
+                  error: price.error || null
+                });
+              });
+            });
+          }
+          // Old format: has prices array directly
+          else if (channelData.prices && Array.isArray(channelData.prices)) {
+            channelData.prices.forEach((price: any) => {
+              filteredData.push({
+                timestamp: channelData.timestamp,
+                lsp_id: price.lsp_id,
+                lsp_name: price.lsp_name,
+                total_fee_msat: price.total_fee_msat || 0,
+                channel_size: channelData.channelSize,
+                source: price.source || 'unknown',
+                error: price.error || null
+              });
+            });
+          }
+        }
+      }
+    }
+
+    // Apply daily averaging for multiple entries per day
+    const dailyAveragedData: any[] = [];
+    const groupedByDate: Record<string, Record<string, any[]>> = {};
+    
+    // Group data by date and LSP
+    filteredData.forEach(entry => {
+      try {
+        // Validate timestamp before processing
+        if (!entry.timestamp) {
+          console.warn('Entry missing timestamp:', entry);
+          return;
+        }
+        
+        const dateObj = new Date(entry.timestamp);
+        if (isNaN(dateObj.getTime())) {
+          console.warn('Invalid timestamp:', entry.timestamp, 'for entry:', entry);
+          return;
+        }
+        
+        const date = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD
+        const lspKey = entry.lsp_id;
+        
+        if (!groupedByDate[date]) {
+          groupedByDate[date] = {};
+        }
+        if (!groupedByDate[date][lspKey]) {
+          groupedByDate[date][lspKey] = [];
+        }
+        groupedByDate[date][lspKey].push(entry);
+      } catch (error) {
+        console.warn('Error processing entry:', entry, error);
+      }
+    });
+    
+    // Calculate daily averages for each LSP
+    Object.entries(groupedByDate).forEach(([date, lspGroups]) => {
+      Object.entries(lspGroups).forEach(([lspId, entries]) => {
+        if (entries.length === 0) return;
+        
+        // Calculate average price for this LSP on this day
+        const validPrices = entries.filter(e => e.total_fee_msat > 0);
+        if (validPrices.length === 0) return;
+        
+        const avgPrice = Math.round(
+          validPrices.reduce((sum, e) => sum + e.total_fee_msat, 0) / validPrices.length
+        );
+        
+        // Use the most recent entry as base and update the price
+        const baseEntry = entries[entries.length - 1]; // Most recent
+        dailyAveragedData.push({
+          ...baseEntry,
+          timestamp: `${date}T12:00:00.000Z`, // Use noon for daily average
+          total_fee_msat: avgPrice,
+          daily_average: true,
+          entry_count: entries.length
+        });
+      });
+    });
+    
     // Sort by timestamp (oldest first for chart display)
-    filteredData.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    dailyAveragedData.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    
+    // Use averaged data instead of raw data
+    filteredData = dailyAveragedData;
 
     console.log(`Found ${filteredData.length} historical entries for ${channelSizeNum} sats`);
 
