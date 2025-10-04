@@ -17,11 +17,11 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const [conversion, setConversion] = useState<CurrencyConversion | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Convert 500 sats to selected currency
+  // Convert 21 sats to selected currency
   useEffect(() => {
     if (isOpen && selectedCurrency) {
       setLoading(true);
-      convertSatsToCurrency(500, selectedCurrency)
+      convertSatsToCurrency(21, selectedCurrency)
         .then(setConversion)
         .catch(error => {
           console.error('Currency conversion error:', error);
@@ -41,7 +41,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const handlePayment = () => {
     // TODO: Integrate with Alby tools for actual payment
     // For now, simulate successful payment
-    console.log('Payment initiated - 500 sats');
+    console.log('Payment initiated - 21 sats');
     
     // Simulate payment success after 2 seconds
     setTimeout(() => {
@@ -78,7 +78,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           <div className="bg-gray-50 rounded-lg p-4 mb-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-2xl font-bold text-gray-900">500 sats</div>
+                <div className="text-2xl font-bold text-gray-900">21 sats</div>
                 <div className="text-sm text-gray-500">
                   {loading ? (
                     <span className="animate-pulse">Loading...</span>
@@ -137,7 +137,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center"
           >
             <span className="mr-2">⚡</span>
-            Pay 500 sats with lightning
+            Pay 21 sats with lightning
           </button>
           
           {/* Testing Notice */}
