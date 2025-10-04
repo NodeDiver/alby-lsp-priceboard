@@ -129,9 +129,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           return;
         }
         
-        const dateObj = new Date(entry.timestamp);
+        // Fix malformed timestamps (missing leading zero in hour)
+        let fixedTimestamp = entry.timestamp;
+        if (fixedTimestamp && fixedTimestamp.includes('T') && !fixedTimestamp.includes('T0') && !fixedTimestamp.includes('T1')) {
+          // Fix timestamps like "2025-09-21T8:22:00.000Z" to "2025-09-21T08:22:00.000Z"
+          fixedTimestamp = fixedTimestamp.replace(/T(\d):/, 'T0$1:');
+        }
+        
+        const dateObj = new Date(fixedTimestamp);
         if (isNaN(dateObj.getTime())) {
-          console.warn('Invalid timestamp:', entry.timestamp, 'for entry:', entry);
+          console.warn('Invalid timestamp:', entry.timestamp, 'fixed to:', fixedTimestamp, 'for entry:', entry);
           return;
         }
         
