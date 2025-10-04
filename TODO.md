@@ -2,6 +2,18 @@
 
 A human-readable list of tasks and improvements for the Alby LSP Price Board project.
 
+## 🚨 **Critical: LSP Blocking Problem**
+
+Our LSP price board faces blocking by both Node ID and IP address from Lightning Service Providers due to high-frequency data fetching. **We need to implement Node ID rotation using lightweight LDK nodes and IP rotation (weekly changes) to maintain service sustainability.**
+
+### LSP Blocking Solutions (High Priority)
+- **🔍 Analyze LSP blocking mechanisms** - Test which LSPs block by Node ID vs IP address
+- **🔄 Implement lightweight LDK node generation** - For automatic Node ID rotation  
+- **🌐 Research and implement weekly IP address rotation** - Cost-effective solution
+- **⚡ Optimize request patterns** - Reduce blocking risk across all LSPs
+- **📊 Add monitoring system** - Detect when LSPs start blocking requests
+- **🛡️ Implement fallback mechanisms** - When primary Node IDs get blocked
+
 ## 🎯 Future Enhancements
 
 ### Code Quality and Performance Improvements
@@ -114,5 +126,5 @@ A human-readable list of tasks and improvements for the Alby LSP Price Board pro
 
 ---
 
-*Last Updated: September 19, 2025*  
-*Version 0.2.1 - Production Ready with Major UX & Readability Improvements*
+*Last Updated: October 4, 2025*  
+*Version 0.2.1 - Production Ready with Major UX & Readability Improvements + LSP Blocking Problem Identified*

@@ -1,6 +1,6 @@
 # Alby LSP Price Board — Project Summary and Roadmap
 
-Last reviewed: 2025-10 (revised) • Repository snapshot analyzed locally
+Last reviewed: 2025-10-04 (revised) • Repository snapshot analyzed locally • **CRITICAL: LSP Blocking Problem Identified**
 
 ## What This Project Is
 A real-time lightning Service Provider (LSP) price comparison tool that fetches per-LSP channel-open pricing via LSPS1-compatible endpoints, stores snapshots in Vercel KV (Upstash Redis-compatible), and exposes:
@@ -47,10 +47,12 @@ Backend/frontend hardening:
 - Raw LSP error snapshots stored on failures (`raw_lsp_error`) to aid debugging without blocking.
 
 ## Supported LSPs (Configured)
-- Olympus
-- LNServer Wave (autodiscovery candidates trialed)
-- Megalith
-- Flashsats
+- **Olympus** - Uses dedicated node ID: `02e36a9c9e03ffc4bbf1bc9df64bdacd7736d4c97c01a1930578154a4c616ff478`
+- **LNServer Wave** - Uses default node ID (autodiscovery candidates trialed)
+- **Megalith** - Uses dedicated node ID: `0281575be148ae504458428cf31985b356d108e2c1bed1cc770f7ecef0bb593713`
+- **Flashsats** - Uses dedicated node ID: `02e36a9c9e03ffc4bbf1bc9df64bdacd7736d4c97c01a1930578154a4c616ff478`
+
+**⚠️ CRITICAL ISSUE**: LSPs may block requests by Node ID and/or IP address due to high-frequency data fetching. **Immediate action required** to implement Node ID rotation (lightweight LDK nodes) and IP rotation (weekly changes) for service sustainability.
 
 Note: Live data depends on LSP constraints (peering, whitelist, rate limits). Smart caching handles unavailability without blocking the UI.
 

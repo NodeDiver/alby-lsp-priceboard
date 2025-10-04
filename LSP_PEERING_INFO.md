@@ -37,5 +37,10 @@ This document contains the raw peering information for lightning Service Provide
 ```
 **Alternative clearnet IP:** `46.229.165.154:9735`
 
+## LQwD-Lspd-ldk
+```
+0370a5392cd7c81ff5128fa656ee6db0c4d11c778fcd6cb98cb6ba3b48394f5705@192.243.215.101:26000
+```
+
 ---
 

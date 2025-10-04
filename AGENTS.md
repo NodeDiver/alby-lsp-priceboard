@@ -16,12 +16,13 @@
 
 ## Project Status
 - **Current Phase**: Production Ready v0.2.1 with Major UX & Readability Improvements
-- **Last Updated**: September 2025
+- **Last Updated**: October 4, 2025
 - **Deployment Status**: Live on Vercel
 - **Code Quality**: Production-ready, fully tested
 - **LSPs**: 4 working LSPs - 3 with LIVE data (Olympus, LNServer Wave, Flashsats), 1 with smart fallback (Megalith)
 - **Breakthrough**: Successfully implemented LSPS1 protocol with persistent data storage
 - **Latest Features**: Fixed hydration error, stable table layout, Pro Mode toggle system, comprehensive typography overhaul, enhanced price display, timestamp improvements, UI polish, animation enhancements, per-LSP force fetch, 1-hour fresh cache rule, multi-channel cron jobs, LSP-specific public keys, unified Redis config, LSPS1 path consistency, unit tests, health monitoring, loading loop fixes, WebLN error handling, support button integration, code refactoring with 7/11 ChatGPT suggestions implemented
+- **⚠️ CRITICAL ISSUE**: LSP blocking problem identified - LSPs may block requests by Node ID and/or IP address, requiring immediate implementation of Node ID rotation (lightweight LDK nodes) and IP rotation (weekly changes)
 
 ## Technology Stack
 - **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS

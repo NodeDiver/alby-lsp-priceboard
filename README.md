@@ -231,6 +231,16 @@ docker run -p 3000:3000 alby-lsp-priceboard
 ### Configuration
 Set up Vercel KV and configure environment variables for database connection.
 
+## ⚠️ **Known Issues & Future Improvements**
+
+### LSP Blocking Problem
+Our LSP price board faces blocking by both Node ID and IP address from Lightning Service Providers due to high-frequency data fetching. **We need to implement Node ID rotation using lightweight LDK nodes and IP rotation (weekly changes) to maintain service sustainability.**
+
+**Planned Solutions:**
+- **Node ID Rotation**: Implement lightweight LDK node generation for automatic Node ID switching
+- **IP Rotation**: Weekly IP address changes to prevent IP-based blocking
+- **Rate Limiting Optimization**: Improve request patterns to reduce blocking risk
+
 ## Contributing
 
 Submit issues and pull requests on [GitHub](https://github.com/NodeDiver/alby-lsp-priceboard).
