@@ -182,9 +182,9 @@ function StatusBadge({ source, staleSeconds, errorCode, error, timestamp, live_f
           {getErrorIcon(errorCode)} {errorCode.replace(/_/g, ' ').toLowerCase()}
         </span>
         {timestamp && (
-          <span className="text-xs text-gray-500">
-            Last: {new Date(timestamp).toLocaleDateString()} <span title={new Date(timestamp).toLocaleTimeString()} className="cursor-pointer">🕒</span>
-          </span>
+            <span className="text-xs text-gray-500 dark:text-slate-400">
+              Last: {new Date(timestamp).toLocaleDateString()} <span title={new Date(timestamp).toLocaleTimeString()} className="cursor-pointer">🕒</span>
+            </span>
         )}
       </div>
     );
@@ -200,7 +200,7 @@ function StatusBadge({ source, staleSeconds, errorCode, error, timestamp, live_f
             </span>
           </Tooltip>
           {timestamp && (
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-gray-500 dark:text-slate-400">
               Last: {new Date(timestamp).toLocaleDateString()} <span title={new Date(timestamp).toLocaleTimeString()} className="cursor-pointer">🕒</span>
             </span>
           )}
@@ -214,20 +214,20 @@ function StatusBadge({ source, staleSeconds, errorCode, error, timestamp, live_f
         return (
           <div className="flex flex-col space-y-1">
             <div className="flex flex-col space-y-1">
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-sm font-medium bg-gray-300 text-gray-700" title={`Cached ${minutes}m ago`} aria-label={`Cached data, ${minutes} minutes old`}>
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-sm font-medium bg-gray-300 dark:bg-slate-600 text-gray-700 dark:text-slate-100" title={`Cached ${minutes}m ago`} aria-label={`Cached data, ${minutes} minutes old`}>
                 <span className="w-2 h-2 rounded-full bg-green-700 mr-1"></span>Cached
               </span>
-              <span className="inline-flex items-center px-2 py-1 rounded-full text-sm font-medium bg-gray-300 text-gray-600" title={`Live fetch failed: ${live_fetch_error}`} aria-label={`Live fetch failed: ${live_fetch_error}`}>
+              <span className="inline-flex items-center px-2 py-1 rounded-full text-sm font-medium bg-gray-300 dark:bg-slate-600 text-gray-600 dark:text-slate-200" title={`Live fetch failed: ${live_fetch_error}`} aria-label={`Live fetch failed: ${live_fetch_error}`}>
                 <span className="w-2 h-2 rounded-full bg-gray-600 mr-1"></span>⚠️ bad status
               </span>
             </div>
             {cached_timestamp && (
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-gray-500 dark:text-slate-400">
                 Cached: {new Date(cached_timestamp).toLocaleDateString()} <span title={new Date(cached_timestamp).toLocaleTimeString()} className="cursor-pointer">🕒</span>
               </span>
             )}
             {live_fetch_timestamp && (
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-gray-500 dark:text-slate-400">
                 Failed: {new Date(live_fetch_timestamp).toLocaleDateString()} <span title={new Date(live_fetch_timestamp).toLocaleTimeString()} className="cursor-pointer">🕒</span>
               </span>
             )}
@@ -239,12 +239,12 @@ function StatusBadge({ source, staleSeconds, errorCode, error, timestamp, live_f
       return (
         <div className="flex flex-col space-y-1">
           <Tooltip text={timestamp ? formatTimeAgo(timestamp) : "Previously fetched data"}>
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-sm font-medium bg-gray-300 text-gray-700 cursor-help" aria-label={`Cached data, ${minutes} minutes old`}>
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-sm font-medium bg-gray-300 dark:bg-slate-600 text-gray-700 dark:text-slate-100 cursor-help" aria-label={`Cached data, ${minutes} minutes old`}>
               <span className="w-2 h-2 rounded-full bg-green-700 mr-1"></span>Cached
             </span>
           </Tooltip>
           {timestamp && (
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-gray-500 dark:text-slate-400">
               Last: {new Date(timestamp).toLocaleDateString()} <span title={new Date(timestamp).toLocaleTimeString()} className="cursor-pointer">🕒</span>
             </span>
           )}
@@ -257,7 +257,7 @@ function StatusBadge({ source, staleSeconds, errorCode, error, timestamp, live_f
             <span className="w-2 h-2 rounded-full bg-gray-600 mr-1"></span>Unavailable
           </span>
           {timestamp && (
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-gray-500 dark:text-slate-400">
               Last: {new Date(timestamp).toLocaleDateString()} <span title={new Date(timestamp).toLocaleTimeString()} className="cursor-pointer">🕒</span>
             </span>
           )}
@@ -270,7 +270,7 @@ function StatusBadge({ source, staleSeconds, errorCode, error, timestamp, live_f
             <span className="w-2 h-2 rounded-full bg-gray-500 mr-1"></span>Unknown
           </span>
           {timestamp && (
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-gray-500 dark:text-slate-400">
               Last: {new Date(timestamp).toLocaleDateString()} <span title={new Date(timestamp).toLocaleTimeString()} className="cursor-pointer">🕒</span>
             </span>
           )}
@@ -577,17 +577,17 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
         </tbody>
       </table>
       
-      <div className="p-4 bg-gray-50 text-sm text-gray-600 border-t border-gray-200">
+      <div className="p-4 bg-gray-50 dark:bg-slate-700 text-sm text-gray-600 dark:text-slate-300 border-t border-gray-200 dark:border-slate-600">
         <div className="flex justify-between items-center">
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-gray-600 dark:text-slate-300">
             {prices.length} price entries
           </div>
           <div className="flex items-center space-x-2">
-            <span>Data sources:</span>
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800" title="Real-time data from LSP APIs"><span className="w-2 h-2 rounded-full bg-green-500 mr-1"></span>Live</span>
-            <span className="text-xs text-gray-500">Real-time pricing from LSPs</span>
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-sm font-medium bg-gray-300 text-gray-700" title="Previously fetched data"><span className="w-2 h-2 rounded-full bg-green-700 mr-1"></span>Cached</span>
-            <span className="text-xs text-gray-500">Previously fetched data</span>
+            <span className="text-gray-600 dark:text-slate-300">Data sources:</span>
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-slate-600 text-gray-800 dark:text-slate-100" title="Real-time data from LSP APIs"><span className="w-2 h-2 rounded-full bg-green-500 mr-1"></span>Live</span>
+            <span className="text-xs text-gray-500 dark:text-slate-400">Real-time pricing from LSPs</span>
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-sm font-medium bg-gray-300 dark:bg-slate-600 text-gray-700 dark:text-slate-100" title="Previously fetched data"><span className="w-2 h-2 rounded-full bg-green-700 mr-1"></span>Cached</span>
+            <span className="text-xs text-gray-500 dark:text-slate-400">Previously fetched data</span>
           </div>
         </div>
       </div>
