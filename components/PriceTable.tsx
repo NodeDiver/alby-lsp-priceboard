@@ -195,7 +195,7 @@ function StatusBadge({ source, staleSeconds, errorCode, error, timestamp, live_f
       return (
         <div className="flex flex-col space-y-1">
           <Tooltip text={timestamp ? formatTimeAgo(timestamp) : "Fresh data from LSP"}>
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800 cursor-help" aria-label="Live data - fresh from LSP">
+            <span className="inline-flex items-center px-2 py-1 rounded-full text-sm font-medium bg-gray-100 dark:bg-slate-600 text-gray-800 dark:text-slate-100 cursor-help" aria-label="Live data - fresh from LSP">
               <span className="w-2 h-2 rounded-full bg-green-500 mr-1"></span>Live
             </span>
           </Tooltip>
@@ -266,7 +266,7 @@ function StatusBadge({ source, staleSeconds, errorCode, error, timestamp, live_f
     default:
       return (
         <div className="flex flex-col space-y-1">
-          <span className="inline-flex items-center px-2 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800" aria-label="Unknown data source">
+          <span className="inline-flex items-center px-2 py-1 rounded-full text-sm font-medium bg-gray-100 dark:bg-slate-600 text-gray-800 dark:text-slate-100" aria-label="Unknown data source">
             <span className="w-2 h-2 rounded-full bg-gray-500 mr-1"></span>Unknown
           </span>
           {timestamp && (
@@ -406,16 +406,16 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
   });
 
   return (
-    <div className="overflow-x-auto bg-white rounded-lg shadow">
+    <div className="overflow-x-auto bg-white dark:bg-slate-800 rounded-lg shadow">
       <table className="w-full border-collapse table-fixed" role="table" aria-label="LSP Price Comparison">
         <thead>
-          <tr className="bg-gray-50 border-b border-gray-200">
-            <th className="text-left p-4 text-lg font-semibold text-gray-700 w-2/3" scope="col">
+          <tr className="bg-gray-50 dark:bg-slate-700 border-b border-gray-200 dark:border-slate-600">
+            <th className="text-left p-4 text-lg font-semibold text-gray-700 dark:text-slate-200 w-2/3" scope="col">
               <Tooltip text="lightning Service Provider - A company that opens lightning network channels for you">
                 Provider
               </Tooltip>
             </th>
-            <th className="text-center p-4 text-lg font-semibold text-gray-700 w-1/3" scope="col">
+            <th className="text-center p-4 text-lg font-semibold text-gray-700 dark:text-slate-200 w-1/3" scope="col">
               <Tooltip text="Total cost to open a lightning channel of this size, including all LSP fees and charges">
                 Fee
               </Tooltip>
@@ -431,8 +431,8 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
             const healthStatus = healthStatuses.find(h => h.lsp_id === lspId);
             
             return (
-              <tr key={lspId} className="border-b border-gray-100 hover:bg-gray-50">
-                <td className="p-4 text-lg font-semibold text-gray-900">
+              <tr key={lspId} className="border-b border-gray-100 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-700">
+                <td className="p-4 text-lg font-semibold text-gray-900 dark:text-slate-100">
                   <div className="flex items-center space-x-3">
                     <LSPHealthIndicator healthStatus={healthStatus} />
                     <LSPIcon 
@@ -475,7 +475,7 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
                   
                   if (!price) {
                     return (
-                      <td className="text-center p-4 text-gray-400">
+                      <td className="text-center p-4 text-gray-400 dark:text-slate-500">
                         N/A
                       </td>
                     );
@@ -490,10 +490,10 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
                     return (
                       <td className="text-center p-4">
                         <div className="space-y-2">
-                          <div className="text-2xl font-bold text-gray-900">
+                          <div className="text-2xl font-bold text-gray-900 dark:text-slate-100">
                             {formatSats(msatToSat(price.price))} sats
                           </div>
-                          <div className="text-lg font-semibold text-gray-700">
+                          <div className="text-lg font-semibold text-gray-700 dark:text-slate-300">
                             {conversionLoading ? (
                               <span className="text-gray-400">Converting...</span>
                             ) : conversion ? (
@@ -525,7 +525,7 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
                     if (price.error_code === 'CHANNEL_SIZE_TOO_SMALL' || 
                         (price.lsp_id === 'lnserver' && selectedChannelSize === 1000000)) {
                       return (
-                        <td className="text-center p-4 text-gray-600">
+                        <td className="text-center p-4 text-gray-600 dark:text-slate-400">
                           <Tooltip text="This LSP only accepts channel opening requests for channels that are at least 2 million satoshis in size">
                             <div className="text-sm cursor-help">
                               Channels from 2M+
@@ -536,7 +536,7 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
                     }
                     
                     return (
-                      <td className="text-center p-4 text-gray-700">
+                        <td className="text-center p-4 text-gray-700 dark:text-slate-300">
                         Error
                       </td>
                     );
@@ -548,10 +548,10 @@ export function PriceTable({ prices, loading = false, lspMetadata = [], selected
                   return (
                     <td className="text-center p-4">
                       <div className="space-y-2">
-                        <div className="text-2xl font-bold text-gray-900">
+                        <div className="text-2xl font-bold text-gray-900 dark:text-slate-100">
                           {formatSats(msatToSat(price.price))} sats
                         </div>
-                        <div className="text-lg font-semibold text-gray-700">
+                        <div className="text-lg font-semibold text-gray-700 dark:text-slate-300">
                           {conversionLoading ? (
                             <span className="text-gray-400">Converting...</span>
                           ) : conversion ? (

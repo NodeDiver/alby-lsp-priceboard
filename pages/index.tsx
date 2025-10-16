@@ -10,6 +10,7 @@ import { ProModeUnlockOverlay } from '../components/ProModeUnlockOverlay';
 import { ProModeManager } from '../lib/pro-mode';
 import { SimpleHealthStatus } from '../lib/simple-health';
 import { HistoricalDataGraph } from '../components/HistoricalDataGraph';
+import { ThemeToggle } from '../components/ThemeToggle';
 
 
 export default function Home() {
@@ -394,16 +395,16 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-white dark:bg-slate-800 shadow-sm border-b border-gray-200 dark:border-slate-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="py-6">
             <div>
-              <h1 className="text-4xl font-bold text-gray-900">
+              <h1 className="text-4xl font-bold text-gray-900 dark:text-slate-100">
                 Alby LSP Price Board
               </h1>
-              <p className="mt-2 text-xl text-gray-600">
+              <p className="mt-2 text-xl text-gray-600 dark:text-slate-300">
                 Compare how much different lightning Service Providers charge to open an inbound lightning channel
               </p>
             </div>
@@ -432,11 +433,11 @@ export default function Home() {
         )}
 
         {/* Price Table */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 bg-gray-100 border-b border-gray-200">
+        <div className="bg-white dark:bg-slate-800 rounded-lg shadow">
+          <div className="px-6 py-4 bg-gray-100 dark:bg-slate-700 border-b border-gray-200 dark:border-slate-600">
             <div className="flex justify-between items-center">
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-100">
                   <Tooltip text="lightning Service Providers - companies that open Bitcoin lightning channels for you">
                     LSP
                   </Tooltip> Price Comparison
@@ -449,7 +450,7 @@ export default function Home() {
               {/* Channel Size Selector */}
                                         <div className="flex items-center space-x-4">
                             <div className="flex items-center space-x-2">
-                              <label htmlFor="channelSize" className="text-sm font-medium text-gray-700">
+                              <label htmlFor="channelSize" className="text-sm font-medium text-gray-700 dark:text-slate-300">
                                 <Tooltip text="How much Bitcoin capacity you want in your lightning channel">
                                   Channel Size:
                                 </Tooltip>
@@ -458,7 +459,7 @@ export default function Home() {
                                 id="channelSize"
                                 value={selectedChannelSize}
                                 onChange={(e) => handleChannelSizeChange(Number(e.target.value))}
-                                className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
+                                className="px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100"
                               >
                                 {Array.from({ length: 10 }, (_, i) => {
                                   const size = (i + 1) * 1000000; // 1M to 10M
@@ -472,14 +473,14 @@ export default function Home() {
                             </div>
                             
                             <div className="flex items-center space-x-2">
-                              <label htmlFor="currency" className="text-sm font-medium text-gray-700">
+                              <label htmlFor="currency" className="text-sm font-medium text-gray-700 dark:text-slate-300">
                                 Currency:
                               </label>
                               <select
                                 id="currency"
                                 value={selectedCurrency}
                                 onChange={(e) => handleCurrencyChange(e.target.value)}
-                                className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500"
+                                className="px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-slate-500 bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100"
                               >
                                 {COMMON_CURRENCIES.map((currency) => (
                                   <option key={currency.code} value={currency.code}>
@@ -487,6 +488,11 @@ export default function Home() {
                                   </option>
                                 ))}
                               </select>
+                            </div>
+                            
+                            {/* Theme Toggle */}
+                            <div className="flex items-center">
+                              <ThemeToggle />
                             </div>
                           </div>
             </div>
@@ -534,7 +540,7 @@ export default function Home() {
                 aria-label="Toggle Pro Mode"
               >
                 <span
-                  className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white dark:bg-slate-200 transition-transform ${
                     isHydrated && proMode ? 'translate-x-6' : 'translate-x-1'
                   }`}
                 />
@@ -555,7 +561,7 @@ export default function Home() {
                 aria-label="Toggle Historical Data"
               >
                 <span
-                  className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white dark:bg-slate-200 transition-transform ${
                     isHydrated && historicalData ? 'translate-x-6' : 'translate-x-1'
                   }`}
                 />
@@ -623,7 +629,7 @@ export default function Home() {
                     window.open('https://getalby.com/p/nodii', '_blank');
                   }
                 }}
-                className="px-5 py-2.5 text-sm bg-white border border-gray-400 text-gray-700 rounded-full hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center uppercase font-semibold"
+                className="px-5 py-2.5 text-sm bg-white dark:bg-slate-700 border border-gray-400 dark:border-slate-600 text-gray-700 dark:text-slate-200 rounded-full hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors duration-200 flex items-center justify-center uppercase font-semibold"
               >
                 Support my work with 1€
               </button>
@@ -638,7 +644,7 @@ export default function Home() {
                     });
                     window.open(`/api/backup-data?${params}`, '_blank');
                   }}
-                  className="px-5 py-2.5 text-sm bg-white border border-gray-400 text-gray-700 rounded-full hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center uppercase font-semibold"
+                  className="px-5 py-2.5 text-sm bg-white dark:bg-slate-700 border border-gray-400 dark:border-slate-600 text-gray-700 dark:text-slate-200 rounded-full hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors duration-200 flex items-center justify-center uppercase font-semibold"
                   title="Download all historical data as JSON file"
                 >
                   📥 Download Data
@@ -662,12 +668,12 @@ export default function Home() {
 
 
         {/* API Info - Collapsible */}
-        <div className="mt-8 bg-white rounded-lg shadow">
+        <div className="mt-8 bg-white dark:bg-slate-800 rounded-lg shadow">
           <button 
             onClick={() => setShowApiSection(!showApiSection)}
-            className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 rounded-t-lg"
+            className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 dark:hover:bg-slate-700 rounded-t-lg"
           >
-            <h3 className="text-lg font-semibold text-gray-900">For Developers - Public API Access</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">For Developers - Public API Access</h3>
             <svg 
               className={`w-5 h-5 transition-transform ${showApiSection ? 'rotate-180' : ''}`}
               fill="none" 
@@ -697,17 +703,17 @@ export default function Home() {
           
           <div className="space-y-4">
             <div>
-              <h4 className="text-base font-medium text-gray-900 mb-2">Endpoint</h4>
-              <div className="bg-gray-50 rounded p-3 font-mono text-base">
+              <h4 className="text-base font-medium text-gray-900 dark:text-slate-100 mb-2">Endpoint</h4>
+              <div className="bg-gray-50 dark:bg-slate-700 rounded p-3 font-mono text-base text-gray-900 dark:text-slate-100">
                 <div>GET /api/prices</div>
-                <div className="text-gray-500 mt-1">Optional: ?channelSize=1000000 (1M-10M sats)</div>
-                <div className="text-gray-500 mt-1">Optional: ?fresh=1 (force live fetch)</div>
+                <div className="text-gray-500 dark:text-slate-400 mt-1">Optional: ?channelSize=1000000 (1M-10M sats)</div>
+                <div className="text-gray-500 dark:text-slate-400 mt-1">Optional: ?fresh=1 (force live fetch)</div>
               </div>
             </div>
             
             <div>
-              <h4 className="text-base font-medium text-gray-900 mb-2">Response Format</h4>
-              <div className="bg-gray-50 rounded p-3 font-mono text-sm overflow-x-auto">
+              <h4 className="text-base font-medium text-gray-900 dark:text-slate-100 mb-2">Response Format</h4>
+              <div className="bg-gray-50 dark:bg-slate-700 rounded p-3 font-mono text-sm text-gray-900 dark:text-slate-100 overflow-x-auto">
                 <pre>{`{
   "success": true,
   "last_update": "2025-09-05T16:24:06.744Z",
@@ -791,10 +797,10 @@ export default function Home() {
         </div>
 
         {/* GitHub Repository Link */}
-        <div className="mt-8 bg-white rounded-lg shadow p-6">
+        <div className="mt-8 bg-white dark:bg-slate-800 rounded-lg shadow p-6">
           <div className="text-center">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Open Source Project</h3>
-            <p className="text-base text-gray-600 mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-2">Open Source Project</h3>
+            <p className="text-base text-gray-600 dark:text-slate-300 mb-4">
               This project is open source and community-driven. Help us improve it!
             </p>
             <div className="flex justify-center space-x-4">
@@ -821,10 +827,10 @@ export default function Home() {
                 Report Issue
               </a>
             </div>
-            <p className="text-sm text-gray-500 mt-4">
+            <p className="text-sm text-gray-500 dark:text-slate-400 mt-4">
               Found a bug? Want to request a feature? Need a new LSP added? 
               <br />
-              <a href="https://github.com/NodeDiver/alby-lsp-priceboard/issues" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">
+              <a href="https://github.com/NodeDiver/alby-lsp-priceboard/issues" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline">
                 Open an issue on GitHub
               </a>
             </p>
@@ -840,12 +846,12 @@ export default function Home() {
         />
 
         {/* Footer */}
-        <footer className="mt-12 py-6 border-t border-gray-200 bg-white">
+        <footer className="mt-12 py-6 border-t border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800">
           <div className="text-center">
-            <p className="text-base text-gray-500">
+            <p className="text-base text-gray-500 dark:text-slate-400">
               Alby LSP Price Board v0.2.1 • Open Source lightning Service Provider Comparison Tool
             </p>
-            <p className="text-sm text-gray-400 mt-1">
+            <p className="text-sm text-gray-400 dark:text-slate-500 mt-1">
               Built with Next.js • Data from LSPS1 Protocol • Updated September 2025
             </p>
             <div className="mt-3">

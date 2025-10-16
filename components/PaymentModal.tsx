@@ -59,14 +59,14 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       />
       
       {/* Modal */}
-      <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all duration-300 scale-100">
+      <div className="relative bg-white dark:bg-slate-800 rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-all duration-300 scale-100">
         <div className="p-6">
           {/* Header */}
           <div className="text-center mb-6">
             <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 mb-4">
               <span className="text-2xl">💪</span>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-slate-100 mb-2">
               Unlock Pro Mode
             </h3>
             <p className="text-gray-600">
@@ -75,10 +75,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           </div>
 
           {/* Pricing */}
-          <div className="bg-gray-50 rounded-lg p-4 mb-6">
+          <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-4 mb-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-2xl font-bold text-gray-900">21 sats</div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-slate-100">21 sats</div>
                 <div className="text-sm text-gray-500">
                   {loading ? (
                     <span className="animate-pulse">Loading...</span>
@@ -95,14 +95,14 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               </div>
               <div className="text-right">
                 <div className="text-sm text-gray-600">Valid for</div>
-                <div className="font-semibold text-gray-900">30 days</div>
+                <div className="font-semibold text-gray-900 dark:text-slate-100">30 days</div>
               </div>
             </div>
           </div>
 
           {/* Features */}
           <div className="mb-6">
-            <h4 className="font-medium text-gray-900 mb-3">Pro Mode includes:</h4>
+            <h4 className="font-medium text-gray-900 dark:text-slate-100 mb-3">Pro Mode includes:</h4>
             <ul className="space-y-2 text-sm text-gray-600">
               <li className="flex items-center">
                 <span className="text-green-500 mr-2">✓</span>

@@ -197,8 +197,8 @@ export function HistoricalDataGraph({ channelSize, proMode }: HistoricalDataGrap
 
   if (requiresProMode && !proMode) {
     return (
-      <div className="bg-white rounded-lg shadow p-8 text-center">
-        <div className="text-gray-500 mb-4">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-8 text-center">
+        <div className="text-gray-500 dark:text-slate-400 mb-4">
           <div className="text-4xl mb-2">🔒</div>
           <div className="text-lg font-semibold">Pro Mode Required</div>
         </div>
@@ -211,16 +211,16 @@ export function HistoricalDataGraph({ channelSize, proMode }: HistoricalDataGrap
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg shadow p-8 text-center">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-8 text-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">Loading historical data...</p>
+        <p className="text-gray-600 dark:text-slate-300">Loading historical data...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg shadow p-8 text-center">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-8 text-center">
         <div className="text-red-500 mb-4">
           <div className="text-4xl mb-2">⚠️</div>
           <div className="text-lg font-semibold">Error Loading Data</div>
@@ -232,8 +232,8 @@ export function HistoricalDataGraph({ channelSize, proMode }: HistoricalDataGrap
 
   if (historicalData.length === 0) {
     return (
-      <div className="bg-white rounded-lg shadow p-8 text-center">
-        <div className="text-gray-500 mb-4">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-8 text-center">
+        <div className="text-gray-500 dark:text-slate-400 mb-4">
           <div className="text-4xl mb-2">📊</div>
           <div className="text-lg font-semibold">No Historical Data</div>
         </div>
@@ -245,12 +245,12 @@ export function HistoricalDataGraph({ channelSize, proMode }: HistoricalDataGrap
   }
 
   return (
-    <div className="bg-white rounded-lg shadow">
-      <div className="p-6 border-b border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900">
+    <div className="bg-white dark:bg-slate-800 rounded-lg shadow">
+      <div className="p-6 border-b border-gray-200 dark:border-slate-600">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
           Historical Price Data - {channelSize / 1000000}M sats
         </h3>
-        <p className="text-sm text-gray-600 mt-1">
+        <p className="text-sm text-gray-600 dark:text-slate-400 mt-1">
           Last 30 days of pricing data
         </p>
       </div>
@@ -310,8 +310,8 @@ export function HistoricalDataGraph({ channelSize, proMode }: HistoricalDataGrap
         </div>
 
         {/* LSP Legend Sidebar */}
-        <div className="w-48 border-l border-gray-200 p-4 bg-gray-50">
-          <h4 className="text-sm font-semibold text-gray-700 mb-3">LSPs</h4>
+        <div className="w-48 border-l border-gray-200 dark:border-slate-600 p-4 bg-gray-50 dark:bg-slate-700">
+          <h4 className="text-sm font-semibold text-gray-700 dark:text-slate-200 mb-3">LSPs</h4>
           <div className="space-y-2">
             {lspList.map((lspName, index) => (
               <label key={lspName} className="flex items-center space-x-2 cursor-pointer">

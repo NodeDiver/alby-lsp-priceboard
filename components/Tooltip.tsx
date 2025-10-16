@@ -30,14 +30,14 @@ export const Tooltip: React.FC<TooltipProps> = ({ text, children, className = ''
       </div>
       {isVisible && (
         <div 
-          className="fixed px-4 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg z-[9999] w-64 pointer-events-none"
+          className="fixed px-4 py-2 bg-gray-900 dark:bg-slate-700 text-white dark:text-slate-100 text-sm rounded-lg shadow-lg z-[9999] w-64 pointer-events-none"
           style={{
             top: `${position.top}px`,
             left: `${Math.max(10, Math.min(position.left, window.innerWidth - 266))}px` // Keep within viewport
           }}
         >
           <div className="text-center leading-relaxed">{text}</div>
-          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+          <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900 dark:border-t-slate-700"></div>
         </div>
       )}
     </div>
