@@ -1,6 +1,6 @@
 import { fetchAllLSPPrices, LSPPrice, LspErrorCode } from './lsp-api';
 import { savePricesToDB, getLatestPrices as getLatestPricesFromDB } from './db';
-import { fetchAlbyPricesForChannelSize, albyHasDataForLSP, getAlbyPriceForLSP } from './alby-api';
+import { fetchAlbyPricesForChannelSize, getAlbyPriceForLSP } from './alby-api';
 
 // Price fetching service
 export class PriceService {
@@ -44,7 +44,7 @@ export class PriceService {
     try {
       // NEW: Try Alby API first
       console.log(`🔄 Fetching prices for ${channelSizeSat} sats - trying Alby API first`);
-      let allPrices: LSPPrice[] = [];
+      const allPrices: LSPPrice[] = [];
       
       try {
         const albyPrices = await fetchAlbyPricesForChannelSize(channelSizeSat);
