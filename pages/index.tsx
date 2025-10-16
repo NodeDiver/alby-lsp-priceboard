@@ -533,7 +533,7 @@ export default function Home() {
                 onClick={isHydrated ? handleProModeToggle : undefined}
                 disabled={!isHydrated}
                 className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 ${
-                  isHydrated && proMode ? 'bg-gray-700' : 'bg-gray-200'
+                  isHydrated && proMode ? 'bg-gray-700' : 'bg-gray-200 dark:bg-slate-600'
                 } ${!isHydrated ? 'opacity-50 cursor-not-allowed' : ''}`}
                 role="switch"
                 aria-checked={isHydrated ? proMode : false}
@@ -554,7 +554,7 @@ export default function Home() {
                 onClick={isHydrated ? handleHistoricalDataToggle : undefined}
                 disabled={!isHydrated}
                 className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 ${
-                  isHydrated && historicalData ? 'bg-gray-700' : 'bg-gray-200'
+                  isHydrated && historicalData ? 'bg-gray-700' : 'bg-gray-200 dark:bg-slate-600'
                 } ${!isHydrated ? 'opacity-50 cursor-not-allowed' : ''}`}
                 role="switch"
                 aria-checked={isHydrated ? historicalData : false}
