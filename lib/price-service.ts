@@ -1,5 +1,6 @@
 import { fetchAllLSPPrices, LSPPrice, LspErrorCode } from './lsp-api';
 import { savePricesToDB, getLatestPrices as getLatestPricesFromDB } from './db';
+import { fetchAlbyPricesForChannelSize, albyHasDataForLSP, getAlbyPriceForLSP } from './alby-api';
 
 // Price fetching service
 export class PriceService {
@@ -41,22 +42,56 @@ export class PriceService {
     this.isFetching = true;
     
     try {
+      // NEW: Try Alby API first
+      console.log(`🔄 Fetching prices for ${channelSizeSat} sats - trying Alby API first`);
+      let allPrices: LSPPrice[] = [];
       
-      // Fetch prices from all LSPs
-      const prices = await fetchAllLSPPrices(channelSizeSat);
+      try {
+        const albyPrices = await fetchAlbyPricesForChannelSize(channelSizeSat);
+        allPrices.push(...albyPrices);
+        
+        const albySuccessCount = albyPrices.filter(p => !p.error).length;
+        console.log(`📊 Alby API: ${albySuccessCount}/${albyPrices.length} LSPs have data`);
+      } catch (albyError) {
+        console.warn(`⚠️ Alby API failed, falling back to LSPS1: ${albyError instanceof Error ? albyError.message : 'Unknown error'}`);
+      }
       
-      if (prices.length > 0) {
+      // For any LSPs not covered by Alby API, try LSPS1
+      const { getActiveLSPs } = await import('./lsps');
+      const activeLSPs = getActiveLSPs();
+      const albyLspIds = new Set(allPrices.map(p => p.lsp_id));
+      const missingLSPs = activeLSPs.filter(lsp => !albyLspIds.has(lsp.id));
+      
+      if (missingLSPs.length > 0) {
+        console.log(`🔍 Missing LSPs from Alby API: ${missingLSPs.map(l => l.name).join(', ')} - trying LSPS1`);
+        try {
+          const lsps1Prices = await fetchAllLSPPrices(channelSizeSat);
+          // Only add LSPS1 prices for LSPs not already covered by Alby
+          const additionalLsps1Prices = lsps1Prices.filter(price => !albyLspIds.has(price.lsp_id));
+          allPrices.push(...additionalLsps1Prices);
+          
+          const lsps1SuccessCount = additionalLsps1Prices.filter(p => !p.error).length;
+          console.log(`📊 LSPS1 fallback: ${lsps1SuccessCount}/${additionalLsps1Prices.length} additional LSPs`);
+        } catch (lsps1Error) {
+          console.error(`❌ LSPS1 fallback also failed: ${lsps1Error instanceof Error ? lsps1Error.message : 'Unknown error'}`);
+        }
+      }
+      
+      if (allPrices.length > 0) {
         // Save to database
-        const saved = await savePricesToDB(prices);
+        const saved = await savePricesToDB(allPrices);
         if (saved) {
           this.lastFetchTime = new Date();
         }
         
         // Also save to in-memory cache for local development
-        this.inMemoryCache.set(channelSizeSat, prices);
+        this.inMemoryCache.set(channelSizeSat, allPrices);
+        
+        const totalSuccessCount = allPrices.filter(p => !p.error).length;
+        console.log(`✅ Price fetch complete: ${totalSuccessCount}/${allPrices.length} LSPs successful`);
       }
       
-      return prices;
+      return allPrices;
     } catch (error) {
       console.error('Error in price fetch service:', error);
       // Return cached prices if available
@@ -174,21 +209,48 @@ export class PriceService {
     const cachedPrices = await getLatestPricesFromDB(channelSizeSat);
     
     try {
-      // Force fetch the specific LSP
-      const livePrice = await fetchLSPPriceBypass(targetLSP, channelSizeSat);
+      // NEW: Try Alby API first
+      console.log(`🔄 Force fetching ${targetLSP.name} - trying Alby API first`);
+      let livePrice: LSPPrice | null = null;
       
-      if (livePrice && livePrice.source === 'live') {
-        console.log(`Got live data for ${targetLSP.name}`);
-        // Convert old error codes to new ones
-        const convertedPrice = this.convertErrorCodes(livePrice);
-        const result = { ...convertedPrice, source: 'live' as const };
+      try {
+        const albyPrices = await fetchAlbyPricesForChannelSize(channelSizeSat);
+        const albyPriceForLSP = getAlbyPriceForLSP(albyPrices, lspId, channelSizeSat);
+        
+        if (albyPriceForLSP && !albyPriceForLSP.error && albyPriceForLSP.total_fee_msat > 0) {
+          console.log(`✅ Got data from Alby API for ${targetLSP.name}: ${albyPriceForLSP.total_fee_msat} msat`);
+          livePrice = { ...albyPriceForLSP, source: 'live' as const };
+        } else {
+          console.log(`⚠️ No Alby data for ${targetLSP.name} at ${channelSizeSat} sats`);
+        }
+      } catch (albyError) {
+        console.warn(`⚠️ Alby API failed for ${targetLSP.name}, trying LSPS1: ${albyError instanceof Error ? albyError.message : 'Unknown error'}`);
+      }
+      
+      // FALLBACK: Try LSPS1 if Alby didn't provide data
+      if (!livePrice) {
+        console.log(`🔍 Trying LSPS1 for ${targetLSP.name}`);
+        const lsps1Price = await fetchLSPPriceBypass(targetLSP, channelSizeSat);
+        
+        if (lsps1Price && lsps1Price.source === 'live') {
+          console.log(`✅ Got data from LSPS1 for ${targetLSP.name}`);
+          // Convert old error codes to new ones
+          const convertedPrice = this.convertErrorCodes(lsps1Price);
+          livePrice = { ...convertedPrice, source: 'live' as const };
+        } else {
+          console.log(`⚠️ No LSPS1 data for ${targetLSP.name}`);
+        }
+      }
+      
+      if (livePrice) {
+        console.log(`🎯 Successfully fetched live data for ${targetLSP.name} from ${livePrice.source === 'alby_api' ? 'Alby API' : 'LSPS1'}`);
         
         // Merge with existing data - keep other LSPs' original timestamps and sources
         const otherPrices = cachedPrices.filter(p => p.lsp_id !== lspId);
-        const allPrices = [result, ...otherPrices];
+        const allPrices = [livePrice, ...otherPrices];
         
         // Save only the updated LSP to database to avoid updating other LSPs' timestamps
-        await savePricesToDB([result]);
+        await savePricesToDB([livePrice]);
         
         // Update in-memory cache with all prices
         this.inMemoryCache.set(channelSizeSat, allPrices);
@@ -233,9 +295,29 @@ export class PriceService {
     const cachedPrices = await getLatestPricesFromDB(channelSizeSat);
     // Prices are already filtered by channel size in the new structure
     
+    // NEW: Try Alby API first for all LSPs
+    console.log(`🔄 Fetching live data per LSP for ${channelSizeSat} sats - trying Alby API first`);
+    let albyPrices: LSPPrice[] = [];
+    try {
+      albyPrices = await fetchAlbyPricesForChannelSize(channelSizeSat);
+      const albySuccessCount = albyPrices.filter(p => !p.error).length;
+      console.log(`📊 Alby API: ${albySuccessCount}/${albyPrices.length} LSPs have data`);
+    } catch (albyError) {
+      console.warn(`⚠️ Alby API failed, will try LSPS1 per LSP: ${albyError instanceof Error ? albyError.message : 'Unknown error'}`);
+    }
+    
     const promises = activeLSPs.map(async (lsp) => {
       try {
-        // Try to fetch live data
+        // NEW: Check if Alby API has data for this LSP first
+        const albyPriceForLSP = getAlbyPriceForLSP(albyPrices, lsp.id, channelSizeSat);
+        
+        if (albyPriceForLSP && !albyPriceForLSP.error && albyPriceForLSP.total_fee_msat > 0) {
+          console.log(`✅ Got data from Alby API for ${lsp.name}: ${albyPriceForLSP.total_fee_msat} msat`);
+          return { ...albyPriceForLSP, source: 'live' as const };
+        }
+        
+        // FALLBACK: Try LSPS1 if Alby didn't provide data
+        console.log(`🔍 No Alby data for ${lsp.name}, trying LSPS1`);
         const livePrice = bypassRateLimit 
           ? await fetchLSPPriceBypass(lsp, channelSizeSat)
           : await fetchLSPPrice(lsp, channelSizeSat);

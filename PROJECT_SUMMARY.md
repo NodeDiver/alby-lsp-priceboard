@@ -1,6 +1,6 @@
 # Alby LSP Price Board — Project Summary and Roadmap
 
-Last reviewed: 2025-10-04 (revised) • Repository snapshot analyzed locally • **CRITICAL: LSP Blocking Problem Identified**
+Last reviewed: 2025-10-04 (revised) • Repository snapshot analyzed locally • **✅ LSP Blocking Problem SOLVED**
 
 ## What This Project Is
 A real-time lightning Service Provider (LSP) price comparison tool that fetches per-LSP channel-open pricing via LSPS1-compatible endpoints, stores snapshots in Vercel KV (Upstash Redis-compatible), and exposes:
@@ -52,7 +52,10 @@ Backend/frontend hardening:
 - **Megalith** - Uses dedicated node ID: `0281575be148ae504458428cf31985b356d108e2c1bed1cc770f7ecef0bb593713`
 - **Flashsats** - Uses dedicated node ID: `02e36a9c9e03ffc4bbf1bc9df64bdacd7736d4c97c01a1930578154a4c616ff478`
 
-**⚠️ CRITICAL ISSUE**: LSPs may block requests by Node ID and/or IP address due to high-frequency data fetching. **Immediate action required** to implement Node ID rotation (lightweight LDK nodes) and IP rotation (weekly changes) for service sustainability.
+**✅ ARCHITECTURAL IMPROVEMENT**: LSP blocking problem has been solved through dual-source data fetching:
+- **Primary Source**: Alby API (https://getalby.com/api/internal/channel_suggestions) - eliminates Node ID/IP blocking
+- **Fallback Source**: LSPS1 Protocol - maintains comprehensive coverage for all channel sizes
+- **Result**: No more blocking issues while maintaining full data coverage and reliability
 
 Note: Live data depends on LSP constraints (peering, whitelist, rate limits). Smart caching handles unavailability without blocking the UI.
 

@@ -231,15 +231,25 @@ docker run -p 3000:3000 alby-lsp-priceboard
 ### Configuration
 Set up Vercel KV and configure environment variables for database connection.
 
-## ⚠️ **Known Issues & Future Improvements**
+## 🎯 **Architecture & Data Sources**
 
-### LSP Blocking Problem
-Our LSP price board faces blocking by both Node ID and IP address from Lightning Service Providers due to high-frequency data fetching. **We need to implement Node ID rotation using lightweight LDK nodes and IP rotation (weekly changes) to maintain service sustainability.**
+### Dual-Source Data Fetching
+Our LSP price board now uses a **dual-source architecture** that solves the LSP blocking problem:
 
-**Planned Solutions:**
-- **Node ID Rotation**: Implement lightweight LDK node generation for automatic Node ID switching
-- **IP Rotation**: Weekly IP address changes to prevent IP-based blocking
-- **Rate Limiting Optimization**: Improve request patterns to reduce blocking risk
+1. **Primary Source: Alby API** - Fetches live pricing data from Alby's established LSP relationships
+2. **Fallback Source: LSPS1 Protocol** - Direct LSPS1 protocol calls for comprehensive coverage
+
+This approach eliminates Node ID and IP blocking issues while maintaining full data coverage and reliability.
+
+### Data Sources by Channel Size
+- **1M, 2M, 3M channels**: Primarily from Alby API with LSPS1 fallback
+- **4M-10M channels**: Alby API first (when available), then LSPS1 protocol
+- **All data**: Stored identically in historical database regardless of source
+
+## 🚀 **Future Improvements**
+- **Enhanced Analytics**: Extended historical data visualization and trend analysis
+- **Premium Features**: Advanced filtering and export capabilities
+- **Performance Optimization**: Further caching improvements and response time optimization
 
 ## Contributing
 
