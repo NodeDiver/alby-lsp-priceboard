@@ -46,9 +46,29 @@ export function HistoricalDataGraph({ channelSize, proMode }: HistoricalDataGrap
   const [visibleLSPs, setVisibleLSPs] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDark, setIsDark] = useState(false);
 
   // Check if channel size requires Pro Mode
   const requiresProMode = channelSize >= 4000000; // 4M sats and above
+
+  // Detect dark mode
+  useEffect(() => {
+    const checkDarkMode = () => {
+      const isDarkMode = document.documentElement.classList.contains('dark');
+      setIsDark(isDarkMode);
+    };
+    
+    checkDarkMode();
+    
+    // Watch for changes to the dark class
+    const observer = new MutationObserver(checkDarkMode);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+    
+    return () => observer.disconnect();
+  }, []);
 
   const fetchHistoricalData = useCallback(async () => {
     try {
@@ -261,21 +281,28 @@ export function HistoricalDataGraph({ channelSize, proMode }: HistoricalDataGrap
           <div className="h-96">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={historicalData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#475569" : "#f0f0f0"} />
                 <XAxis 
                   dataKey="date" 
-                  stroke="#6b7280"
+                  stroke={isDark ? "#cbd5e1" : "#6b7280"}
                   fontSize={12}
+                  tick={{ fill: isDark ? "#cbd5e1" : "#6b7280" }}
                   tickFormatter={(value) => {
                     const date = new Date(value + 'T00:00:00'); // Add time to make it a valid date
                     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                   }}
                 />
                 <YAxis 
-                  stroke="#6b7280"
+                  stroke={isDark ? "#cbd5e1" : "#6b7280"}
                   fontSize={12}
+                  tick={{ fill: isDark ? "#cbd5e1" : "#6b7280" }}
                   tickFormatter={formatPrice}
-                  label={{ value: 'Price (sats)', angle: -90, position: 'insideLeft' }}
+                  label={{ 
+                    value: 'Price (sats)', 
+                    angle: -90, 
+                    position: 'insideLeft', 
+                    style: { textAnchor: 'middle', fill: isDark ? "#cbd5e1" : "#6b7280" } 
+                  }}
                 />
                 <Tooltip 
                   labelFormatter={(value) => {
@@ -284,10 +311,11 @@ export function HistoricalDataGraph({ channelSize, proMode }: HistoricalDataGrap
                   }}
                   formatter={(value: number) => [`${formatPrice(value)} sats`, '']}
                   contentStyle={{
-                    backgroundColor: '#f9fafb',
-                    border: '1px solid #e5e7eb',
+                    backgroundColor: isDark ? '#1e293b' : '#f9fafb',
+                    border: isDark ? '1px solid #475569' : '1px solid #e5e7eb',
                     borderRadius: '6px',
-                    fontSize: '12px'
+                    fontSize: '12px',
+                    color: isDark ? '#cbd5e1' : '#374151'
                   }}
                 />
                 {lspList.map((lspName, index) => (

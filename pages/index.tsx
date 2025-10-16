@@ -442,7 +442,7 @@ export default function Home() {
                     LSP
                   </Tooltip> Price Comparison
                 </h2>
-                <p className="mt-1 text-sm text-gray-600">
+                <p className="mt-1 text-sm text-gray-600 dark:text-slate-300">
                   Compare lightning Service Provider fees for different channel sizes
                 </p>
               </div>
@@ -522,7 +522,7 @@ export default function Home() {
             {/* Pro Mode Toggle */}
             <div className="flex items-center space-x-2">
               <div className="flex items-baseline space-x-1">
-                <span className="text-sm font-medium text-gray-700">Pro Mode <span className="inline-block -translate-y-0.5">💪</span></span>
+                <span className="text-sm font-medium text-gray-700 dark:text-slate-200">Pro Mode <span className="inline-block -translate-y-0.5">💪</span></span>
                 {isHydrated && ProModeManager.hasProModeAccess() && (
                   <span className="text-xs text-green-600 font-medium">
                     ({ProModeManager.getRemainingDays()}d left)
@@ -549,7 +549,7 @@ export default function Home() {
             
             {/* Historical Data Toggle */}
             <div className="flex items-center space-x-2">
-              <span className="text-sm font-medium text-gray-700">Historical Data <span className="inline-block -translate-y-0.5">📊</span></span>
+              <span className="text-sm font-medium text-gray-700 dark:text-slate-200">Historical Data <span className="inline-block -translate-y-0.5">📊</span></span>
               <button
                 onClick={isHydrated ? handleHistoricalDataToggle : undefined}
                 disabled={!isHydrated}
@@ -851,13 +851,13 @@ export default function Home() {
             <p className="text-base text-gray-500 dark:text-slate-400">
               Alby LSP Price Board v0.2.1 • Open Source lightning Service Provider Comparison Tool
             </p>
-            <p className="text-sm text-gray-400 dark:text-slate-500 mt-1">
+            <p className="text-sm text-gray-400 dark:text-slate-400 mt-1">
               Built with Next.js • Data from LSPS1 Protocol • Updated September 2025
             </p>
             <div className="mt-3">
               <Link 
                 href="/backup" 
-                className="text-sm text-blue-600 hover:text-blue-800 underline"
+                className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline"
               >
                 📦 Download Database Backup
               </Link>
