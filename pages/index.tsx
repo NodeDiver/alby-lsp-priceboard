@@ -684,8 +684,8 @@ export default function Home() {
             </svg>
           </button>
           {showApiSection && (
-          <div className="px-6 pb-6 border-t border-gray-200">
-          <p className="text-base text-gray-500 mb-4 italic">
+          <div className="px-6 pb-6 border-t border-gray-200 dark:border-slate-600">
+          <p className="text-base text-gray-500 dark:text-slate-400 mb-4 italic">
             {dataSource === 'live' 
               ? `Note: Using live data from LSPs (${dataSourceDescription})`
               : dataSource === 'cached'
@@ -697,7 +697,7 @@ export default function Home() {
               : 'Note: Data source unknown - check debug info for details'
             }
           </p>
-          <p className="text-base text-gray-600 mb-4">
+          <p className="text-base text-gray-600 dark:text-slate-300 mb-4">
             Other applications can access this pricing data via our public REST API:
           </p>
           
@@ -737,8 +737,8 @@ export default function Home() {
             </div>
             
             <div>
-              <h4 className="text-base font-medium text-gray-900 mb-2">How to Use</h4>
-              <div className="text-base text-gray-600 space-y-2">
+              <h4 className="text-base font-medium text-gray-900 dark:text-slate-100 mb-2">How to Use</h4>
+              <div className="text-base text-gray-600 dark:text-slate-300 space-y-2">
                 <div>• <strong>No authentication required</strong> - completely open API</div>
                 <div>• <strong>CORS enabled</strong> - works from any website</div>
                 <div>• <strong>Channel size filtering</strong> - add ?channelSize=2000000 for 2M sats</div>
@@ -749,8 +749,8 @@ export default function Home() {
             </div>
             
             <div>
-              <h4 className="text-base font-medium text-gray-900 mb-2">Limitations</h4>
-              <div className="text-base text-gray-600 space-y-1">
+              <h4 className="text-base font-medium text-gray-900 dark:text-slate-100 mb-2">Limitations</h4>
+              <div className="text-base text-gray-600 dark:text-slate-300 space-y-1">
                 <div>• Rate limit: ~100 requests/minute (Vercel free tier)</div>
                 <div>• Data retention: Public API exposes latest snapshot only (backend stores history)</div>
                 <div>• Channel sizes: 1M-10M sats supported</div>
@@ -760,9 +760,9 @@ export default function Home() {
             </div>
           </div>
           
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <h4 className="text-base font-medium text-gray-900 mb-2">Current Status</h4>
-            <div className="text-sm text-gray-600 space-y-1">
+          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-slate-600">
+            <h4 className="text-base font-medium text-gray-900 dark:text-slate-100 mb-2">Current Status</h4>
+            <div className="text-sm text-gray-600 dark:text-slate-300 space-y-1">
               <div>• ✅ API endpoint active and responding</div>
               {dataSource === 'live' ? (
                 <>
