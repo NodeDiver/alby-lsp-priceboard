@@ -39,6 +39,7 @@ next-env.d.ts
 # IDE
 .vscode/
 .idea/
+.cursor/
 
 # OS
 Thumbs.db
