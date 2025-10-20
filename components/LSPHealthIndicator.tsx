@@ -12,7 +12,7 @@ export function LSPHealthIndicator({ healthStatus, className = '' }: HealthIndic
     // Unknown status - show gray indicator
     return (
       <div className={`inline-flex items-center ${className}`}>
-        <Tooltip text="API Status Unknown - We check if the LSP's LSPS1 API endpoint is available when you visit this site. Note: This checks the HTTP API, not the Lightning node itself.">
+        <Tooltip text="Status unknown. Refresh the page to check if you can open new channels.">
           <div className="w-3 h-3 rounded-full bg-gray-400 mr-2 cursor-help"></div>
         </Tooltip>
       </div>
@@ -27,15 +27,15 @@ export function LSPHealthIndicator({ healthStatus, className = '' }: HealthIndic
   switch (status) {
     case 'online':
       statusColor = 'bg-green-500';
-      tooltipText = `API Available - The LSP's LSPS1 HTTP API endpoint is responding. This means you can open new channels. Note: This checks the web API (HTTPS), not the Lightning node connection. Your existing channels may work even if this shows red.`;
+      tooltipText = 'You can open new channels with this LSP right now.';
       break;
     case 'offline':
       statusColor = 'bg-red-500';
-      tooltipText = `API Unavailable - The LSP's LSPS1 HTTP API endpoint is not responding. You may not be able to open new channels right now. Note: This only checks the web API. The Lightning node itself may still be online for existing channels and peering.`;
+      tooltipText = 'Cannot open new channels right now. Your existing channels may still work fine.';
       break;
     default:
       statusColor = 'bg-gray-400';
-      tooltipText = 'API Status Unknown - We check if the LSP\'s LSPS1 API endpoint is available when you visit this site. Note: This checks the HTTP API, not the Lightning node itself.';
+      tooltipText = 'Status unknown. Refresh the page to check if you can open new channels.';
   }
 
   return (
