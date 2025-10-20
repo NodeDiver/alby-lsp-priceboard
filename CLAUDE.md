@@ -65,7 +65,9 @@ Alby API (Primary) → LSPS1 Protocol (Fallback) → PriceService
 - `prices-ui.ts` - UI-optimized API with smart caching
 - `lsp-metadata.ts` - LSP metadata and logos
 - `health.ts` - System health monitoring
-- `cron/fetch-prices.ts` - Daily automated price fetching
+- `health/lsp-status.ts` - Real-time LSP health checks
+- `cron/health-check.ts` - Scheduled LSP health monitoring (23:55 UTC)
+- `cron/fetch-prices.ts` - Daily automated price fetching (00:00 UTC)
 
 ## Data Storage Strategy
 
@@ -80,7 +82,14 @@ alby:lsp:channel:{channelSize}
 alby:lsp:history:{date}
 ├─ Daily snapshots with timestamps
 ├─ Format: { date, lastUpdate, channel_1000000: {...}, ... }
+├─ Includes health status data (is_online, health_status, etc.)
 └─ TTL: None (permanent storage)
+
+alby:lsp:health:current
+├─ Current health status for all LSPs
+├─ Updated by health-check cron (23:55 UTC)
+├─ Used by fetch-prices cron (00:00 UTC)
+└─ TTL: None (overwritten daily)
 
 alby:lsp:metadata
 ├─ Summary: lastUpdate, totalChannels, totalPrices
@@ -89,10 +98,17 @@ alby:lsp:metadata
 
 ### Data Collection
 
-**Automated Collection (Day-of-Week Rotation)**
-- Vercel Cron: Runs daily at midnight UTC (00:00)
+**Automated Collection (Two Cron Jobs)**
+
+*Health Check Cron (23:55 UTC):*
+- Checks all LSPs' LSPS1 API endpoint availability
+- Saves health status to Redis cache
+- **Execution time**: ~11 seconds
+- Used by price fetch cron 5 minutes later
+
+*Price Fetch Cron (00:00 UTC):*
 - **Optimized for Vercel Free Tier**: Fetches ONE channel size per day (not all 10)
-- **Weekly Rotation Schedule:**
+- **Day-of-Week Rotation Schedule:**
   - Monday → 1M sats
   - Tuesday → 2M sats
   - Wednesday → 3M sats
@@ -101,10 +117,12 @@ alby:lsp:metadata
   - Saturday → 7M sats
   - Sunday → 10M sats
 - Uses dual-source strategy (Alby API + LSPS1)
+- Reads cached health status from Redis
 - **Execution time**: ~4-8 seconds (well within 10s free tier limit)
 - Only successful fetches overwrite cache
 - Historical data is preserved before updates
 - Each channel size gets fresh data once per week
+- Saves both price and health data to historical snapshots
 
 **Manual Collection**
 - User-triggered refresh (Pro Mode feature)
@@ -122,6 +140,7 @@ alby:lsp:metadata
 
 ### Free Features
 - Live price comparison across 4 LSPs
+- Real-time LSP health status indicators (green/red/gray dots)
 - 1M-3M sats channel size selection
 - Multi-currency support (20+ currencies)
 - Smart caching (1-hour fresh rule)
@@ -263,6 +282,118 @@ alby-lsp-priceboard/
 | Cron success rate | 0% (failing) | 100% | ✅ Fixed |
 | Historical data load | 20-30s | 0.7s | 28× faster |
 | Free tier compliance | ❌ Exceeded | ✅ Compliant | Cost: $0/month |
+
+## LSP Health Monitoring (October 2025)
+
+### Overview
+Real-time health status indicators show whether each LSP can accept new channel requests. Visual indicators (green/red/gray dots) appear next to each LSP name in the comparison table.
+
+### How It Works
+
+**Two Health Check Mechanisms:**
+
+1. **Real-Time Checks** (when users visit)
+   - Triggered when frontend loads the page
+   - Endpoint: `/api/health/lsp-status`
+   - Checks LSPS1 HTTP API endpoint availability
+   - Updates immediately for current user session
+
+2. **Scheduled Checks** (automated cron job)
+   - Runs daily at 23:55 UTC (5 minutes before price fetch)
+   - Endpoint: `/api/cron/health-check`
+   - Saves health status to Redis cache
+   - Used by price fetch cron job (00:00 UTC)
+   - Execution time: ~11 seconds
+
+**Split Cron Job Architecture:**
+```
+23:55 UTC: Health Check Cron (~11s)
+    ↓
+Saves to Redis Cache (alby:lsp:health:current)
+    ↓
+00:00 UTC: Price Fetch Cron (~6s)
+    ↓
+Reads cached health status
+    ↓
+Saves prices + health status to historical data
+```
+
+### What is Checked
+
+**Important Distinction:**
+- ✅ **Checks**: LSPS1 HTTP API endpoint (HTTPS on port 443/80)
+- ❌ **Does NOT check**: Lightning node itself (port 9735)
+
+This means:
+- Green dot = LSP API is available → You can open new channels
+- Red dot = LSP API is unavailable → Cannot open new channels right now
+- **Note**: Lightning node may still be online for existing channels even if API is down
+
+### Health Status Indicators
+
+| Indicator | Meaning | Tooltip |
+|-----------|---------|---------|
+| 🟢 Green | API Available | "You can open new channels with this LSP right now." |
+| 🔴 Red | API Unavailable | "Cannot open new channels right now. Your existing channels may still work fine." |
+| ⚪ Gray | Status Unknown | "Status unknown. Refresh the page to check if you can open new channels." |
+
+**Tooltip Design Philosophy:**
+- Simplified for non-technical users (October 20, 2025)
+- Focuses on what users can **do**, not technical details
+- Avoids jargon like "LSPS1", "HTTP API", "Lightning node"
+- Clear action-oriented language
+
+### Technical Implementation
+
+**Files:**
+- `lib/simple-health.ts` - Health check logic
+- `components/LSPHealthIndicator.tsx` - Visual indicator component
+- `pages/api/health/lsp-status.ts` - Real-time health check endpoint
+- `pages/api/cron/health-check.ts` - Scheduled health check cron
+- `lib/db.ts` - Redis cache for health status
+
+**Health Check Method:**
+```typescript
+// Checks LSPS1 HTTP API endpoint with HEAD request
+const response = await fetch(lsp.url, { method: 'HEAD' });
+const isOnline = response.status < 500;
+```
+
+**Data Structure:**
+```typescript
+interface SimpleHealthStatus {
+  lsp_id: string;
+  is_online: boolean;
+  status: 'online' | 'offline';
+  last_check: string;
+  response_time_ms: number;
+  error_message?: string;
+}
+```
+
+**Redis Cache:**
+```
+alby:lsp:health:current
+├─ Array of health statuses for all LSPs
+├─ Updated by health-check cron at 23:55 UTC
+├─ Read by fetch-prices cron at 00:00 UTC
+└─ TTL: None (overwritten daily)
+```
+
+### Historical Health Data
+
+Health status is saved alongside price data in historical snapshots:
+```typescript
+interface LSPPrice {
+  // ... price fields
+  is_online?: boolean;
+  health_status?: 'online' | 'offline' | 'unknown';
+  health_check_timestamp?: string;
+  health_response_time_ms?: number;
+}
+```
+
+This allows tracking LSP uptime trends over time.
 
 ## Common Tasks for Claude
 
