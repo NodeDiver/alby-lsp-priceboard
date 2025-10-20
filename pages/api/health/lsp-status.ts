@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       success: true,
       data: healthStatuses,
       timestamp: new Date().toISOString(),
-      message: 'Real-time health check performed - shows if LSPs are online right now'
+      message: 'Real-time LSPS1 API availability check - checks HTTP API endpoints, not Lightning nodes'
     });
   } catch (error) {
     console.error('Error fetching LSP health statuses:', error);

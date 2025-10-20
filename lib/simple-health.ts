@@ -2,8 +2,8 @@ import { LSP } from './lsps';
 
 export interface SimpleHealthStatus {
   lsp_id: string;
-  is_online: boolean;
-  status: 'online' | 'offline';
+  is_online: boolean; // Whether the LSPS1 HTTP API endpoint is available
+  status: 'online' | 'offline'; // 'online' = API available, 'offline' = API unavailable
   last_check: string;
   response_time_ms: number;
   error_message?: string;
@@ -11,7 +11,10 @@ export interface SimpleHealthStatus {
 
 export class SimpleHealthMonitor {
   /**
-   * Simple health check - just see if the LSP URL responds
+   * LSPS1 API Health Check
+   * Checks if the LSP's LSPS1 HTTP API endpoint is responding
+   * NOTE: This checks the web API (HTTPS), NOT the Lightning node itself
+   * The Lightning node may still be online for channels/peering even if API is down
    */
   async checkLSPHealth(lsp: LSP): Promise<SimpleHealthStatus> {
     const startTime = Date.now();
@@ -28,8 +31,8 @@ export class SimpleHealthMonitor {
       
       const responseTime = Date.now() - startTime;
       const isOnline = response.status < 500;
-      
-      console.log(`${lsp.name}: ${response.status} (${responseTime}ms) - ${isOnline ? 'ONLINE' : 'OFFLINE'}`);
+
+      console.log(`${lsp.name} API: ${response.status} (${responseTime}ms) - ${isOnline ? 'AVAILABLE' : 'UNAVAILABLE'}`);
       
       return {
         lsp_id: lsp.id,
@@ -40,7 +43,7 @@ export class SimpleHealthMonitor {
       };
     } catch (error) {
       const responseTime = Date.now() - startTime;
-      console.log(`${lsp.name}: ERROR (${responseTime}ms) - ${error.message}`);
+      console.log(`${lsp.name} API: ERROR (${responseTime}ms) - ${error.message}`);
       
       return {
         lsp_id: lsp.id,
@@ -54,21 +57,21 @@ export class SimpleHealthMonitor {
   }
 
   /**
-   * Check all LSPs
+   * Check all LSPs' LSPS1 API endpoints
    */
   async checkAllLSPs(): Promise<SimpleHealthStatus[]> {
     const { getActiveLSPs } = await import('./lsps');
     const activeLSPs = getActiveLSPs();
-    
-    console.log(`Checking ${activeLSPs.length} LSPs...`);
-    
+
+    console.log(`Checking LSPS1 API availability for ${activeLSPs.length} LSPs...`);
+
     const healthPromises = activeLSPs.map(lsp => this.checkLSPHealth(lsp));
     const healthStatuses = await Promise.all(healthPromises);
-    
+
     const online = healthStatuses.filter(h => h.is_online).length;
     const offline = healthStatuses.filter(h => !h.is_online).length;
-    
-    console.log(`Health check complete: ${online} online, ${offline} offline`);
+
+    console.log(`API health check complete: ${online} available, ${offline} unavailable`);
     
     return healthStatuses;
   }

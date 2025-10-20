@@ -12,7 +12,7 @@ export function LSPHealthIndicator({ healthStatus, className = '' }: HealthIndic
     // Unknown status - show gray indicator
     return (
       <div className={`inline-flex items-center ${className}`}>
-        <Tooltip text="Health status unknown - we check if LSPs are online or offline daily at noon">
+        <Tooltip text="API Status Unknown - We check if the LSP's LSPS1 API endpoint is available when you visit this site. Note: This checks the HTTP API, not the Lightning node itself.">
           <div className="w-3 h-3 rounded-full bg-gray-400 mr-2 cursor-help"></div>
         </Tooltip>
       </div>
@@ -20,22 +20,22 @@ export function LSPHealthIndicator({ healthStatus, className = '' }: HealthIndic
   }
 
   const { status } = healthStatus;
-  
+
   let statusColor: string;
   let tooltipText: string;
 
   switch (status) {
     case 'online':
       statusColor = 'bg-green-500';
-      tooltipText = `Online - This LSP is currently responding to requests. We check daily at noon.`;
+      tooltipText = `API Available - The LSP's LSPS1 HTTP API endpoint is responding. This means you can open new channels. Note: This checks the web API (HTTPS), not the Lightning node connection. Your existing channels may work even if this shows red.`;
       break;
     case 'offline':
       statusColor = 'bg-red-500';
-      tooltipText = `Offline - This LSP is not responding to requests. We check daily at noon.`;
+      tooltipText = `API Unavailable - The LSP's LSPS1 HTTP API endpoint is not responding. You may not be able to open new channels right now. Note: This only checks the web API. The Lightning node itself may still be online for existing channels and peering.`;
       break;
     default:
       statusColor = 'bg-gray-400';
-      tooltipText = 'Health status unknown - we check if LSPs are online or offline daily at noon';
+      tooltipText = 'API Status Unknown - We check if the LSP\'s LSPS1 API endpoint is available when you visit this site. Note: This checks the HTTP API, not the Lightning node itself.';
   }
 
   return (
