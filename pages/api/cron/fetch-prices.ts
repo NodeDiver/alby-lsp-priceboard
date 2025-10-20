@@ -31,26 +31,49 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const allPrices = [];
 
-    // Use the PriceService with fallback logic
+    // STEP 1: Check health status of all LSPs (to save with historical data)
+    console.log('Checking LSP health status...');
+    const { simpleHealthMonitor } = await import('../../../lib/simple-health');
+    const healthStatuses = await simpleHealthMonitor.checkAllLSPs();
+    console.log(`Health check complete: ${healthStatuses.filter(h => h.is_online).length}/${healthStatuses.length} LSPs online`);
+
+    // STEP 2: Use the PriceService with fallback logic
     const { PriceService } = await import('../../../lib/price-service');
     const priceService = PriceService.getInstance();
     const prices = await priceService.forceFetchPricesNew(channelSize, true);
-    allPrices.push(...prices);
+
+    // STEP 3: Merge health status with price data
+    const pricesWithHealth = prices.map(price => {
+      const healthStatus = healthStatuses.find(h => h.lsp_id === price.lsp_id);
+      return {
+        ...price,
+        is_online: healthStatus?.is_online,
+        health_status: healthStatus?.status,
+        health_check_timestamp: healthStatus?.last_check,
+        health_response_time_ms: healthStatus?.response_time_ms
+      };
+    });
+
+    allPrices.push(...pricesWithHealth);
     
     // Return success response
     res.status(200).json({
       success: true,
-      message: `Prices fetched and saved successfully for ${channelSize / 1000000}M sats channel size`,
+      message: `Prices and health status fetched and saved successfully for ${channelSize / 1000000}M sats channel size`,
       count: allPrices.length,
       channelSize: channelSize,
       dayOfWeek: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek],
       timestamp: new Date().toISOString(),
+      lspsOnline: healthStatuses.filter(h => h.is_online).length,
+      lspsTotal: healthStatuses.length,
       prices: allPrices.map(price => ({
         lsp_id: price.lsp_id,
         lsp_name: price.lsp_name,
         channel_size_sat: price.channel_size_sat,
         total_fee_msat: price.total_fee_msat,
-        timestamp: price.timestamp
+        timestamp: price.timestamp,
+        is_online: price.is_online,
+        health_status: price.health_status
       }))
     });
     

@@ -246,6 +246,11 @@ export interface LSPPrice {
   live_fetch_error_code?: LspErrorCode; // Error code from failed live fetch
   live_fetch_timestamp?: string; // Timestamp of failed live fetch
   cached_timestamp?: string; // Timestamp of cached data being shown
+  // Health status fields - online/offline status of the LSP
+  is_online?: boolean; // Whether the LSP is currently online
+  health_status?: 'online' | 'offline' | 'unknown'; // Health status at time of data collection
+  health_check_timestamp?: string; // When health check was performed
+  health_response_time_ms?: number; // Response time for health check
 }
 
 

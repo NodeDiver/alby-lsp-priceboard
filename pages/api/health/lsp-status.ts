@@ -7,13 +7,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
+    // Perform REAL-TIME health check when this endpoint is called
+    // This runs every time a user visits the site
     const healthStatuses = await simpleHealthMonitor.checkAllLSPs();
-    
+
     res.status(200).json({
       success: true,
       data: healthStatuses,
       timestamp: new Date().toISOString(),
-      message: 'Health status checked every 30 minutes'
+      message: 'Real-time health check performed - shows if LSPs are online right now'
     });
   } catch (error) {
     console.error('Error fetching LSP health statuses:', error);
