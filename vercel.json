@@ -11,10 +11,10 @@
   ],
   "functions": {
     "pages/api/cron/fetch-prices.ts": {
-      "maxDuration": 120
+      "maxDuration": 10
     },
     "pages/api/cron/health-check.ts": {
-      "maxDuration": 60
+      "maxDuration": 10
     }
   },
   "buildCommand": "npm run build",

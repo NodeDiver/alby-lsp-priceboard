@@ -27,7 +27,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.log(`Fetching historical data for ${channelSizeNum} sats from ${startDate.toISOString()} to ${endDate.toISOString()}`);
 
     // Get historical data from database (new date-based structure)
-    const historicalData = await getPriceHistory(1000);
+    // Only fetch 35 days (30 requested + 5 buffer) instead of 1000 for performance
+    // This reduces Redis queries from 1000 to 35, making it ~28x faster
+    const historicalData = await getPriceHistory(35);
     
     // Process the new structure: each entry is a daily snapshot with arrays of timestamped entries
     let filteredData: Array<{
