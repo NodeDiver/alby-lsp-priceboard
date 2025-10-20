@@ -350,11 +350,11 @@ export function HistoricalDataGraph({ channelSize, proMode }: HistoricalDataGrap
                   className="rounded border-gray-300 text-gray-600 focus:ring-gray-500"
                 />
                 <div className="flex items-center space-x-2">
-                  <div 
+                  <div
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: LSP_COLORS[index % LSP_COLORS.length] }}
                   />
-                  <span className="text-sm text-gray-700">{lspName}</span>
+                  <span className="text-sm text-gray-700 dark:text-slate-200">{lspName}</span>
                 </div>
               </label>
             ))}
