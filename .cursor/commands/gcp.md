@@ -1,1 +1,0 @@
-Git commit and git push, comment must be one sentence, 140 chars max
