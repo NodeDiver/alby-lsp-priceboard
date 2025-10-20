@@ -7,28 +7,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Verify this is a cron job request (optional security check)
-  const authHeader = req.headers.authorization;
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return res.status(401).json({ error: 'Unauthorized' });
+  // Verify this is a cron job request (only in production)
+  if (process.env.CRON_SECRET) {
+    const authHeader = req.headers.authorization;
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
   }
 
   try {
     console.log('Starting scheduled health check for all LSPs...');
-    
+
+    // Check health status of all LSPs
     const healthStatuses = await simpleHealthMonitor.checkAllLSPs();
-    
+
+    // Save health statuses to Redis cache for use by price fetch cron
+    const { saveHealthStatuses } = await import('../../../lib/db');
+    const saved = await saveHealthStatuses(healthStatuses);
+
     const summary = {
       total_checked: healthStatuses.length,
       online: healthStatuses.filter(s => s.is_online).length,
-      offline: healthStatuses.filter(s => !s.is_online).length
+      offline: healthStatuses.filter(s => !s.is_online).length,
+      saved_to_cache: saved
     };
-    
+
     console.log('Health check completed:', summary);
-    
+
     res.status(200).json({
       success: true,
-      message: 'Health check completed successfully',
+      message: 'Health check completed and saved to cache',
       summary,
       timestamp: new Date().toISOString()
     });

@@ -339,6 +339,63 @@ export async function getDatabaseStatus(): Promise<{
   }
 }
 
+// Health status cache key
+const HEALTH_STATUS_KEY = 'alby:lsp:health:current';
+
+// Save LSP health statuses to Redis cache
+export async function saveHealthStatuses(healthStatuses: Array<{
+  lsp_id: string;
+  is_online: boolean;
+  status: 'online' | 'offline';
+  last_check: string;
+  response_time_ms: number;
+  error_message?: string;
+}>): Promise<boolean> {
+  try {
+    if (!redis || !isRedisConfigured()) {
+      console.error('Upstash Redis not configured or unavailable');
+      return false;
+    }
+
+    await redis.set(HEALTH_STATUS_KEY, JSON.stringify({
+      timestamp: new Date().toISOString(),
+      statuses: healthStatuses
+    }));
+
+    console.log(`Saved health status for ${healthStatuses.length} LSPs to cache`);
+    return true;
+  } catch (error) {
+    console.error('Error saving health statuses to cache:', error);
+    return false;
+  }
+}
+
+// Get cached LSP health statuses from Redis
+export async function getHealthStatuses(): Promise<Array<{
+  lsp_id: string;
+  is_online: boolean;
+  status: 'online' | 'offline';
+  last_check: string;
+  response_time_ms: number;
+  error_message?: string;
+}> | null> {
+  try {
+    if (!redis || !isRedisConfigured()) {
+      console.error('Upstash Redis not configured or unavailable');
+      return null;
+    }
+
+    const data = await redis.get(HEALTH_STATUS_KEY);
+    if (!data) return null;
+
+    const parsed = typeof data === 'string' ? JSON.parse(data) : data;
+    return parsed.statuses || null;
+  } catch (error) {
+    console.error('Error getting health statuses from cache:', error);
+    return null;
+  }
+}
+
 // Clear all relevant cache keys
 export async function clearCache(): Promise<string[]> {
   try {

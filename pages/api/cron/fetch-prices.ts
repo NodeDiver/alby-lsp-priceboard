@@ -31,19 +31,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const allPrices = [];
 
-    // STEP 1: Check health status of all LSPs (to save with historical data)
-    console.log('Checking LSP health status...');
-    const { simpleHealthMonitor } = await import('../../../lib/simple-health');
-    const healthStatuses = await simpleHealthMonitor.checkAllLSPs();
-    console.log(`Health check complete: ${healthStatuses.filter(h => h.is_online).length}/${healthStatuses.length} LSPs online`);
+    // STEP 1: Get cached health status from Redis (checked by separate cron job)
+    console.log('Reading cached LSP health status...');
+    const { getHealthStatuses } = await import('../../../lib/db');
+    const healthStatuses = await getHealthStatuses();
+
+    if (healthStatuses) {
+      console.log(`Using cached health status: ${healthStatuses.filter(h => h.is_online).length}/${healthStatuses.length} LSPs online`);
+    } else {
+      console.warn('No cached health status found - health data will not be included');
+    }
 
     // STEP 2: Use the PriceService with fallback logic
     const { PriceService } = await import('../../../lib/price-service');
     const priceService = PriceService.getInstance();
     const prices = await priceService.forceFetchPricesNew(channelSize, true);
 
-    // STEP 3: Merge health status with price data
+    // STEP 3: Merge health status with price data (if available)
     const pricesWithHealth = prices.map(price => {
+      if (!healthStatuses) {
+        return price; // No health data available
+      }
+
       const healthStatus = healthStatuses.find(h => h.lsp_id === price.lsp_id);
       return {
         ...price,
@@ -59,13 +68,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Return success response
     res.status(200).json({
       success: true,
-      message: `Prices and health status fetched and saved successfully for ${channelSize / 1000000}M sats channel size`,
+      message: `Prices${healthStatuses ? ' and health status' : ''} fetched and saved successfully for ${channelSize / 1000000}M sats channel size`,
       count: allPrices.length,
       channelSize: channelSize,
       dayOfWeek: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek],
       timestamp: new Date().toISOString(),
-      lspsOnline: healthStatuses.filter(h => h.is_online).length,
-      lspsTotal: healthStatuses.length,
+      lspsOnline: healthStatuses ? healthStatuses.filter(h => h.is_online).length : undefined,
+      lspsTotal: healthStatuses ? healthStatuses.length : undefined,
+      healthDataAvailable: !!healthStatuses,
       prices: allPrices.map(price => ({
         lsp_id: price.lsp_id,
         lsp_name: price.lsp_name,

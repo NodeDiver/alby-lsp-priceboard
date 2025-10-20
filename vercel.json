@@ -1,12 +1,12 @@
 {
   "crons": [
     {
-      "path": "/api/cron/fetch-prices",
-      "schedule": "0 0 * * *"
+      "path": "/api/cron/health-check",
+      "schedule": "55 23 * * *"
     },
     {
-      "path": "/api/cron/health-check",
-      "schedule": "0 12 * * *"
+      "path": "/api/cron/fetch-prices",
+      "schedule": "0 0 * * *"
     }
   ],
   "functions": {
