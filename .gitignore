@@ -42,3 +42,6 @@ next-env.d.ts
 
 # OS
 Thumbs.db
+
+# SessionEnd chat archives (auto-added)
+previousclaudechat/
