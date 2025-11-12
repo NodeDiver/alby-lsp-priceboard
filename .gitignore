@@ -8,10 +8,16 @@
 
 # testing
 /coverage
+tests/
+*.log
+.env.test
+.env.test.local
 
 # next.js
 /.next/
 /out/
+.swc/
+.cache/
 
 # production
 /build
