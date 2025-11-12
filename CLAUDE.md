@@ -210,13 +210,53 @@ Recovery Strategy:
 ```env
 KV_REST_API_URL=https://...upstash.io
 KV_REST_API_TOKEN=xxxx
+KV_REST_API_READ_ONLY_TOKEN=xxxx (optional)
 ```
 
-### Running Locally
+### Running Locally with Production Database
+
+**⚠️ Important**: Local development connects to the **same production database** used by https://channelprices.com/. Any writes from local development will affect the production database.
+
+**Prerequisites:**
+1. Node.js installed (v18+)
+2. `.env.local` file configured with production Vercel KV credentials
+
+**Setup Steps:**
 ```bash
+# Install dependencies
 npm install
+
+# Ensure .env.local exists with production credentials
+# KV_REST_API_URL=https://...upstash.io
+# KV_REST_API_TOKEN=xxxx
+
+# Start the development server
 npm run dev
-# Visit http://localhost:3000
+```
+
+The application will be available at: **http://localhost:3000**
+
+**Database Connection:**
+- **Database Type**: Vercel KV (Upstash Redis)
+- **Connection**: Uses environment variables from `.env.local`
+- **Shared Data**: Same database as production (https://channelprices.com/)
+- **Read/Write Access**: Full read/write access to production data
+
+**Important Notes:**
+1. **Production Database**: Local development uses the same database as production. Any data changes will affect the live site.
+2. **Cron Jobs**: Local cron jobs will not run automatically. They are configured in `vercel.json` and only execute on Vercel.
+3. **API Endpoints**: All API endpoints work the same as production.
+4. **Hot Reload**: Next.js development server supports hot module replacement for fast development.
+
+**Troubleshooting:**
+- **Database Connection Issues**: Verify `.env.local` exists and contains correct credentials. Test connection by visiting `/api/health`
+- **Port Already in Use**: Kill existing process: `lsof -ti:3000 | xargs kill` or use different port: `PORT=3001 npm run dev`
+- **Module Not Found**: Run `npm install` to install dependencies
+
+**Stopping the Server:**
+Press `Ctrl+C` in the terminal, or kill the process:
+```bash
+ps aux | grep "next dev" | grep -v grep | awk '{print $2}' | xargs kill
 ```
 
 ### Running with Docker
