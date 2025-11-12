@@ -1,5 +1,8 @@
 import { LSP } from './lsps';
 
+// Health check configuration
+const HEALTH_CHECK_TIMEOUT_MS = 5000; // 5 seconds timeout for health checks
+
 export interface SimpleHealthStatus {
   lsp_id: string;
   is_online: boolean; // Whether the LSPS1 HTTP API endpoint is available
@@ -26,7 +29,8 @@ export class SimpleHealthMonitor {
         method: 'HEAD',
         headers: {
           'User-Agent': 'Alby-LSP-HealthCheck/1.0'
-        }
+        },
+        signal: AbortSignal.timeout(HEALTH_CHECK_TIMEOUT_MS)
       });
       
       const responseTime = Date.now() - startTime;
@@ -43,15 +47,23 @@ export class SimpleHealthMonitor {
       };
     } catch (error) {
       const responseTime = Date.now() - startTime;
-      console.log(`${lsp.name} API: ERROR (${responseTime}ms) - ${error.message}`);
-      
+
+      // Safe error message extraction with type checking
+      const errorMessage = error instanceof Error
+        ? error.message
+        : typeof error === 'string'
+          ? error
+          : 'Unknown error occurred';
+
+      console.log(`${lsp.name} API: ERROR (${responseTime}ms) - ${errorMessage}`);
+
       return {
         lsp_id: lsp.id,
         is_online: false,
         status: 'offline',
         last_check: new Date().toISOString(),
         response_time_ms: responseTime,
-        error_message: error.message
+        error_message: errorMessage
       };
     }
   }

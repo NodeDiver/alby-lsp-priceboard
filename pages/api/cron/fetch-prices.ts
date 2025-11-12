@@ -15,6 +15,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Log the request method for debugging
   console.log(`Cron request received: method=${req.method}, isVercelCron=${isVercelCron}`);
 
+  // Verify this is a cron job request (only in production)
+  if (process.env.CRON_SECRET) {
+    const authHeader = req.headers.authorization;
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+  }
+
   try {
     // Day-of-week based channel size fetching to stay within Vercel free tier 10s limit
     // Monday = 1M, Tuesday = 2M, Wednesday = 3M, Thursday = 4M, Friday = 5M, Saturday = 7M, Sunday = 10M
@@ -37,15 +45,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const allPrices = [];
 
-    // STEP 1: Get cached health status from Redis (checked by separate cron job)
+    // STEP 1: Get cached health status from Redis (checked by separate cron job at 23:55 UTC)
     console.log('Reading cached LSP health status...');
     const { getHealthStatuses } = await import('../../../lib/db');
-    const healthStatuses = await getHealthStatuses();
+    let healthStatuses = await getHealthStatuses();
 
-    if (healthStatuses) {
-      console.log(`Using cached health status: ${healthStatuses.filter(h => h.is_online).length}/${healthStatuses.length} LSPs online`);
+    // Validate cached health status is recent (within 10 minutes)
+    const HEALTH_CACHE_MAX_AGE_MS = 10 * 60 * 1000; // 10 minutes
+    if (healthStatuses && healthStatuses.length > 0) {
+      const oldestCheckTime = Math.min(...healthStatuses.map(h => new Date(h.last_check).getTime()));
+      const ageMs = Date.now() - oldestCheckTime;
+
+      if (ageMs > HEALTH_CACHE_MAX_AGE_MS) {
+        console.warn(`Cached health status is stale (${Math.round(ageMs / 1000)}s old) - performing fresh check`);
+        const { simpleHealthMonitor } = await import('../../../lib/simple-health');
+        healthStatuses = await simpleHealthMonitor.checkAllLSPs();
+      } else {
+        console.log(`Using cached health status: ${healthStatuses.filter(h => h.is_online).length}/${healthStatuses.length} LSPs online`);
+      }
     } else {
-      console.warn('No cached health status found - health data will not be included');
+      console.warn('No cached health status found - performing fresh check');
+      const { simpleHealthMonitor } = await import('../../../lib/simple-health');
+      healthStatuses = await simpleHealthMonitor.checkAllLSPs();
     }
 
     // STEP 2: Use the PriceService with fallback logic

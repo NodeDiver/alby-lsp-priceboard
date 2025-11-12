@@ -2,13 +2,22 @@ import { fetchAllLSPPrices, LSPPrice, LspErrorCode } from './lsp-api';
 import { savePricesToDB, getLatestPrices as getLatestPricesFromDB } from './db';
 import { fetchAlbyPricesForChannelSize, getAlbyPriceForLSP } from './alby-api';
 
+// LRU Cache configuration
+const MAX_CACHE_ENTRIES = 100; // Maximum number of cache entries to keep
+const CACHE_ENTRY_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+interface CacheEntry {
+  prices: LSPPrice[];
+  timestamp: number;
+}
+
 // Price fetching service
 export class PriceService {
   private static instance: PriceService;
   private isFetching: boolean = false;
   private lastFetchTime: Date | null = null;
   private fetchIntervalMs = 10 * 60 * 1000; // 10 minutes
-  private inMemoryCache: Map<number, LSPPrice[]> = new Map(); // channelSize -> prices
+  private inMemoryCache: Map<number, CacheEntry> = new Map(); // channelSize -> {prices, timestamp}
 
   private constructor() {}
 
@@ -17,6 +26,61 @@ export class PriceService {
       PriceService.instance = new PriceService();
     }
     return PriceService.instance;
+  }
+
+  /**
+   * Evict old cache entries to prevent memory leak
+   * Implements LRU-like eviction: removes oldest entries when cache is full
+   */
+  private evictOldCacheEntries(): void {
+    const now = Date.now();
+
+    // Remove stale entries (older than max age)
+    for (const [channelSize, entry] of this.inMemoryCache.entries()) {
+      if (now - entry.timestamp > CACHE_ENTRY_MAX_AGE_MS) {
+        this.inMemoryCache.delete(channelSize);
+      }
+    }
+
+    // If still over limit, remove oldest entries
+    if (this.inMemoryCache.size > MAX_CACHE_ENTRIES) {
+      const entries = Array.from(this.inMemoryCache.entries())
+        .sort((a, b) => a[1].timestamp - b[1].timestamp);
+
+      const toRemove = entries.slice(0, this.inMemoryCache.size - MAX_CACHE_ENTRIES);
+      for (const [channelSize] of toRemove) {
+        this.inMemoryCache.delete(channelSize);
+      }
+    }
+  }
+
+  /**
+   * Get prices from in-memory cache
+   */
+  private getCachedPrices(channelSize: number): LSPPrice[] | null {
+    const entry = this.inMemoryCache.get(channelSize);
+    if (!entry) return null;
+
+    // Check if cache entry is still valid
+    if (Date.now() - entry.timestamp > CACHE_ENTRY_MAX_AGE_MS) {
+      this.inMemoryCache.delete(channelSize);
+      return null;
+    }
+
+    return entry.prices;
+  }
+
+  /**
+   * Set prices in in-memory cache with eviction
+   */
+  private setCachedPrices(channelSize: number, prices: LSPPrice[]): void {
+    this.inMemoryCache.set(channelSize, {
+      prices,
+      timestamp: Date.now()
+    });
+
+    // Evict old entries after adding new one
+    this.evictOldCacheEntries();
   }
 
   // Helper method to determine if cached data should be treated as "live" (less than 1 hour old)
@@ -85,7 +149,7 @@ export class PriceService {
         }
         
         // Also save to in-memory cache for local development
-        this.inMemoryCache.set(channelSizeSat, allPrices);
+        this.setCachedPrices(channelSizeSat, allPrices);
         
         const totalSuccessCount = allPrices.filter(p => !p.error).length;
         console.log(`✅ Price fetch complete: ${totalSuccessCount}/${allPrices.length} LSPs successful`);
@@ -111,7 +175,7 @@ export class PriceService {
       
       // Save to in-memory cache
       if (prices.length > 0) {
-        this.inMemoryCache.set(channelSizeSat, prices);
+        this.setCachedPrices(channelSizeSat, prices);
       }
       
       return prices;
@@ -130,7 +194,7 @@ export class PriceService {
     // Check in-memory cache if no Redis cache
     let availablePrices = cachedPrices;
     if (availablePrices.length === 0) {
-      const inMemoryPrices = this.inMemoryCache.get(channelSizeSat);
+      const inMemoryPrices = this.getCachedPrices(channelSizeSat);
       if (inMemoryPrices && inMemoryPrices.length > 0) {
         console.log(`Using in-memory cache for ${channelSizeSat} sats (${inMemoryPrices.length} prices)`);
         availablePrices = inMemoryPrices.map(price => ({
@@ -253,7 +317,7 @@ export class PriceService {
         await savePricesToDB([livePrice]);
         
         // Update in-memory cache with all prices
-        this.inMemoryCache.set(channelSizeSat, allPrices);
+        this.setCachedPrices(channelSizeSat, allPrices);
         
         // Return all prices (the specific LSP + others from cache)
         return allPrices;
@@ -467,7 +531,7 @@ export class PriceService {
       const mergedPrices = [...successfulLivePrices, ...preservedCachedPrices];
       
       await savePricesToDB(mergedPrices);
-      this.inMemoryCache.set(channelSizeSat, mergedPrices);
+      this.setCachedPrices(channelSizeSat, mergedPrices);
       console.log(`Saved ${successfulLivePrices.length} new + ${preservedCachedPrices.length} preserved prices`);
     } else {
       console.log('No successful live prices to save - preserving existing cached data');
@@ -543,7 +607,7 @@ export class PriceService {
     // Check in-memory cache if no Redis cache
     let availablePrices = cachedPrices;
     if (availablePrices.length === 0) {
-      const inMemoryPrices = this.inMemoryCache.get(channelSizeSat);
+      const inMemoryPrices = this.getCachedPrices(channelSizeSat);
       if (inMemoryPrices && inMemoryPrices.length > 0) {
         console.log(`Using in-memory cache for ${channelSizeSat} sats (${inMemoryPrices.length} prices)`);
         availablePrices = inMemoryPrices.map(price => ({
@@ -624,7 +688,7 @@ export class PriceService {
     if (cachedPrices.length === 0) {
       // No cached prices for this channel size in Redis
       // First check in-memory cache
-      const inMemoryPrices = this.inMemoryCache.get(channelSizeSat);
+      const inMemoryPrices = this.getCachedPrices(channelSizeSat);
       if (inMemoryPrices && inMemoryPrices.length > 0) {
         console.log(`Using in-memory cache for ${channelSizeSat} sats (${inMemoryPrices.length} prices)`);
         // Mark as cached data
