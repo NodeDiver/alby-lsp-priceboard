@@ -126,5 +126,65 @@ A human-readable list of tasks and improvements for the Alby LSP Price Board pro
 
 ---
 
-*Last Updated: October 4, 2025*  
-*Version 0.2.1 - Production Ready with Major UX & Readability Improvements + LSP Blocking Problem Identified*
+## 🔴 Deferred Critical Issues (November 2025)
+
+### Issue #1: Pro Mode Security Vulnerability
+**Status**: Deferred
+**Priority**: Critical
+**Effort**: High (~8 hours)
+
+**Problem**: Pro Mode access controlled entirely by client-side localStorage, allowing payment bypass.
+
+**Proposed Solution**:
+- Implement server-side Pro Mode validation with signed JWT tokens
+- Store payment verification in database
+- API endpoints verify tokens before serving Pro Mode data
+
+**Files to Modify**:
+- `lib/pro-mode.ts`, `pages/api/prices.ts`, `pages/api/historical-data.ts`
+- New: `pages/api/pro-mode/verify.ts`, `lib/jwt.ts`
+
+---
+
+### Issue #6: Enhanced Input Validation & Rate Limiting
+**Status**: Deferred
+**Priority**: High
+**Effort**: Medium (~4 hours)
+
+**Problem**: Weak parameter validation, limited rate limiting coverage
+
+**Proposed Solution**:
+- Add comprehensive input validation library (Zod)
+- Apply rate limiting to all public endpoints
+- Implement IP-based rate limiting with CAPTCHA for suspicious activity
+
+**Files to Modify**:
+- All `pages/api/*.ts` files
+- `middleware.ts` - Expand rate limiting
+- New: `lib/validation.ts`
+
+---
+
+### Issue #17: Complete Pro Mode Payment Integration
+**Status**: Deferred
+**Priority**: Medium
+**Effort**: Medium (~6 hours)
+
+**Problem**: Pro Mode payment flow incomplete (TODO in PaymentModal.tsx:42)
+
+**Proposed Solution**:
+- Integrate Lightning payment processing (Alby/BTCPay/LNbits)
+- Generate unique payment invoices
+- Verify payment completion and issue access tokens
+- Set expiration time for Pro Mode access
+
+**Dependencies**: Requires Issue #1 completion first
+
+**Files to Modify**:
+- `components/PaymentModal.tsx`
+- New: `pages/api/pro-mode/create-invoice.ts`, `pages/api/pro-mode/verify-payment.ts`, `lib/lightning-payment.ts`
+
+---
+
+*Last Updated: November 12, 2025*
+*Version 0.3 - Code Quality Improvements + Nov 12 Cron Job Fixes + Deferred Issues Documented*

@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { PriceService } from '../../lib/price-service';
+import { LSPPrice } from '../../lib/lsp-api';
 import { allowCORS, getDataSourceDescription } from '../../lib/api-helpers';
 
 // Parse channel size from query parameter with validation

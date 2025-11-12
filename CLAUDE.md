@@ -323,6 +323,69 @@ alby-lsp-priceboard/
 | Historical data load | 20-30s | 0.7s | 28× faster |
 | Free tier compliance | ❌ Exceeded | ✅ Compliant | Cost: $0/month |
 
+## November 12, 2025 Improvements
+
+### Cron Job 405 Error Fix
+**Problem**: Both cron jobs failing with "Method Not Allowed" (405) since deployment
+**Root Cause**: Endpoints only accepted POST, but Vercel Cron sends GET requests
+**Solution**: Updated both endpoints to accept GET and POST methods with Vercel cron header detection
+
+**Files Modified**:
+- `pages/api/cron/fetch-prices.ts`
+- `pages/api/cron/health-check.ts`
+
+**Result**: ✅ Cron jobs now execute successfully, daily data collection restored
+
+### Code Quality & Stability Improvements (Nov 12, 2025)
+
+#### Phase 1: Critical Stability Fixes
+1. **Type Safety in Health Check** (`lib/simple-health.ts`)
+   - Added proper error type checking before accessing `.message`
+   - Safe error message extraction for all error types
+
+2. **Health Check Timeout** (`lib/simple-health.ts`)
+   - Added 5-second timeout to fetch calls using `AbortSignal.timeout(5000)`
+   - Prevents health checks from hanging indefinitely
+
+3. **CRON_SECRET Validation** (`pages/api/cron/fetch-prices.ts`)
+   - Added authorization check matching health-check endpoint
+   - Consistent security across both cron jobs
+
+4. **Health Status Cache Validation** (`pages/api/cron/fetch-prices.ts`)
+   - Validates cached health status age (10-minute max)
+   - Fallback to fresh health check if cache stale/missing
+   - Eliminates race condition between health check and price fetch
+
+5. **Memory Leak Prevention** (`lib/price-service.ts`)
+   - Implemented LRU cache with eviction policy
+   - Max 100 entries, 24-hour TTL per entry
+   - Automatic cleanup of stale entries
+   - Prevents unbounded memory growth
+
+#### Phase 2: Code Quality Improvements
+1. **Type Assertion Cleanup** (`lib/lsp-api.ts`)
+   - Removed `as unknown as` pattern at lines 546, 640
+   - Direct type assertions for better type safety
+
+2. **Standard API Response Types** (`types/api-response.ts`)
+   - Created unified response format for all endpoints
+   - `ApiSuccessResponse<T>` and `ApiErrorResponse`
+   - Helper functions for consistent responses
+
+3. **Currency Conversion Race Condition** (`lib/currency.ts`)
+   - Added in-flight request tracking
+   - Prevents thundering herd on cache expiry
+   - Single request serves all concurrent callers
+
+4. **Complete Error Code Coverage** (`lib/price-service.ts`)
+   - Added user-friendly messages for all 15 error codes
+   - TIMEOUT, URL_NOT_FOUND, TLS_ERROR, etc.
+   - Exhaustive switch statement with default case
+
+5. **Type Definition Fixes** (`pages/api/prices-ui.ts`)
+   - Added missing `LSPPrice` import
+   - Proper TypeScript type safety restored
+
 ## LSP Health Monitoring (October 2025)
 
 ### Overview
