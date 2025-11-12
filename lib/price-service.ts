@@ -565,7 +565,7 @@ export class PriceService {
     let newError = price.error;
     
     switch (price.error_code) {
-      case 'BAD_STATUS':
+      case LspErrorCode.BAD_STATUS:
         if (price.error?.includes('Peer not connected')) {
           newErrorCode = LspErrorCode.PEER_NOT_CONNECTED;
           newError = 'Peer not connected - please connect to this LSP';
@@ -580,11 +580,50 @@ export class PriceService {
           newError = 'Unable to fetch live data';
         }
         break;
-      case 'CHANNEL_SIZE_TOO_SMALL':
+      case LspErrorCode.TIMEOUT:
+        newError = 'Request timed out - LSP not responding';
+        break;
+      case LspErrorCode.URL_NOT_FOUND:
+        newError = 'LSP endpoint not found';
+        break;
+      case LspErrorCode.INVALID_JSON:
+        newError = 'Invalid response from LSP';
+        break;
+      case LspErrorCode.SCHEMA_MISMATCH:
+        newError = 'Unexpected response format from LSP';
+        break;
+      case LspErrorCode.TLS_ERROR:
+        newError = 'TLS/SSL connection error';
+        break;
+      case LspErrorCode.CORS_BLOCKED:
+        newError = 'Cross-origin request blocked';
+        break;
+      case LspErrorCode.PEER_NOT_CONNECTED:
+        newError = 'Peer not connected - please connect to this LSP';
+        break;
+      case LspErrorCode.WHITELIST_REQUIRED:
+        newError = 'Whitelist required - contact LSP for access';
+        break;
+      case LspErrorCode.RATE_LIMITED:
+        newError = 'Rate limited - too many requests';
+        break;
+      case LspErrorCode.CHANNEL_SIZE_TOO_SMALL:
         newError = 'Channel size too small for this LSP';
         break;
-      case 'CHANNEL_SIZE_TOO_LARGE':
+      case LspErrorCode.CHANNEL_SIZE_TOO_LARGE:
         newError = 'Channel size too large for this LSP';
+        break;
+      case LspErrorCode.LIVE_DATA_UNAVAILABLE:
+        newError = 'Unable to fetch live data';
+        break;
+      case LspErrorCode.CACHE_UNAVAILABLE:
+        newError = 'No cached data available';
+        break;
+      case LspErrorCode.UNKNOWN:
+        newError = 'Unknown error occurred';
+        break;
+      default:
+        // Keep original error message
         break;
     }
     

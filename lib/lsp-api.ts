@@ -543,7 +543,7 @@ export async function fetchLSPPrice(lsp: LSP, channelSizeSat: number = 1000000):
       const orderResult = await createLSPOrder(lsp, channelSizeSat, infoResult.info);
       if (orderResult && !('error' in orderResult)) {
         const order = orderResult as LSPS1CreateOrderResponse;
-        const msat = extractMsatFromOrder(order as unknown as Record<string, unknown>);
+        const msat = extractMsatFromOrder(order as Record<string, unknown>);
         if (msat && msat > 0) {
           console.log(`Successfully fetched price from ${lsp.name}: ${msat} msat`);
           
@@ -637,7 +637,7 @@ export async function fetchLSPPriceBypass(lsp: LSP, channelSizeSat: number = 100
       const order = orderResult as LSPS1CreateOrderResponse;
 
       // Extract pricing from order
-      const totalFeeMsat = extractMsatFromOrder(order as unknown as Record<string, unknown>);
+      const totalFeeMsat = extractMsatFromOrder(order as Record<string, unknown>);
       if (totalFeeMsat === null) {
         lastError = 'Invalid order response';
         continue;

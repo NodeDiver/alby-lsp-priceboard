@@ -41,6 +41,9 @@ export interface CurrencyCache {
 // Cache for currency rates to avoid excessive API calls
 const currencyCache: CurrencyCache = {};
 
+// Track in-flight requests to prevent thundering herd
+const inflightRequests: Map<string, Promise<CurrencyConversion>> = new Map();
+
 // Cache duration: 10 minutes
 const CACHE_DURATION = 10 * 60 * 1000;
 
@@ -66,10 +69,10 @@ export async function convertSatsToCurrency(
     
     // Check if we have a recent cached rate
     const cached = currencyCache[code];
-    
+
     if (cached && (Date.now() - new Date(cached.lastUpdated).getTime()) < CACHE_DURATION) {
       const amount = sats * cached.rate;
-      
+
       return {
         amount: Math.round(amount * 100) / 100, // Round to 2 decimals
         formatted: formatCurrency(amount, code, currencyInfo.symbol),
@@ -79,25 +82,44 @@ export async function convertSatsToCurrency(
       };
     }
 
-    // Fetch fresh rate from Alby lightning Tools
-    const fiatValue = await fiat.getFiatValue({ 
-      satoshi: sats, 
-      currency: code 
-    });
+    // Check if there's already a request in flight for this currency
+    const inflightKey = `${code}`;
+    const existingRequest = inflightRequests.get(inflightKey);
+    if (existingRequest) {
+      // Wait for the existing request instead of making a new one
+      return existingRequest;
+    }
 
-    // Update cache
-    currencyCache[code] = {
-      rate: fiatValue / sats,
-      lastUpdated: now
-    };
-    
-    return {
-      amount: Math.round(fiatValue * 100) / 100, // Round to 2 decimals
-      formatted: formatCurrency(fiatValue, code, currencyInfo.symbol),
-      currency: code,
-      symbol: currencyInfo.symbol,
-      lastUpdated: now
-    };
+    // Create new request and track it
+    const requestPromise = (async () => {
+      try {
+        // Fetch fresh rate from Alby lightning Tools
+        const fiatValue = await fiat.getFiatValue({
+          satoshi: sats,
+          currency: code
+        });
+
+        // Update cache
+        currencyCache[code] = {
+          rate: fiatValue / sats,
+          lastUpdated: now
+        };
+
+        return {
+          amount: Math.round(fiatValue * 100) / 100,
+          formatted: formatCurrency(fiatValue, code, currencyInfo.symbol),
+          currency: code,
+          symbol: currencyInfo.symbol,
+          lastUpdated: now
+        };
+      } finally {
+        // Remove from inflight tracking when done
+        inflightRequests.delete(inflightKey);
+      }
+    })();
+
+    inflightRequests.set(inflightKey, requestPromise);
+    return requestPromise;
 
   } catch (error) {
     console.error('Currency conversion error:', error);
