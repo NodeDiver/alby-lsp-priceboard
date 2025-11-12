@@ -1,13 +1,19 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Only allow POST requests (Vercel Cron Jobs use POST)
-  if (req.method !== 'POST') {
-    return res.status(405).json({ 
+  // Accept both GET and POST requests (Vercel Cron can use either)
+  // Verify it's actually a cron request by checking for Vercel cron headers
+  const isVercelCron = req.headers['x-vercel-cron'] || req.headers['user-agent']?.includes('vercel-cron');
+
+  if (req.method !== 'POST' && req.method !== 'GET') {
+    return res.status(405).json({
       error: 'Method not allowed',
-      message: 'Only POST requests are allowed for this endpoint'
+      message: 'Only GET and POST requests are allowed for this endpoint'
     });
   }
+
+  // Log the request method for debugging
+  console.log(`Cron request received: method=${req.method}, isVercelCron=${isVercelCron}`);
 
   try {
     // Day-of-week based channel size fetching to stay within Vercel free tier 10s limit

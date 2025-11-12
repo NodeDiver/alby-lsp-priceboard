@@ -2,10 +2,15 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { simpleHealthMonitor } from '../../../lib/simple-health';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Only allow POST requests (for cron jobs)
-  if (req.method !== 'POST') {
+  // Accept both GET and POST requests (Vercel Cron can use either)
+  const isVercelCron = req.headers['x-vercel-cron'] || req.headers['user-agent']?.includes('vercel-cron');
+
+  if (req.method !== 'POST' && req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  // Log the request method for debugging
+  console.log(`Health check cron request: method=${req.method}, isVercelCron=${isVercelCron}`);
 
   // Verify this is a cron job request (only in production)
   if (process.env.CRON_SECRET) {
