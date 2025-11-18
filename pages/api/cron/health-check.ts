@@ -12,14 +12,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Log the request method for debugging
   console.log(`Health check cron request: method=${req.method}, isVercelCron=${isVercelCron}`);
 
-  // Verify this is a cron job request (only in production)
-  if (process.env.CRON_SECRET) {
-    const authHeader = req.headers.authorization;
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-  }
-
   try {
     console.log('Starting scheduled health check for all LSPs...');
 

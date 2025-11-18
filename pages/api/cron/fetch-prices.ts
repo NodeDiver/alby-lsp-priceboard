@@ -15,14 +15,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Log the request method for debugging
   console.log(`Cron request received: method=${req.method}, isVercelCron=${isVercelCron}`);
 
-  // Verify this is a cron job request (only in production)
-  if (process.env.CRON_SECRET) {
-    const authHeader = req.headers.authorization;
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-  }
-
   try {
     // Day-of-week based channel size fetching to stay within Vercel free tier 10s limit
     // Monday = 1M, Tuesday = 2M, Wednesday = 3M, Thursday = 4M, Friday = 5M, Saturday = 7M, Sunday = 10M
