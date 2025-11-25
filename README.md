@@ -251,6 +251,22 @@ This approach eliminates Node ID and IP blocking issues while maintaining full d
 - **Premium Features**: Advanced filtering and export capabilities
 - **Performance Optimization**: Further caching improvements and response time optimization
 
+## 🔍 Monitoring & Verification
+
+### Recent Checks
+
+**November 25, 2025** - Weekly Data Collection Verification
+- ✅ Verified all 7 channel sizes (1M, 2M, 3M, 4M, 5M, 7M, 10M) are collecting data
+- ✅ Confirmed cron jobs running daily at 00:00 UTC (price fetch) and 23:55 UTC (health check)
+- ✅ Validated day-of-week rotation: each channel size collected on its designated day
+- ✅ Last 6 consecutive days (Nov 20-25) successfully collected data
+- ✅ All 4 LSPs (Olympus, LNServer Wave, Megalith, Flashsats) being queried correctly
+- 📊 **Status**: System stable, 100% success rate since Nov 20
+- 📅 **Next Check**: Week of December 2, 2025 (weekly monitoring)
+
+**Known Gaps:**
+- Nov 17-19: Missing due to `CRON_SECRET` validation bug (fixed on Nov 17)
+
 ## Contributing
 
 Submit issues and pull requests on [GitHub](https://github.com/NodeDiver/alby-lsp-priceboard).
