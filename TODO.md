@@ -186,5 +186,54 @@ A human-readable list of tasks and improvements for the Alby LSP Price Board pro
 
 ---
 
-*Last Updated: November 12, 2025*
-*Version 0.3 - Code Quality Improvements + Nov 12 Cron Job Fixes + Deferred Issues Documented*
+## 🟡 Feature Enhancements (November 2025)
+
+### Add Missing Channel Sizes (6M, 8M, 9M)
+**Status**: Deferred to next week
+**Priority**: Medium
+**Effort**: Low (~30 minutes)
+**Scheduled**: Week of December 2, 2025
+
+**Problem**: Currently only collecting 7 channel sizes (1M, 2M, 3M, 4M, 5M, 7M, 10M). Missing 6M, 8M, and 9M.
+
+**Proposed Solution (Option 1 - 10-Day Rotation)**:
+- Extend from 7-day to 10-day rotation cycle
+- Add 6M, 8M, 9M to the schedule
+- Each size updated every 10 days instead of 7 days
+- Stays within Vercel free tier (10s limit)
+
+**New Schedule**:
+- Day 1: 1M
+- Day 2: 2M
+- Day 3: 3M
+- Day 4: 4M
+- Day 5: 5M
+- Day 6: 6M ← New
+- Day 7: 7M
+- Day 8: 8M ← New
+- Day 9: 9M ← New
+- Day 10: 10M
+- Day 11: Repeat from Day 1
+
+**Files to Modify**:
+- `pages/api/cron/fetch-prices.ts` - Update `channelSizeByDay` mapping to use 10-day cycle
+
+**Pros**:
+- ✅ Complete coverage of all 10 channel sizes
+- ✅ Zero cost (stays on free tier)
+- ✅ Low risk, proven to work
+- ✅ Simple implementation
+
+**Cons**:
+- ⏱️ Updates every 10 days instead of 7 days
+
+**Alternative Options Considered**:
+- Option 2: Dual fetch (weekly for popular, monthly for uncommon)
+- Option 3: Two sizes per day (risky, requires optimization)
+- Option 4: Upgrade to Vercel Pro ($20/month)
+- Option 5: Remove least used sizes
+
+---
+
+*Last Updated: November 25, 2025*
+*Version 0.3.1 - Nov 25 Verification + Channel Size Enhancement Planned*
