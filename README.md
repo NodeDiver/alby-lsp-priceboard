@@ -1,8 +1,8 @@
-# Alby LSP Price Board v0.2.1
+# Alby LSP Price Board v0.2.2
 
 A real-time lightning Service Provider (LSP) price comparison tool that helps users make informed decisions when opening lightning channels.
 
-✅ **PRODUCTION READY v0.2.1**: Successfully implemented LSPS1 protocol with live pricing data from multiple LSPs. Smart caching system ensures data persistence and optimal user experience with major UX and readability improvements.
+✅ **PRODUCTION READY v0.2.2**: Successfully implemented LSPS1 protocol with live pricing data from multiple LSPs. Smart caching system ensures data persistence and optimal user experience with major UX and readability improvements.
 
 🌐 **Live Demo**: [https://alby-lsp-priceboard.vercel.app/](https://alby-lsp-priceboard.vercel.app/)
 
@@ -39,9 +39,17 @@ Menu: [v0.2](#v02) • [v0.1](#v01) • [v0.05](#v005)
 
 ## 🚀 **Previous Updates**
 
-Menu: [v0.2.1](#v021) • [v0.2](#v02-updates) • [v0.1](#v01-updates)
+Menu: [v0.2.2](#v022) • [v0.2.1](#v021) • [v0.2](#v02-updates) • [v0.1](#v01-updates)
 
 <details open>
+  <summary id="v022">v0.2.2 (October 2025)</summary>
+
+  ### UI Improvements
+  - **✅ Removed Pro Mode Expiration Text**: Removed "(30d left)" countdown text from Pro Mode toggle, matching the removal of payment requirements for Pro Mode access
+
+</details>
+
+<details>
   <summary id="v021">v0.2.1 (September 2025)</summary>
 
   ### Bug Fixes & Stability Improvements
