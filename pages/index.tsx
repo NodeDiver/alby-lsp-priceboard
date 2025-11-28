@@ -523,11 +523,6 @@ export default function Home() {
             <div className="flex items-center space-x-2">
               <div className="flex items-baseline space-x-1">
                 <span className="text-sm font-medium text-gray-700 dark:text-slate-200">Pro Mode <span className="inline-block -translate-y-0.5">💪</span></span>
-                {isHydrated && ProModeManager.hasProModeAccess() && (
-                  <span className="text-xs text-green-600 font-medium">
-                    ({ProModeManager.getRemainingDays()}d left)
-                  </span>
-                )}
               </div>
               <button
                 onClick={isHydrated ? handleProModeToggle : undefined}
