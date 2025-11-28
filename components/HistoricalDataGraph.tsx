@@ -49,7 +49,7 @@ export function HistoricalDataGraph({ channelSize, proMode }: HistoricalDataGrap
   const [isDark, setIsDark] = useState(false);
 
   // Check if channel size requires Pro Mode
-  const requiresProMode = channelSize >= 4000000; // 4M sats and above
+  const requiresProMode = channelSize >= 7000000; // 7M sats and above
 
   // Detect dark mode
   useEffect(() => {

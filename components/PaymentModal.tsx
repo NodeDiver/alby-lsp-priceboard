@@ -17,11 +17,11 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const [conversion, setConversion] = useState<CurrencyConversion | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Convert 21 sats to selected currency
+  // Convert 1 sats to selected currency
   useEffect(() => {
     if (isOpen && selectedCurrency) {
       setLoading(true);
-      convertSatsToCurrency(21, selectedCurrency)
+      convertSatsToCurrency(1, selectedCurrency)
         .then(setConversion)
         .catch(error => {
           console.error('Currency conversion error:', error);
@@ -78,7 +78,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           <div className="bg-gray-50 dark:bg-slate-700 rounded-lg p-4 mb-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-2xl font-bold text-gray-900 dark:text-slate-100">21 sats</div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-slate-100">1 sats</div>
                 <div className="text-sm text-gray-500">
                   {loading ? (
                     <span className="animate-pulse">Loading...</span>
@@ -106,7 +106,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             <ul className="space-y-2 text-sm text-gray-600">
               <li className="flex items-center">
                 <span className="text-green-500 mr-2">✓</span>
-                Large channel sizes (3M-10M sats)
+                Large channel sizes (7M-10M sats)
               </li>
               <li className="flex items-center">
                 <span className="text-green-500 mr-2">✓</span>
@@ -137,7 +137,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center"
           >
             <span className="mr-2">⚡</span>
-            Pay 21 sats with lightning
+            Pay 1 sats with lightning
           </button>
           
           {/* Testing Notice */}
