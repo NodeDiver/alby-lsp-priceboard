@@ -3,6 +3,7 @@
 ## Project Overview
 
 The **Alby LSP Price Board** is a Lightning Network service that provides transparent, real-time price comparison for Lightning Service Provider (LSP) channel opening fees. It solves the critical problem of users not knowing how much LSPs charge before committing to open a channel.
+v0.2.2
 
 **Live Demo**: https://alby-lsp-priceboard.vercel.app/
 
