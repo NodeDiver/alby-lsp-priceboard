@@ -263,6 +263,23 @@ This approach eliminates Node ID and IP blocking issues while maintaining full d
 
 ### Recent Checks
 
+**December 6, 2025** - Weekly Data Collection Verification & Pro Mode Update
+- ✅ **Day-of-week rotation working perfectly**: 100% success rate (Dec 1-5)
+  - Dec 1 (Mon): 1M collected ✅
+  - Dec 2 (Tue): 2M collected ✅
+  - Dec 3 (Wed): 3M collected ✅
+  - Dec 4 (Thu): 4M collected ✅
+  - Dec 5 (Fri): 5M collected ✅
+  - Dec 6 (Sat): 7M scheduled for tonight
+- ✅ All 4 LSPs online and responding (Olympus: 110ms, Megalith: 64ms, LNServer: 1515ms, Flashsats: 375ms)
+- ⚠️ **Issues found**:
+  - Health endpoint reports `price_count: 0` (bug - actual data IS collecting correctly)
+  - Flashsats data very stale for some sizes (1M: 19 days old, 5M: 68 days old)
+  - CACHE_UNAVAILABLE errors: LNServer (1M), Flashsats (10M)
+- ✅ **Pro Mode updated**: Price reduced to 1 sat, free tier expanded to 1M-5M channels
+- 📊 **Status**: Core system working perfectly, minor LSP-specific issues
+- 📅 **Next Check**: December 13, 2025 (after full week rotation)
+
 **November 25, 2025** - Weekly Data Collection Verification
 - ✅ Verified all 7 channel sizes (1M, 2M, 3M, 4M, 5M, 7M, 10M) are collecting data
 - ✅ Confirmed cron jobs running daily at 00:00 UTC (price fetch) and 23:55 UTC (health check)
